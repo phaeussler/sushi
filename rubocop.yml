@@ -1,0 +1,31 @@
+AllCops:
+  TargetRubyVersion: 2.5
+  DisplayStyleGuide: true
+  Include:
+    - '**/*.jbuilder'
+    - '**/*.rake'
+    - '**/Gemfile'
+    - '**/Rakefile'
+  Exclude:
+    - 'db/migrate/**/*'
+    - 'db/schema.rb'
+    - 'db/seeds.rb'
+    - 'config/**/*'
+    - 'vendor/**/*'
+    - 'bin/**/*'
+
+Rails:
+  Enabled: true
+
+
+Metrics/ClassLength:
+  Max: 200
+
+Metrics/AbcSize:
+  Max: 30
+
+Layout/AlignParameters:
+  Enabled: Yes
+
+Metrics/MethodLength:
+  Max: 30
