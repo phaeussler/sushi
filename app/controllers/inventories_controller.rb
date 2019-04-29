@@ -1,10 +1,25 @@
+
+
 class InventoriesController < ApplicationController
   before_action :set_inventory, only: [:show, :edit, :update, :destroy]
+  include InventoriesHelper
+  require 'httparty'
 
-  # GET /inventories
-  # GET /inventories.json
+
   def index
     @inventories = Inventory.all
+    secret_key = "RAPrFLl620Cg$o"
+    data = "GET"
+
+    hash_almacenes =  hmac_sha1(data, secret_key)
+    Rails.logger.debug("HASH: #{hash_almacenes}")
+    @almacenes = HTTParty.get('https://integracion-2019-dev.herokuapp.com/bodega/almacenes', 
+      headers:{
+        "Authorization": "INTEGRACION grupo1:#{hash_almacenes}",
+        "Content-Type": "application/json"
+      })
+    Rails.logger.debug("Almacenes: #{@almacenes}")
+    puts "INTEGRACION grupo1_____:#{hash_almacenes}}"
   end
 
   # GET /inventories/1
