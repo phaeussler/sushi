@@ -1,0 +1,25 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  sku_product: 1
+  name_product: MyString
+  sku_ingredient: 1
+  name_ingredient: MyString
+  quantity: 1.5
+  unit1: MyString
+  production_lot: 1
+  quantity_for_lot: 1.5
+  unit2: MyString
+  equivalence_unit_hold: 1.5
+
+two:
+  sku_product: 1
+  name_product: MyString
+  sku_ingredient: 1
+  name_ingredient: MyString
+  quantity: 1.5
+  unit1: MyString
+  production_lot: 1
+  quantity_for_lot: 1.5
+  unit2: MyString
+  equivalence_unit_hold: 1.5

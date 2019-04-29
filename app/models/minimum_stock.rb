@@ -1,0 +1,2 @@
+class MinimumStock < ApplicationRecord
+end
