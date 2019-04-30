@@ -9,11 +9,22 @@ class InventoriesController < ApplicationController
     @inventories = Inventory.all
     #request_product("5cbd3ce444f67600049431b3", "1001", "RAPrFLl620Cg$o")
     puts "__________________________"
-    request_system("almacenes", "GET", "RAPrFLl620Cg$o")
 
      for p in Product.all do
        #request_product("5cbd3ce444f67600049431b3", p, "RAPrFLl620Cg$o")
      end
+
+     #fabricarSinPago("RAPrFLl620Cg$o", "1001", 200 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1008", 200 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1009", 200 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1015", 200 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1016", 200 )
+
+
+
+     request_system("almacenes", "GET", @@api_key)
+
+
 
 
     #sum(@almacenes)

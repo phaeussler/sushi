@@ -7,6 +7,7 @@ class ApplicationController < ActionController::Base
   @@despacho = "5cbd3ce444f67600049431b4"
   @@pulmon = "5cbd3ce444f67600049431b7"
   @@cocina = "5cbd3ce444f67600049431b8"
+  @@api_key = "RAPrFLl620Cg$o"
 
 
 
@@ -45,10 +46,59 @@ class ApplicationController < ActionController::Base
     return request_system(uri, hash_str,api_key)
   end
 
-
+  #almacen_id es id de destino.
   def move_product_almacen(product_id, almacen_id)
+    hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
+    request = HTTParty.post("https://integracion-2019-dev.herokuapp.com/bodega/moveStock",
+		  body:{
+				"productoId": product_id,
+				"almacenId": almacen_id,
 
+		  }.to_json,
+		  headers:{
+		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
+		    "Content-Type": "application/json"
+		  })
+      puts "\nMOVER ALMACEN\n"
+      puts JSON.parse(request.body)
+      return request
   end
+
+  def move_product_bodega(product_id, almacen_id)
+    hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
+    request = HTTParty.post("https://integracion-2019-dev.herokuapp.com/bodega/moveStockBodega",
+		  body:{
+				"productoId": product_id,
+				"almacenId": almacen_id,
+		  }.to_json,
+		  headers:{
+		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
+		    "Content-Type": "application/json"
+		  })
+      puts "\nMOVER BODEGA\n"
+      puts JSON.parse(request.body)
+      return request
+  end
+
+  def fabricarSinPago(api_key, sku, cantidad)
+    hash_str = hash("PUT#{sku}#{cantidad}", api_key)
+    producido = products_produced = HTTParty.put("https://integracion-2019-dev.herokuapp.com/bodega/fabrica/fabricarSinPago",
+		  body:{
+		  	"sku": sku,
+		  	"cantidad": cantidad
+		  }.to_json,
+		  headers:{
+		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
+		    "Content-Type": "application/json"
+		  })
+      puts "\nENVIO A FABRICAR\n"
+		  puts JSON.parse(producido.body)
+
+      return producido
+    end
+
+
+
 
 
 
