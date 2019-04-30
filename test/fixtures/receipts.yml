@@ -1,0 +1,29 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  sku: 1
+  name: MyString
+  description: MyString
+  ingredients_number: 1
+  ingredient1: MyString
+  ingredient2: MyString
+  ingredient3: MyString
+  ingredient4: MyString
+  ingredient5: MyString
+  ingredient6: MyString
+  space_for_production: 1
+  space_for_receive_production: 1
+
+two:
+  sku: 1
+  name: MyString
+  description: MyString
+  ingredients_number: 1
+  ingredient1: MyString
+  ingredient2: MyString
+  ingredient3: MyString
+  ingredient4: MyString
+  ingredient5: MyString
+  ingredient6: MyString
+  space_for_production: 1
+  space_for_receive_production: 1
