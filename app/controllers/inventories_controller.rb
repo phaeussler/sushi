@@ -1,10 +1,34 @@
+require 'json'
+
 class InventoriesController < ApplicationController
   before_action :set_inventory, only: [:show, :edit, :update, :destroy]
+  include InventoriesHelper
+  require 'httparty'
 
-  # GET /inventories
-  # GET /inventories.json
   def index
     @inventories = Inventory.all
+    #request_product("5cbd3ce444f67600049431b3", "1001", "RAPrFLl620Cg$o")
+    puts "__________________________"
+
+     for p in Product.all do
+       #request_product("5cbd3ce444f67600049431b3", p, "RAPrFLl620Cg$o")
+     end
+
+     #fabricarSinPago("RAPrFLl620Cg$o", "1001", 200 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1008", 200 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1009", 200 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1015", 200 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1016", 200 )
+
+
+
+     request_system("almacenes", "GET", @@api_key)
+
+
+
+
+    #sum(@almacenes)
+
   end
 
   # GET /inventories/1

@@ -1,0 +1,31 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  sku: 1
+  name: MyString
+  description: MyString
+  sell_price: 1
+  ingredients: 1
+  used_by: 1
+  expected_duration_hours: 1.5
+  equivalence_units_hold: 1.5
+  unit: MyString
+  production_lot: MyString
+  expected_time_production_mins: 1.5
+  groups: MyString
+  total_productor_groups: 1
+
+two:
+  sku: 1
+  name: MyString
+  description: MyString
+  sell_price: 1
+  ingredients: 1
+  used_by: 1
+  expected_duration_hours: 1.5
+  equivalence_units_hold: 1.5
+  unit: MyString
+  production_lot: MyString
+  expected_time_production_mins: 1.5
+  groups: MyString
+  total_productor_groups: 1
