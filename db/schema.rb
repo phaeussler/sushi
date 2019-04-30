@@ -21,6 +21,9 @@ ActiveRecord::Schema.define(version: 20190428174454) do
   end
 
   create_table "orders", force: :cascade do |t|
+    t.integer "sku"
+    t.integer "almacenId"
+    t.integer "cantidad"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
