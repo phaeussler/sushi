@@ -11,6 +11,21 @@
     </div>
   <% end %>
 
+  <div class="field">
+    <%= form.label :sku %>
+    <%= form.text_field :sku, id: :sku %>
+  </div>
+
+  <div class="field">
+    <%= form.label :almacenId %>
+    <%= form.text_field :almacenId, id: :almacenId %>
+  </div>
+
+  <div class="field">
+    <%= form.label :cantidad %>
+    <%= form.text_field :cantidad, id: :cantidad %>
+  </div>
+
   <div class="actions">
     <%= form.submit %>
   </div>
