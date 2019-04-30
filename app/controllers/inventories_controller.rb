@@ -7,16 +7,16 @@ class InventoriesController < ApplicationController
 
   def index
     @inventories = Inventory.all
-    secret_key = "RAPrFLl620Cg$o"
-    data = "GET"
-    hash_almacenes =  hash(data, secret_key)
-    resp = HTTParty.get('https://integracion-2019-dev.herokuapp.com/bodega/almacenes', 
-      headers:{
-        "Authorization": "INTEGRACION grupo1:#{hash_almacenes}",
-        "Content-Type": "application/json"
-      }).body
-    @almacenes = JSON.parse(resp)
-    sum(@almacenes)
+    #request_product("5cbd3ce444f67600049431b3", "1001", "RAPrFLl620Cg$o")
+    puts "__________________________"
+    request_system("almacenes", "GET", "RAPrFLl620Cg$o")
+
+     for p in Product.all do
+       #request_product("5cbd3ce444f67600049431b3", p, "RAPrFLl620Cg$o")
+     end
+
+
+    #sum(@almacenes)
 
   end
 

@@ -10,25 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-
 ActiveRecord::Schema.define(version: 20190429191600) do
-
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-
 
   create_table "assignations", force: :cascade do |t|
     t.integer "sku"
     t.string "name"
     t.integer "group"
-    
-  create_table "inventories", force: :cascade do |t|
-
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
-
 
   create_table "ingredients", force: :cascade do |t|
     t.integer "sku_product"
@@ -45,11 +38,21 @@ ActiveRecord::Schema.define(version: 20190429191600) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "inventories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "minimum_stocks", force: :cascade do |t|
     t.integer "sku"
     t.string "name"
     t.integer "number_of_products"
     t.integer "minimum_stock"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "orders", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -91,9 +94,6 @@ ActiveRecord::Schema.define(version: 20190429191600) do
     t.string "ingredient6"
     t.integer "space_for_production"
     t.integer "space_for_receive_production"
-
-  create_table "orders", force: :cascade do |t|
-
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
