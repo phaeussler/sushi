@@ -2,17 +2,22 @@ require 'json'
 
 class ApplicationController < ActionController::Base
 
+
+  def index
+
+  end
+
   # protect_from_forgery with: :exception
   protect_from_forgery unless: -> { request.format.json? }
   helper_method :grup_request
   include HTTParty
-  
+
   @@recepcion = "5cbd3ce444f67600049431b3"
   @@despacho = "5cbd3ce444f67600049431b4"
   @@pulmon = "5cbd3ce444f67600049431b7"
   @@cocina = "5cbd3ce444f67600049431b8"
   @@api_key = "RAPrFLl620Cg$o"
-  
+
   def get_request(base_url, uri)
     # base_url : str ej "http://tuerca#{g_num}.ing.puc.cl/"
     # uri : str orders or inventories ....
@@ -77,7 +82,8 @@ class ApplicationController < ActionController::Base
     return request_system(uri, hash_str,api_key)
   end
 
-  #almacen_id es id de destino.
+
+
   def move_product_almacen(product_id, almacen_id)
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
     request = HTTParty.post("https://integracion-2019-dev.herokuapp.com/bodega/moveStock",
