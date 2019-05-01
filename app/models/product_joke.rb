@@ -1,0 +1,2 @@
+class ProductJoke < ApplicationRecord
+end
