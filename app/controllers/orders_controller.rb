@@ -22,27 +22,106 @@ class OrdersController < ApplicationController
   def edit
   end
 
+
+  def evaluar_pedido(cantidad, sku)
+    stock = sku_with_stock(@@cocina, @@api_key)[0]
+    stock = stock[0]["total"].to_i
+    #Encontrar el find by sku
+    min = 0
+    minimo = MinimumStock.all
+    minimo.each do |m|
+      if m["sku"] == sku.to_i
+        min = m["minimum_stock"]
+        break
+      end
+      end
+    cantidad = cantidad.to_i
+    if stock - cantidad < min
+      return false
+    else
+      return true
+    end
+  end
+
+
+ #Retorna true si el sku es producido por nosotros
+  def check_sku(sku)
+    listas_sku = []
+    productos = Product.all
+    productos.each do |product|
+
+    if product["groups"].split(",")[0] == "1"
+        listas_sku << product["sku"]
+      end
+    end
+
+
+
+    if  listas_sku.include?(sku.to_i)
+      return true
+    else
+      return false
+    end
+  end
+
   # POST /orders
   # POST /orders.json
   def create
-    @order = Order.new(order_params)
-    print(order_params)
-    respond_to do |format|
-      if @order.save
-        msg = {:sku => order_params[:sku], :almacenId => order_params[:almacenId], :cantidad => order_params[:cantidad], :grupoProveedor => 1, :aceptado => 0, :despachado => 0}
-        format.json  { render :json => msg }
-      end
+    @grupo = request.headers["group"]
+    @sku = params[:sku]
+    @almacenId = params[:almacenId]
+    @cantidad = params[:cantidad]
+
+    puts @grupo
+    puts @sku
+    puts @almacenId
+    puts @cantidad
+
+
+    if @cantidad.blank? || @grupo.blank? || @sku.blank? || @almacenId.blank?
+
+      res = "No se creó el pedido por un error del cliente en la solicitud.
+            Por ejemplo, falta un parámetro obligatorio"
+            render json: res, :status => 400
+
+
+
+    elsif !check_sku(@sku)
+      res = "No tenemos ese sku"
+  		render json: res, :status => 404
     end
-    
-    # respond_to do |format|
-    #     format.html { redirect_to @order, notice: 'Order was successfully created.' }
-    #     format.json { render :show, status: :created, location: @order }
-        
-    #   else
-    #     format.html { render :new }
-    #     format.json { render json: @order.errors, status: :unprocessable_entity }
-    #   end
-    # end
+
+
+    if evaluar_pedido(@cantidad, @sku)
+
+      res = {
+        "sku": @sku,
+        "cantidad": @cantidad,
+        "almacenId": @almacenId,
+        "grupoProveedor": 1,
+        "aceptado": true,
+        "despachado": true
+      }
+      render json: res, :status => 201
+      # primero movemos producto de cosina a despacho
+      move_q_products_almacen(@@cocina, @@despacho, @sku, @cantidad)
+      request_system("almacenes", "GET", @@api_key )
+      # ahora despachamos producto a bodega del grupo
+      move_q_products_bodega(@@despacho, @almacenId, @sku, @cantidad)
+
+
+
+    else
+      res = "No es posible la solicitud"
+			render json: res, :status => 404
+    end
+
+
+
+
+
+
+
   end
 
   # PATCH/PUT /orders/1

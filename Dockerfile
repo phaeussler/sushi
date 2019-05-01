@@ -1,3 +1,4 @@
+
 FROM ruby:2.5.0
 
 ENV LANG C.UTF-8
@@ -18,7 +19,6 @@ ENV APP_HOME /example
 
 RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
-
 
 ADD Gemfile $APP_HOME/Gemfile
 ADD Gemfile.lock $APP_HOME/Gemfile.lock

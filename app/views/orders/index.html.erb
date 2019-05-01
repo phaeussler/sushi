@@ -1,29 +1,3 @@
 <p id="notice"><%= notice %></p>
 
 <h1>Orders</h1>
-
-<%# <%= order_request(10, 1001, 1,1) %>
-<table>
-  <thead>
-    <tr>
-      <th>Sku</th>
-      <th>Cantidad</th>
-      <th>AlmacenId</th>
-      <th colspan="3"></th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <% @orders.each do |order| %>
-      <tr>
-        <td><%= order.sku %></td>
-        <td><%= order.cantidad %></td>
-        <td><%= order.almacenId %></td>
-        <td><%= link_to 'Show', order %></td>
-        <td><%= link_to 'Edit', edit_order_path(order) %></td>
-        <td><%= link_to 'Destroy', order, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-

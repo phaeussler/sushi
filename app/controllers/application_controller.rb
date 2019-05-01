@@ -2,11 +2,6 @@ require 'json'
 
 class ApplicationController < ActionController::Base
 
-
-  def index
-
-  end
-
   # protect_from_forgery with: :exception
   protect_from_forgery unless: -> { request.format.json? }
   helper_method :grup_request
@@ -16,6 +11,7 @@ class ApplicationController < ActionController::Base
   @@despacho = "5cbd3ce444f67600049431b4"
   @@pulmon = "5cbd3ce444f67600049431b7"
   @@cocina = "5cbd3ce444f67600049431b8"
+  @@lista_almacenes = [@@recepcion, @@despacho, @@pulmon, @@cocina]
   @@api_key = "RAPrFLl620Cg$o"
 
   def get_request(base_url, uri)
@@ -45,8 +41,10 @@ class ApplicationController < ActionController::Base
     end
   end
 
+#FUNCIONES PARA INTERACTUAR CON EL SYSTEMA
 
 
+  #funcion de hash
   def hash(data, secret_key)
     require 'base64'
     require 'cgi'
@@ -56,6 +54,7 @@ class ApplicationController < ActionController::Base
     return signature
   end
 
+  #funcion que hace funcion get al sistema
   def request_system(uri,method_str, api_key)
     hash_str = hash(method_str, api_key)
     base_url ="https://integracion-2019-dev.herokuapp.com/bodega/"
@@ -66,7 +65,7 @@ class ApplicationController < ActionController::Base
       })
     puts "Solicitud: #{resp.code}"
     puts JSON.parse(resp.body)
-    return resp
+    return JSON.parse(resp.body), resp.headers
   end
 
 
@@ -79,11 +78,11 @@ class ApplicationController < ActionController::Base
   def sku_with_stock(id, api_key)
     uri = "skusWithStock?almacenId=#{id}"
     hash_str = "GET#{id}"
+    puts "SKUS CON STOCK EN AMLACEN #{id}"
     return request_system(uri, hash_str,api_key)
   end
 
-
-
+  #almacen_id es id de destino.
   def move_product_almacen(product_id, almacen_id)
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
     request = HTTParty.post("https://integracion-2019-dev.herokuapp.com/bodega/moveStock",
@@ -133,4 +132,35 @@ class ApplicationController < ActionController::Base
 
       return producido
     end
+
+   #Mueve todos los produsctos de un sku determinado
+    def move_sku_almacen(almacenId_actual, almacenId_destino, sku)
+          lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
+          for j in lista_productos do
+            move_product_almacen(j["_id"], almacenId_destino)
+      end
+    end
+    #Mueve una cantidad determinada de un sku entre dos almacenes
+    def move_q_products_almacen(almacenId_actual, almacenId_destino, sku, cantidad)
+      lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
+      cantidad = cantidad.to_i
+      for i in 0..cantidad -1 do
+            move_product_almacen(lista_productos[i]["_id"], almacenId_destino)
+      end
+    end
+
+    #Mueva una cantidad determinada a la bodega de de un grupo
+    def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad)
+      lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
+      cantidad = cantidad.to_i
+      for i in 0..cantidad -1 do
+            move_product_bodega(lista_productos[i]["_id"], almacenId_destino)
+      end
+    end
+
+
+
+
+
+
 end

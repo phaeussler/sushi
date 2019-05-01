@@ -8,28 +8,25 @@ class InventoriesController < ApplicationController
   def index
     @inventories = Inventory.all
     #request_product("5cbd3ce444f67600049431b3", "1001", "RAPrFLl620Cg$o")
-    puts "__________________________"
 
-     for p in Product.all do
-       #request_product("5cbd3ce444f67600049431b3", p, "RAPrFLl620Cg$o")
+     #fabricarSinPago("RAPrFLl620Cg$o", "1001", 500 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1008", 500 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1009", 500 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1015", 500 )
+     #fabricarSinPago("RAPrFLl620Cg$o", "1016", 800 )
+     productos = sku_with_stock(@@cocina,@@api_key)[0]
+     respuesta = []
+     for p in productos do
+       nombre = Product.find_by sku: p["_id"]
+       res = {"sku": p["_id"],"nombre": nombre["name"], "total": p["total"]}
+       respuesta << res
      end
-
-     #fabricarSinPago("RAPrFLl620Cg$o", "1001", 200 )
-     #fabricarSinPago("RAPrFLl620Cg$o", "1008", 200 )
-     #fabricarSinPago("RAPrFLl620Cg$o", "1009", 200 )
-     #fabricarSinPago("RAPrFLl620Cg$o", "1015", 200 )
-     #fabricarSinPago("RAPrFLl620Cg$o", "1016", 200 )
-
-
-
-     request_system("almacenes", "GET", @@api_key)
-
-
-
-
-    #sum(@almacenes)
+     render json: respuesta, :status => 200
+     puts "_________________-"
+     puts respuesta
 
   end
+
 
   # GET /inventories/1
   # GET /inventories/1.json
