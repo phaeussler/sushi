@@ -1,2 +1,4 @@
+
 module InventoriesHelper
+
 end

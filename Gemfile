@@ -18,6 +18,7 @@ gem 'sass-rails', '~> 5.0'
 gem 'uglifier', '>= 1.3.0'
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'therubyracer', platforms: :ruby
+gem 'httparty', '~> 0.13.7'
 
 # Use CoffeeScript for .coffee assets and views
 gem 'coffee-rails', '~> 4.2'
@@ -29,9 +30,14 @@ gem 'jbuilder', '~> 2.5'
 # gem 'redis', '~> 4.0'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
+gem 'net-ssh', '~> 5.2.0'
+gem 'roo', '~> 2.8.2'
 
 # Use Capistrano for deployment
-# gem 'capistrano-rails', group: :development
+group :development do
+	gem 'capistrano', "~> 3.10", require: false
+	gem 'capistrano-rails', "~> 1.3", require: false
+end
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console

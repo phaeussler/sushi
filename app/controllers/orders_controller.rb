@@ -1,5 +1,6 @@
 class OrdersController < ApplicationController
   before_action :set_order, only: [:show, :edit, :update, :destroy]
+  helper_method :order_request
 
   # GET /orders
   # GET /orders.json
@@ -21,20 +22,106 @@ class OrdersController < ApplicationController
   def edit
   end
 
+
+  def evaluar_pedido(cantidad, sku)
+    stock = sku_with_stock(@@cocina, @@api_key)[0]
+    stock = stock[0]["total"].to_i
+    #Encontrar el find by sku
+    min = 0
+    minimo = MinimumStock.all
+    minimo.each do |m|
+      if m["sku"] == sku.to_i
+        min = m["minimum_stock"]
+        break
+      end
+      end
+    cantidad = cantidad.to_i
+    if stock - cantidad < min
+      return false
+    else
+      return true
+    end
+  end
+
+
+ #Retorna true si el sku es producido por nosotros
+  def check_sku(sku)
+    listas_sku = []
+    productos = Product.all
+    productos.each do |product|
+
+    if product["groups"].split(",")[0] == "1"
+        listas_sku << product["sku"]
+      end
+    end
+
+
+
+    if  listas_sku.include?(sku.to_i)
+      return true
+    else
+      return false
+    end
+  end
+
   # POST /orders
   # POST /orders.json
   def create
-    @order = Order.new(order_params)
+    @grupo = request.headers["group"]
+    @sku = params[:sku]
+    @almacenId = params[:almacenId]
+    @cantidad = params[:cantidad]
 
-    respond_to do |format|
-      if @order.save
-        format.html { redirect_to @order, notice: 'Order was successfully created.' }
-        format.json { render :show, status: :created, location: @order }
-      else
-        format.html { render :new }
-        format.json { render json: @order.errors, status: :unprocessable_entity }
-      end
+    puts @grupo
+    puts @sku
+    puts @almacenId
+    puts @cantidad
+
+
+    if @cantidad.blank? || @grupo.blank? || @sku.blank? || @almacenId.blank?
+
+      res = "No se creó el pedido por un error del cliente en la solicitud.
+            Por ejemplo, falta un parámetro obligatorio"
+            render json: res, :status => 400
+
+
+
+    elsif !check_sku(@sku)
+      res = "No tenemos ese sku"
+  		render json: res, :status => 404
     end
+
+
+    if evaluar_pedido(@cantidad, @sku)
+
+      res = {
+        "sku": @sku,
+        "cantidad": @cantidad,
+        "almacenId": @almacenId,
+        "grupoProveedor": 1,
+        "aceptado": true,
+        "despachado": true
+      }
+      render json: res, :status => 201
+      # primero movemos producto de cosina a despacho
+      move_q_products_almacen(@@cocina, @@despacho, @sku, @cantidad)
+      request_system("almacenes", "GET", @@api_key )
+      # ahora despachamos producto a bodega del grupo
+      move_q_products_bodega(@@despacho, @almacenId, @sku, @cantidad)
+
+
+
+    else
+      res = "No es posible la solicitud"
+			render json: res, :status => 404
+    end
+
+
+
+
+
+
+
   end
 
   # PATCH/PUT /orders/1
@@ -61,14 +148,27 @@ class OrdersController < ApplicationController
     end
   end
 
+  def order_request(g_num, sku, storeId, quantity)
+    # g_num : int [1..14]
+    uri = "orders?sku=#{sku}almacenId=#{storeId}}&cantidad=#{quantity}}"
+    grup_request("post", g_num, uri)
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_order
       @order = Order.find(params[:id])
     end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
+
     def order_params
-      params.fetch(:order, {})
+      # params.require(:almacenId, :sku, :cantidad)
+      params.permit(:almacenId, :sku, :cantidad)
+      # params.fetch(:order, {}).permit(:almacenId, :sku, :cantidad)
     end
+    # # Never trust parameters from the scary internet, only allow the white list through.
+    # def order_params
+    #   params.fetch(:order, {})
+
+    # end
 end
