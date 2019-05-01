@@ -1,0 +1,2 @@
+module RecepcionHelper
+end
