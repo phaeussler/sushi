@@ -9,11 +9,11 @@ class InventoriesController < ApplicationController
     @inventories = Inventory.all
     #request_product("5cbd3ce444f67600049431b3", "1001", "RAPrFLl620Cg$o")
 
-     #fabricarSinPago("RAPrFLl620Cg$o", "1001", 500 )
-     #fabricarSinPago("RAPrFLl620Cg$o", "1008", 500 )
-     #fabricarSinPago("RAPrFLl620Cg$o", "1009", 500 )
-     #fabricarSinPago("RAPrFLl620Cg$o", "1015", 500 )
-     #fabricarSinPago("RAPrFLl620Cg$o", "1016", 800 )
+     # fabricarSinPago("RAPrFLl620Cg$o", "1001", 500 )
+     # fabricarSinPago("RAPrFLl620Cg$o", "1008", 500 )
+     # fabricarSinPago("RAPrFLl620Cg$o", "1009", 600 )
+     # fabricarSinPago("RAPrFLl620Cg$o", "1015", 500 )
+     # fabricarSinPago("RAPrFLl620Cg$o", "1016", 800 )
      productos = sku_with_stock(@@cocina,@@api_key)[0]
      respuesta = []
      for p in productos do

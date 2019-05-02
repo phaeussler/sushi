@@ -148,11 +148,7 @@ class OrdersController < ApplicationController
     end
   end
 
-  def order_request(g_num, sku, storeId, quantity)
-    # g_num : int [1..14]
-    uri = "orders?sku=#{sku}almacenId=#{storeId}}&cantidad=#{quantity}}"
-    grup_request("post", g_num, uri)
-  end
+
 
   private
     # Use callbacks to share common setup or constraints between actions.

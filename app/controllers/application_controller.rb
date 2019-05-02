@@ -21,12 +21,24 @@ class ApplicationController < ActionController::Base
     return response.code, response.body
   end
 
+  def order_request(g_num, sku, storeId, quantity)
+        # g_num : int [1..14]
+        uri = "orders?sku=#{sku}&almacenId=#{storeId}&cantidad=#{quantity}"
+        grup_request("post", g_num, uri)
+    end
+
   def post_request(base_url, uri)
-    # base_url : str ej "http://tuerca#{g_num}.ing.puc.cl/"
-    # uri : str orders or inventories ....
-    response = HTTParty.post("#{base_url}/#{uri}")
-    return response.code, response.body
-  end
+        # base_url : str ej "http://tuerca#{g_num}.ing.puc.cl/"
+        # uri : str orders or inventories ....
+        begin  # "try" block
+          puts "post_request #{base_url}/#{uri}"
+          response = HTTParty.post("#{base_url}/#{uri}", timeout: 5)
+          return response.code, response.body
+        rescue Errno::ECONNREFUSED, Net::ReadTimeout => e
+          puts "Error del otro grupo #{e}"
+          return 500, {}
+        end
+      end
 
   def grup_request(method, g_num, uri)
     # g_num : int [1..14]
@@ -57,7 +69,7 @@ class ApplicationController < ActionController::Base
   #funcion que hace funcion get al sistema
   def request_system(uri,method_str, api_key)
     hash_str = hash(method_str, api_key)
-    base_url ="https://integracion-2019-dev.herokuapp.com/bodega/"
+    base_url ="https://integracion-2019-prod.herokuapp.com/bodega/"
     resp = HTTParty.get("#{base_url}#{uri}",
       headers:{
         "Authorization": "INTEGRACION grupo1:#{hash_str}",
@@ -85,7 +97,7 @@ class ApplicationController < ActionController::Base
   #almacen_id es id de destino.
   def move_product_almacen(product_id, almacen_id)
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
-    request = HTTParty.post("https://integracion-2019-dev.herokuapp.com/bodega/moveStock",
+    request = HTTParty.post("https://integracion-2019-prod.herokuapp.com/bodega/moveStock",
 		  body:{
 				"productoId": product_id,
 				"almacenId": almacen_id,
@@ -102,7 +114,7 @@ class ApplicationController < ActionController::Base
 
   def move_product_bodega(product_id, almacen_id)
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
-    request = HTTParty.post("https://integracion-2019-dev.herokuapp.com/bodega/moveStockBodega",
+    request = HTTParty.post("https://integracion-2019-prod.herokuapp.com/bodega/moveStockBodega",
 		  body:{
 				"productoId": product_id,
 				"almacenId": almacen_id,
@@ -118,7 +130,7 @@ class ApplicationController < ActionController::Base
 
   def fabricarSinPago(api_key, sku, cantidad)
     hash_str = hash("PUT#{sku}#{cantidad}", api_key)
-    producido = products_produced = HTTParty.put("https://integracion-2019-dev.herokuapp.com/bodega/fabrica/fabricarSinPago",
+    producido = products_produced = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricarSinPago",
 		  body:{
 		  	"sku": sku,
 		  	"cantidad": cantidad
@@ -157,8 +169,6 @@ class ApplicationController < ActionController::Base
             move_product_bodega(lista_productos[i]["_id"], almacenId_destino)
       end
     end
-
-
 
 
 
