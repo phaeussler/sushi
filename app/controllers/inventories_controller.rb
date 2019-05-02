@@ -24,6 +24,7 @@ class InventoriesController < ApplicationController
      render json: respuesta, :status => 200
      puts "_________________-"
      puts respuesta
+     #request_system("almacenes", "GET", @@api_key)
 
   end
 

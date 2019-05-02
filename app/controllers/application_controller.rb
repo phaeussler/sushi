@@ -7,10 +7,10 @@ class ApplicationController < ActionController::Base
   helper_method :grup_request
   include HTTParty
 
-  @@recepcion = "5cbd3ce444f67600049431b3"
-  @@despacho = "5cbd3ce444f67600049431b4"
-  @@pulmon = "5cbd3ce444f67600049431b7"
-  @@cocina = "5cbd3ce444f67600049431b8"
+  @@recepcion = "5cc7b139a823b10004d8e6cd"
+  @@despacho = "5cc7b139a823b10004d8e6ce"
+  @@pulmon = "5cc7b139a823b10004d8e6d1"
+  @@cocina = "5cc7b139a823b10004d8e6d2"
   @@lista_almacenes = [@@recepcion, @@despacho, @@pulmon, @@cocina]
   @@api_key = "RAPrFLl620Cg$o"
 
