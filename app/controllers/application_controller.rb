@@ -1,7 +1,6 @@
 require 'json'
 
 class ApplicationController < ActionController::Base
-
   # protect_from_forgery with: :exception
   protect_from_forgery unless: -> { request.format.json? }
   helper_method :grup_request
@@ -87,6 +86,7 @@ class ApplicationController < ActionController::Base
     return request_system(uri, hash_str, api_key)
   end
 
+  '''Productos con stock en el almacen pedido segun id.'''
   def sku_with_stock(id, api_key)
     uri = "skusWithStock?almacenId=#{id}"
     hash_str = "GET#{id}"
