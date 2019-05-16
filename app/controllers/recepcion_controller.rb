@@ -40,6 +40,9 @@ class RecepcionController < ApplicationController
       else
         incoming["incoming"] -= producto["total"].to_i
       end
+      incoming.save
     end
   end
+
+
 end
