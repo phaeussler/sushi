@@ -18,26 +18,18 @@ class CheckController < ApplicationController
   lista_final = encontrar_incoming(lista_sku2, productos1)
   '''4. Analizar el tema de inventario'''
   inventario(lista_final)
-
-
   puts "INVENTARIO"
   msg = "Inventario Revisado"
   render json: msg, :status => 200
   end
 
 
-
-def actualizar_incoming2(sku, cantidad)
-    incoming = Product.all
-    incoming.each do |inc|
-      if inc["sku"] == sku
-          if inc["incoming"] == nil
-            inc["incoming"] = 0
-        else
-            inc["incoming"] = inc["incoming"] + cantidad
-          end
-        end
-      end
+  def actualizar_incoming2(sku, cantidad)
+    incoming = Product.find_by sku: sku.to_i
+    if incoming["incoming"] == nil
+      incoming["incoming"] = 0
+    else
+      incoming["incoming"] = incoming["incoming"] + cantidad
     end
   end
 
