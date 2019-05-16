@@ -18,29 +18,21 @@ class CheckController < ApplicationController
   lista_final = encontrar_incoming(lista_sku2, productos1)
   '''4. Analizar el tema de inventario'''
   inventario(lista_final)
-
-
   puts "INVENTARIO"
   msg = "Inventario Revisado"
   render json: msg, :status => 200
   end
 
 
-
-def actualizar_incoming2(sku, cantidad)
-    incoming = Product.all
-    incoming.each do |inc|
-      if inc["sku"] == sku
-          if inc["incoming"] == nil
-            inc["incoming"] = 0
-        else
-            inc["incoming"] = inc["incoming"] + cantidad
-          end
-        end
-      end
+  def actualizar_incoming2(sku, cantidad)
+    incoming = Product.find_by sku: sku.to_i
+    if incoming["incoming"] == nil
+      incoming["incoming"] = 0
+    else
+      incoming["incoming"] = incoming["incoming"] + cantidad
     end
+    incoming.save
   end
-
 
   #Entrega los productos que debemos tener stock mínimo
   def skus_monitorear()
@@ -75,6 +67,7 @@ def actualizar_incoming2(sku, cantidad)
       incoming = Product.find_by sku: producto[0].to_i
       if incoming["incoming"] == nil
          incoming["incoming"] = 0
+         incoming.save
       end
       nuevos_inventarios << [producto[0], incoming["incoming"], producto[1].to_i]
     end
@@ -98,170 +91,111 @@ def actualizar_incoming2(sku, cantidad)
       if producto[1] < producto[2] * 1.3
         '''Aplico Política 2 de Inventario'''
         cantidad = 2*producto[2] - producto[1]
-        puts "Cantidad a pedir"
-        puts cantidad
-        puts "\n"
-        # cantidad = pedir_producto(producto[0],cantidad)
-        # if cantidad > 0
-        #   fabricar_producto(cantidad, producto[0])
-        #end
+        '''Pedir producto retorna 0 si logro pedir y la cantidad anterior si es
+        que no logro pedir'''
+        cantidad = pedir_producto(producto[0],cantidad)
+        if cantidad > 0
+          fabricar_producto(cantidad, producto[0], lista)
+        end
       end
     end
   end
 
-
-  def fabricar_producto(cantidad, sku)
+  '''Pedir el producto a la fábrica'''
+  '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
+  '''FALTA -> AL PEEDIR UN INGREDIENTE SE LO PODRIA PEDIR A UN GRUPO'''
+  def fabricar_producto(cantidad, sku, lista)
     @cantidad = cantidad
     @sku = sku
-    #Buscar la receta
+    '''1. Buscamos la receta'''
     receta = Receipt.find_by sku: sku
-    #Si el producto no requiere de otros para ser fabricado
-    ing = Product.find_by sku: @sku
-    if ing["ingredients"] == 0
-      puts "No requiere materias primas"
-      can1 = Ingredient.find_by sku_product: @sku
-      can = (can1["quantity"] * @cantidad).to_i
-      #Para cumplir con lotes de produccion
-      n = 1
-      while can >= can1["production_lot"] * n
-        n = n + 1
-      end
-      can = can1["production_lot"] * n
-      fabricarSinPago("@@api_key", @sku, can)
+    puts "RECETA"
+    total_ingredientes = receta["ingredients_number"]
+    puts "Ingredientes -> #{total_ingredientes}"
+    puts "\n"
 
-    #SI requiere de otros productos para ser fabricado
+    '''2. Si el producto no requiere ingredeintes para ser fabricado'''
+    if total_ingredientes == 0
+      lot = production_lot(@sku, @cantidad)
+      fabricarSinPago(@@api_key, @sku, lot)
+    '''2.1 Si requiere de ingredientes para ser fabricado'''
     else
-    ingredientes = []
-    numero = "1"
-    for j in 0...6
-      if receta["ingredient"+numero] != nil
-        sku = Product.find_by name: receta["ingredient"+numero]
-        ingredientes << sku["sku"]
+      ingredientes = []
+      numero = "1"
+      for j in 0...total_ingredientes
+        if receta["ingredient"+numero] != nil
+          sku = Product.find_by name: receta["ingredient"+numero]
+          ingredientes << sku["sku"]
+        end
+          numero = numero.to_i + 1
+          numero = numero.to_s
       end
-      numero = numero.to_i + 1
-      numero = numero.to_s
     end
 
-    #Ahora que tengo la receta tengo que ver cuanto tengo en inventario de las materias
+    '''3. Tengo la receta y los ingredientes, busco el inventario de las materias_primas'''
     contador = 0
-    for ingrediente in ingredientes
-      #Cuanto de ese ingrediente necesito
-      pr = Product.find_by sku: @sku
-      quantity1 = Ingredient.find_by(sku_product: pr["sku"], sku_ingredient: ingrediente)
-
-      if quantity1 == nil
-        quantity = 0
+    for ingrediente in ingredients
+      '''3.1 Cuanto necesito de cada ingrediente'''
+      '''3.1.1 Buscar la cantidad'''
+      producto = Product.find_by sku: @sku
+      quantity = Ingredient.find_by(sku_product: producto["sku"], sku_ingredient: ingrediente)
+      lot = 0
+      if quantity == nil
+        lot = 0
       else
-      quantity =(quantity1["quantity"] * @cantidad).to_i
-      #Para cumplir con lotes de produccion
-      n = 1
-      while quantity >= quantity1["production_lot"] * n
-        n = n + 1
+        lot = production_lot_ingredient(quantity ,@cantidad)
       end
-      quantity = quantity1["production_lot"] * n
-      end
-      
-      #Veo si lo tengo en stock
+      '''3.1.2 Reviso el stock que tengo de ese producto'''
+      '''Si tengo el stock ahora'''
+      inventario = sku_with_stock(@@cocina, @@api_key)[0]
       revisado = false
-      for producto in @stock
-        #Si lo tengo en stock
+      for producto in inventario
         if ingrediente == producto["_id"].to_i
-          revisado = true
-          #Revisar si tengo lo suficiente
           real = producto["total"].to_i
           if real > quantity
+            revisado = true
             contador = contador + 1
-          else
-            incoming = Product.find_by sku: ingrediente
-            if incoming["incoming"] == nil
-              incoming["incoming"] = 0
-            end
-            incoming = incoming["incoming"]
-            total = real + incoming
-            if total > quantity
-            else
-              prod = Product.find_by sku: ingrediente
-              ingrediente = ingrediente.to_s
-              fabricar = fabricarSinPago("@@api_key", ingrediente, quantity)
-              respuesta = JSON.parse(fabricar.body)
-              if respuesta["error"]
-                if respuesta["error"] == "No existen suficientes materias primas"
-                  fabricar_producto(quantity, ingrediente.to_i)
-                end
-                if respuesta["error"].include? "Lote incorrecto"
-                  num = respuesta["error"].scan(/\d/).join('')
-                  num  = num.to_i
-                  n = 1
-                  while quantity > num * n
-                    n = n + 1
-                  end
-                  fabricarSinPago("@@api_key", ingrediente, num*n)
-                  actualizar_incoming2(ingrediente, num*n)
-                end
-              else
-              actualizar_incoming2(ingrediente, quantity)
-              end
-            end
           end
         end
       end
-      #Si no lo tengo en stock y tengo que pedirlo
+      '''Puede ser que el stock venga en camino'''
+      for stock in lista
+        '''Si lo tengo en mi lista de stock'''
+        if ingrediente == stock[0].to_i
+          '''Si el stock viene en camino'''
+          revisado = true
+          '''Si el stock viene en camino y no hay suficiente'''
+          if stock[1] < lot
+            prod = Product.find_by sku: ingrediente
+            ingrediente = ingrediente.to_s
+            fabricar = fabricarSinPago(@@api_key, ingrediente, lot)
+            respuesta = JSON.parse(fabricar.body)
+            handle_response(respuesta, ingrediente, lot)
+          end
+        end
+      end
+      '''Si el producto no está en stock o hay que pedirlo'''
       if !revisado
         prod = Product.find_by sku: ingrediente
         ingrediente = ingrediente.to_s
-        fabricar = fabricarSinPago("@@api_key", ingrediente, quantity)
+        fabricar = fabricarSinPago(@@api_key, ingrediente, lot)
         respuesta = JSON.parse(fabricar.body)
-        if respuesta["error"]
-          if respuesta["error"] == "No existen suficientes materias primas"
-            fabricar_producto(quantity, ingrediente.to_i)
-          end
-          if respuesta["error"].include? "Lote incorrecto"
-            num = respuesta["error"].scan(/\d/).join('')
-            num  = num.to_i
-            n = 1
-            while quantity > num * n
-              n = n + 1
-            end
-            fabricarSinPago("@@api_key", ingrediente, num*n)
-            actualizar_incoming2(ingrediente, num*n)
-          end
-        end
-        actualizar_incoming2(ingrediente, quantity)
+        handle_response(respuesta, ingrediente, lot)
       end
     end
 
-    #Si tengo las materias primas para fabricar
-    if contador == ingredientes.length
-
-        fabricar = fabricarSinPago("@@api_key", @sku, @cantidad)
-
-        respuesta = JSON.parse(fabricar.body)
-        if respuesta["error"]
-          if respuesta["error"] == "No existen suficientes materias primas"
-            fabricar_producto(@cantidad, @sku)
-          end
-          if respuesta["error"].include? "Lote incorrecto"
-            num = respuesta["error"].scan(/\d/).join('')
-            num  = num.to_i
-            n = 1
-            while @cantidad > num * n
-              n = n + 1
-            end
-            fabricarSinPago("@@api_key", @sku, num*n)
-            actualizar_incoming2(@sku, num*n)
-          end
-        actualizar_incoming2(@sku, @cantidad)
-        end
+    '''4. Si tengo las materias primas para fabricar'''
+    if contador == total_ingredientes
+      cantidad = production_lot(@sku, @cantidad)
+      fabricar = fabricarSinPago(@@api_key, @sku, cantidad)
+      respuesta = JSON.parse(fabricar.body)
+      handle_response(respuesta, @sku, cantidad)
     end
   end
-  end
 
 
-  #Funcion para pedir los productos a otro grupo inputs(sku:str, cantidad:int), output cantidad_faltante:int
-
+  '''Funcion para pedir los productos a otro grupo inputs(sku:str, cantidad:int), output cantidad_faltante:int'''
   def pedir_producto(sku, cantidad)
-      #OJO QUE CUANDO PIDO DEBO ACTUALIZAR EL INCOMING
-      puts "ACA TENGO QUE PEDIR PRODUCTO"
       producto = Product.find_by sku: sku
       groups = producto.groups
       # Deberiamos hacer una migracion para corregir esto
@@ -271,14 +205,14 @@ def actualizar_incoming2(sku, cantidad)
       #en forma aleatorea analizamos si es que nos pueden pasar los productos
       for group in groups.split(",").shuffle
         unless group ==1
-          puts "\ngroup #{group} cantidad #{cantidad}"
+          puts "\nGrupo #{group} cantidad #{cantidad}"
           if cantidad > 0
             code, body, headers = order_request(group, sku, @@recepcion, cantidad)
             # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-            puts "group #{group}, code #{code}"
+            puts "Grupo #{group}, code #{code}"
             if code == 200 or code == 201
               body = JSON.parse(body)
-              puts "body #{body}"
+              puts "Body #{body}"
               if body["aceptado"]
                 begin  # "try" block
                   cantidad -= body['cantidad']
@@ -304,4 +238,47 @@ def actualizar_incoming2(sku, cantidad)
       puts "\nFIN DE PEDIR PRODUCTO #{cantidad}\n\n"
       return cantidad
   end
+
+  '''Calcula el lote de produccion'''
+  def production_lot(sku, cantidad)
+    quantity1 = Ingredient.find_by sku_product: sku
+    quantity = (quantity1["quantity"] * cantidad).to_i
+    n = 1
+    while quantity >= quantity1["production_lot"] * n
+      n = n + 1
+    end
+    return quantity1["production_lot"] * n
+  end
+
+  '''Calcula lote de produccion de un ingrediente'''
+  def production_lot_ingredient(quantity1, cantidad)
+    quantity =(quantity1["quantity"] * cantidad).to_i
+    n = 1
+    while quantity >= quantity1["production_lot"] * n
+      n = n + 1
+    end
+    return quantity1["production_lot"] * n
+  end
+
+  '''Maneja las respuestas de fabricarSinPago'''
+  def handle_response(respuesta, ingrediente, quantity)
+    if respuesta["error"]
+      if respuesta["error"] == "No existen suficientes materias primas"
+        fabricar_producto(quantity, ingrediente.to_i)
+      end
+      if respuesta["error"].include? "Lote incorrecto"
+        num = respuesta["error"].scan(/\d/).join('')
+        num  = num.to_i
+        n = 1
+        while quantity > num * n
+          n = n + 1
+        end
+        fabricarSinPago(@@api_key, ingrediente, num*n)
+        actualizar_incoming2(ingrediente, num*n)
+      end
+    else
+      actualizar_incoming2(ingrediente, quantity)
+    end
+  end
+
 end
