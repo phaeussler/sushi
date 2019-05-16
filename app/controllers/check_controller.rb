@@ -13,11 +13,11 @@ class CheckController < ApplicationController
   productos1 = sku_with_stock(@@cocina, @@api_key)[0]
   '''3.2 Encuentro el inventario incoming de los productos. Puede ser que ya
   hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-  de listas donde cada elemento tiene el formato [sku, inventario total].
+  de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
   Inventario total es inventario incoming + inventario en cocina'''
-  productos2 = encontrar_incoming(lista_sku1, productos1)
+  lista_final = encontrar_incoming(lista_sku2, productos1)
   '''4. Analizar el tema de inventario'''
-  # inventario(lista_sku2, productos2)
+  inventario(lista_final)
 
   #4. Pedir al sistema
   #5. Pedir a otros grupos
@@ -71,11 +71,11 @@ class CheckController < ApplicationController
   def encontrar_incoming(productos, inventario)
     nuevos_inventarios = []
     for producto in productos
-      incoming = Product.find_by sku: producto.to_i
+      incoming = Product.find_by sku: producto[0].to_i
       if incoming["incoming"] == nil
          incoming["incoming"] = 0
       end
-      nuevos_inventarios << [producto, incoming["incoming"]]
+      nuevos_inventarios << [producto[0], incoming["incoming"], producto[1].to_i]
     end
     for producto in inventario
       for prod in nuevos_inventarios
@@ -90,41 +90,21 @@ class CheckController < ApplicationController
   #Politica de inventario
   '''Política 1: Cuando tengo menos de la cantiad minima * 1.3 gatillo el pedido/produccion del producto'''
   '''Política 2: Mantendo 2 veces el stock mínimo en inventario'''
-  def inventario(lista_sku, productos)
-    @stock = sku_with_stock("5cbd3ce444f67600049431b8", "RAPrFLl620Cg$o")[0]
-    for sku in lista_sku
-      revisado = false
-      for producto in productos
-        pr = producto["_id"].to_i
-        #Comparo su inventario mínimo con el inventario actual
-        if sku[0] == pr
-          #Comparo el inventario real y el inventario mínimo
-          revisado = true
-          if sku[1] * 1.3 < producto["total"]
-            '''ACÁ HAY QUE PEDIR PRODUCTO'''
-            cantidad = 2*sku[1] - producto["total"]
-            cantidad = pedir_producto(sku[0],cantidad)
-            if cantidad > 0
-              fabricar_producto(cantidad, sku[0])
-            end
-          end
-        #Si el sku no esta en productos, es porque su stock es 0
-        else
-          revisado = true
-          '''ACÁ HAY QUE PEDIR PRODUCTO'''
-          cantidad = pedir_producto(sku[0], sku[1] * 2)
-          if cantidad > 0
-            fabricar_producto(sku[1]*2, sku[0])
-          end
-        end
+  '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
+  def inventario(lista)
+    for producto in lista
+      '''Aplico Politica 1 de Inventario'''
+      if producto[1] < producto[2] * 1.3
+        '''Aplico Política 2 de Inventario'''
+        cantidad = 2*producto[2] - producto[1]
+        puts "Cantidad a pedir"
+        puts cantidad
+        puts "\n"
+        # cantidad = pedir_producto(producto[0],cantidad)
+        # if cantidad > 0
+        #   fabricar_producto(cantidad, producto[0])
+        #end
       end
-      if !revisado
-        cantidad = pedir_producto(sku[0], sku[1] * 2)
-        if cantidad > 0
-          fabricar_producto(sku[1]*2, sku[0])
-        end
-      end
-
     end
   end
 
