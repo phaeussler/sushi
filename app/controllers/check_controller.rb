@@ -19,15 +19,15 @@ class CheckController < ApplicationController
   '''4. Analizar el tema de inventario'''
   inventario(lista_final)
 
-  #4. Pedir al sistema
-  #5. Pedir a otros grupos
 
   puts "INVENTARIO"
   msg = "Inventario Revisado"
   render json: msg, :status => 200
   end
 
-  def actualizar_incoming2(sku, cantidad)
+
+
+def actualizar_incoming2(sku, cantidad)
     incoming = Product.all
     incoming.each do |inc|
       if inc["sku"] == sku
@@ -40,6 +40,7 @@ class CheckController < ApplicationController
       end
     end
   end
+
 
   #Entrega los productos que debemos tener stock mínimo
   def skus_monitorear()
@@ -126,8 +127,7 @@ class CheckController < ApplicationController
         n = n + 1
       end
       can = can1["production_lot"] * n
-
-      fabricarSinPago("RAPrFLl620Cg$o", @sku, can)
+      fabricarSinPago("@@api_key", @sku, can)
 
     #SI requiere de otros productos para ser fabricado
     else
@@ -160,7 +160,7 @@ class CheckController < ApplicationController
       end
       quantity = quantity1["production_lot"] * n
       end
-
+      
       #Veo si lo tengo en stock
       revisado = false
       for producto in @stock
@@ -182,22 +182,21 @@ class CheckController < ApplicationController
             else
               prod = Product.find_by sku: ingrediente
               ingrediente = ingrediente.to_s
-              fabricar = fabricarSinPago("RAPrFLl620Cg$o", ingrediente, quantity)
-
+              fabricar = fabricarSinPago("@@api_key", ingrediente, quantity)
               respuesta = JSON.parse(fabricar.body)
               if respuesta["error"]
                 if respuesta["error"] == "No existen suficientes materias primas"
                   fabricar_producto(quantity, ingrediente.to_i)
                 end
                 if respuesta["error"].include? "Lote incorrecto"
-                   num = respuesta["error"].scan(/\d/).join('')
-                   num  = num.to_i
-                   n = 1
-                   while quantity > num * n
-                     n = n + 1
-                   end
-                   fabricarSinPago("RAPrFLl620Cg$o", ingrediente, num*n)
-                   actualizar_incoming2(ingrediente, num*n)
+                  num = respuesta["error"].scan(/\d/).join('')
+                  num  = num.to_i
+                  n = 1
+                  while quantity > num * n
+                    n = n + 1
+                  end
+                  fabricarSinPago("@@api_key", ingrediente, num*n)
+                  actualizar_incoming2(ingrediente, num*n)
                 end
               else
               actualizar_incoming2(ingrediente, quantity)
@@ -210,22 +209,21 @@ class CheckController < ApplicationController
       if !revisado
         prod = Product.find_by sku: ingrediente
         ingrediente = ingrediente.to_s
-        fabricar = fabricarSinPago("RAPrFLl620Cg$o", ingrediente, quantity)
-
+        fabricar = fabricarSinPago("@@api_key", ingrediente, quantity)
         respuesta = JSON.parse(fabricar.body)
         if respuesta["error"]
           if respuesta["error"] == "No existen suficientes materias primas"
             fabricar_producto(quantity, ingrediente.to_i)
           end
           if respuesta["error"].include? "Lote incorrecto"
-             num = respuesta["error"].scan(/\d/).join('')
-             num  = num.to_i
-             n = 1
-             while quantity > num * n
-               n = n + 1
-             end
-             fabricarSinPago("RAPrFLl620Cg$o", ingrediente, num*n)
-             actualizar_incoming2(ingrediente, num*n)
+            num = respuesta["error"].scan(/\d/).join('')
+            num  = num.to_i
+            n = 1
+            while quantity > num * n
+              n = n + 1
+            end
+            fabricarSinPago("@@api_key", ingrediente, num*n)
+            actualizar_incoming2(ingrediente, num*n)
           end
         end
         actualizar_incoming2(ingrediente, quantity)
@@ -234,21 +232,23 @@ class CheckController < ApplicationController
 
     #Si tengo las materias primas para fabricar
     if contador == ingredientes.length
-        fabricar = fabricarSinPago("RAPrFLl620Cg$o", @sku, @cantidad)
+
+        fabricar = fabricarSinPago("@@api_key", @sku, @cantidad)
+
         respuesta = JSON.parse(fabricar.body)
         if respuesta["error"]
           if respuesta["error"] == "No existen suficientes materias primas"
             fabricar_producto(@cantidad, @sku)
           end
           if respuesta["error"].include? "Lote incorrecto"
-             num = respuesta["error"].scan(/\d/).join('')
-             num  = num.to_i
-             n = 1
-             while @cantidad > num * n
-               n = n + 1
-             end
-             fabricarSinPago("RAPrFLl620Cg$o", @sku, num*n)
-             actualizar_incoming2(@sku, num*n)
+            num = respuesta["error"].scan(/\d/).join('')
+            num  = num.to_i
+            n = 1
+            while @cantidad > num * n
+              n = n + 1
+            end
+            fabricarSinPago("@@api_key", @sku, num*n)
+            actualizar_incoming2(@sku, num*n)
           end
         actualizar_incoming2(@sku, @cantidad)
         end
@@ -256,7 +256,9 @@ class CheckController < ApplicationController
   end
   end
 
-  #Pedir materiales
+
+  #Funcion para pedir los productos a otro grupo inputs(sku:str, cantidad:int), output cantidad_faltante:int
+
   def pedir_producto(sku, cantidad)
       #OJO QUE CUANDO PIDO DEBO ACTUALIZAR EL INCOMING
       puts "ACA TENGO QUE PEDIR PRODUCTO"
@@ -266,23 +268,40 @@ class CheckController < ApplicationController
       if not producto.incoming
         producto.incoming = 0
       end
-      #en forma aleatorea analizamos si nos pueden pasar los productos
+      #en forma aleatorea analizamos si es que nos pueden pasar los productos
       for group in groups.split(",").shuffle
-        if cantidad > 0
-          code, body = order_request(group, sku, "5cbd3ce444f67600049431b3", 1)
-          # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-          if code == 201
-            body = JSON.parse(body)
-            if body["aceptado"]
-              cantidad -= body['cantidad']
-              producto.incoming += body['cantidad']
-              puts "FIN DE PEDIR PRODUCTO"
-              return 0
+        unless group ==1
+          puts "\ngroup #{group} cantidad #{cantidad}"
+          if cantidad > 0
+            code, body, headers = order_request(group, sku, @@recepcion, cantidad)
+            # Si el codigo es positivo restamos la cantidad que nos pueden pasar
+            puts "group #{group}, code #{code}"
+            if code == 200 or code == 201
+              body = JSON.parse(body)
+              puts "body #{body}"
+              if body["aceptado"]
+                begin  # "try" block
+                  cantidad -= body['cantidad']
+                  producto.incoming += body['cantidad']
+                  producto.save
+                  puts "FIN DE PEDIR PRODUCTO 0"
+                  return 0
+                rescue TypeError => e
+                  if body['cantidad']
+                    producto.incoming += cantidad
+                    producto.save
+                  end
+                  puts "FIN DE PEDIR PRODUCTO 0"
+                  return 0
+                end
+              end
             end
           end
         end
         puts "FIN DE PEDIR PRODUCTO"
         return cantidad
       end
-
+      puts "\nFIN DE PEDIR PRODUCTO #{cantidad}\n\n"
+      return cantidad
+  end
 end

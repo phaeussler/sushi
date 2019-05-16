@@ -22,33 +22,56 @@ class ApplicationController < ActionController::Base
 
   def order_request(g_num, sku, storeId, quantity)
         # g_num : int [1..14]
-        uri = "orders?sku=#{sku}&almacenId=#{storeId}&cantidad=#{quantity}"
-        grup_request("post", g_num, uri)
+        # uri = "orders?sku=#{sku}&almacenId=#{storeId}&cantidad=#{quantity}"
+        body_dict = {sku: sku, almacenId: storeId, cantidad:quantity}.to_json
+        request_group("orders", g_num, body_dict)
     end
 
-  def post_request(base_url, uri)
-        # base_url : str ej "http://tuerca#{g_num}.ing.puc.cl/"
-        # uri : str orders or inventories ....
-        begin  # "try" block
-          puts "post_request #{base_url}/#{uri}"
-          response = HTTParty.post("#{base_url}/#{uri}", timeout: 5)
-          return response.code, response.body
-        rescue Errno::ECONNREFUSED, Net::ReadTimeout => e
-          puts "Error del otro grupo #{e}"
-          return 500, {}
-        end
-      end
+  # def post_request(base_url, uri)
+  #       # base_url : str ej "http://tuerca#{g_num}.ing.puc.cl/"
+  #       # uri : str orders or inventories ....
+  #       begin  # "try" block
+  #         puts "post_request #{base_url}/#{uri}"
+  #         response = HTTParty.post("#{base_url}/#{uri}", timeout: 5)
+  #         return response.code, response.body
+  #       rescue Errno::ECONNREFUSED, Net::ReadTimeout => e
+  #         puts "Error del otro grupo #{e}"
+  #         return 500, {}
+  #       end
+  #     end
 
-  def grup_request(method, g_num, uri)
-    # g_num : int [1..14]
-    # uri : str orders or inventories ...
-    # orders?almacenId=1&sku=1211&cantidad=1
-    base_url = "http://tuerca#{g_num}.ing.puc.cl/"
-    if method == "post"
-      post_request(base_url, uri)
-    else
-      get_request(base_url,uri)
-      "error"
+  # def grup_request(method, g_num, uri)
+  #   # g_num : int [1..14]
+  #   # uri : str orders or inventories ...
+  #   # orders?almacenId=1&sku=1211&cantidad=1
+  #   base_url = "http://tuerca#{g_num}.ing.puc.cl"
+  #   if method == "post"
+  #     post_request(base_url, uri)
+  #   else
+  #     get_request(base_url,uri)
+  #     "error"
+  #   end
+  # end
+
+  #funcion que hace funcion post a los grupos
+  def request_group(uri, g_num, body_dict)
+    # hash_str = hash(method_str, api_key)
+    base_url ="http://tuerca#{g_num}.ing.puc.cl/"
+    begin  # "try" block
+      puts "URL: #{base_url}#{uri}"
+      resp = HTTParty.post("#{base_url}#{uri}",
+        headers:{
+          "group": "1",
+          "Content-Type": "application/json"
+        },
+        body: body_dict, timeout: 15)
+      # puts "Solicitud: #{resp.code}"
+      # puts JSON.parse(resp.body)
+      # puts "Header #{resp.headers}"
+      return resp.code, resp.body, resp.headers
+    rescue Errno::ECONNREFUSED, Net::ReadTimeout => e
+      puts "Error del otro grupo #{e}"
+      return 500, {}, {}
     end
   end
 
@@ -76,6 +99,7 @@ class ApplicationController < ActionController::Base
       })
     puts "Solicitud: #{resp.code}"
     puts JSON.parse(resp.body)
+    puts "Header #{resp.headers}"
     return JSON.parse(resp.body), resp.headers
   end
 
@@ -169,6 +193,28 @@ class ApplicationController < ActionController::Base
             move_product_bodega(lista_productos[i]["_id"], almacenId_destino)
       end
     end
+
+  # arroja el inventario de recepcion + el pulmon con nombre incluido
+  def get_inventories
+    recepcion = sku_with_stock(@@recepcion,@@api_key)[0]
+    pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
+    productos = recepcion + pulmon
+    # productos.group_by(&:capitalize).map {|k,v| [k, v.length]}
+    productos = productos.group_by{|x| x["_id"]}
+    respuesta = []
+    for p, dic in productos do
+      total = 0
+      nombre = Product.find_by sku: p
+      for y in dic do
+        total += y["total"]
+      end
+      res = {"sku": p,"nombre": nombre["name"], "total": total}
+      puts "p #{p} -> total #{total}"
+      respuesta << res
+    end
+    respuesta
+  end
+    
 
 
 
