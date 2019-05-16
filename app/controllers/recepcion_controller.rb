@@ -1,17 +1,18 @@
-class RecepcionController < ApplicationController
+class RecepcionController < CheckController
 
   '''En este controlador lo que se hace es revisar el stock en el almacend de
   recepcion y se vacía, ya que el almacen de rececpcion es solo para recivir
   productos y no se debe almacenar en el.'''
   # GET /recepcion
   def index
+    puts "RECEPCION"
     '''Productos con stock en rececpcion'''
     productos = sku_with_stock(@@recepcion, @@api_key)[0]
     puts productos
     '''Por cada producto en la recepcion, moverlo a cocina'''
     if productos.length > 0
-      for p in productos
-       move_sku_almacen(@recepcion, @@cocina, p["_id"])
+      for prod in productos
+       move_sku_almacen(@@recepcion, @@cocina, prod["_id"])
       end
     '''Se creo una columna llamada incoming en el modelo de productos, cada vez
     que se pide un producto, este producto tiene un tiempo de demora en llegar a
