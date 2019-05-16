@@ -5,6 +5,7 @@ class InventoriesController < ApplicationController
   include InventoriesHelper
   require 'httparty'
 
+  # GET /inventories
   def index
     puts "INDEX INVENTORY"
     @inventories = Inventory.all
@@ -13,7 +14,6 @@ class InventoriesController < ApplicationController
      puts "_________________-"
      puts productos
      #request_system("almacenes", "GET", @@api_key)
-
   end
 
 
