@@ -85,6 +85,7 @@ class CheckController < ApplicationController
   '''Política 2: Mantendo 2 veces el stock mínimo en inventario'''
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
   def inventario(lista)
+    @lista_final = lista
     for producto in lista
       '''Aplico Politica 1 de Inventario'''
       if producto[1] < producto[2] * 1.3
@@ -320,6 +321,22 @@ class CheckController < ApplicationController
       end
     else
       actualizar_incoming2(ingrediente, quantity)
+    end
+  end
+
+  '''Esta es la funcion que actualiza el incoming de cada producto'''
+  def actualizar_incoming(productos)
+    for producto in productos
+      incoming = Product.find_by sku: producto["_id"].to_i
+      if incoming["incoming"] == nil
+        incoming["incoming"] = 0
+      end
+      if incoming["incoming"] - producto["total"].to_i < 0
+        incoming["incoming"] = 0
+      else
+        incoming["incoming"] -= producto["total"].to_i
+      end
+      incoming.save
     end
   end
 
