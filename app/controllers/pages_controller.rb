@@ -3,10 +3,8 @@ class PagesController < ApplicationController
     puts "HOME"
     #handler = Handler.new
     #handler.empty_reception
-    # ftp = Ftp.new
-    # ftp.files
-    ftp = FTP.new
-    ftp.files
+    ftp = Ftp.new
+    ftp.execute
   end
-  
+
 end

@@ -62,6 +62,7 @@ class OrdersController < ApplicationController
     end
   end
 
+
   # POST /orders
   # POST /orders.json
   def create
@@ -106,20 +107,10 @@ class OrdersController < ApplicationController
       request_system("almacenes", "GET", @@api_key )
       # ahora despachamos producto a bodega del grupo
       move_q_products_bodega(@@despacho, @almacenId, @sku, @cantidad)
-
-
-
     else
       res = "No es posible la solicitud"
 			render json: res, :status => 404
     end
-
-
-
-
-
-
-
   end
 
   # PATCH/PUT /orders/1

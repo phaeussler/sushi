@@ -11,13 +11,16 @@ class CheckController < ApplicationController
     '''3. Para cada uno de los productos debo encontrar su inventario'''
     '''3.1 Encuentro los productos con stock en cocina'''
     productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    '''3.2 Encuentro el inventario incoming de los productos. Puede ser que ya
+    '''3.2 Productos con inventario en pulmon'''
+    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
     hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
     de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
     Inventario total es inventario incoming + inventario en cocina'''
     @lista_final = encontrar_incoming(lista_sku2, productos1)
+    puts @lista_final
     '''4. Analizar el tema de inventario'''
-    inventario(@lista_final)
+    #inventario(@lista_final)
     puts "INVENTARIO"
     msg = "Inventario Revisado"
     render json: msg, :status => 200
@@ -339,5 +342,45 @@ class CheckController < ApplicationController
       incoming.save
     end
   end
+
+
+
+
+  '''ENTREGA 2'''
+
+  '''Debo mantener un stock de productos en el inventario'''
+  '''Para eso debo monitorear constantemente ingredientes y producir'''
+
+
+  '''Generar el Id de la orden de compra y retorna la OC completa'''
+  def orden_de_compra
+  end
+
+  '''Fabrico producto final'''
+  def fabricar(id, sku, cantidad)
+    '''PREV --> Revisar que tengo lo necesario para producir el producto final'''
+
+    '''1. Llamar al metodo fabricar_producto_final'''
+    '''2. Analizar respuesta de la API'''
+    '''2.1 Si la respuesta es positiva'''
+    '''2.1.1 Agregar el pedido a @@pedidos_pendientes'''
+    '''2.1.2 Notificar al grupo comprador'''
+    '''2.2 Si la respuesta es negativa'''
+    '''2.2.1 Notificar al grupo comprador'''
+
+  end
+
+
+  '''Crear orden de compra y enviarla a otro grupo'''
+  '''Ver diagrama enunciado'''
+  def pedir_productos_finales
+    '''1. Revisar Stock del otro grupo'''
+    '''1.1 Si el stock esta disponible'''
+    '''1.1.1 Crear orden de compra'''
+    '''1.1.2 Enviar orden de compra'''
+    '''1.1.3 Lidear con la respuesta'''
+  end
+
+
 
 end

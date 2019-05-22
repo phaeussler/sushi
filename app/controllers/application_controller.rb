@@ -10,9 +10,9 @@ class ApplicationController < ActionController::Base
   @@despacho = "5cc7b139a823b10004d8e6ce"
   @@pulmon = "5cc7b139a823b10004d8e6d1"
   @@cocina = "5cc7b139a823b10004d8e6d2"
-  @@lista_almacenes = [@@recepcion, @@despacho, @@pulmon, @@cocina]
   @@api_key = "RAPrFLl620Cg$o"
   @@pedidos_pendientes = {}
+  @@demanda = {}
 
 
   @@ftp_user = "grupo1_dev"
@@ -82,7 +82,6 @@ class ApplicationController < ActionController::Base
     return JSON.parse(resp.body), resp.headers
   end
 
-
   def request_product(id, sku, api_key)
     uri = "stock?almacenId=#{id}&sku=#{sku}"
     hash_str = "GET#{id}#{sku}"
@@ -142,7 +141,7 @@ class ApplicationController < ActionController::Base
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-      puts "\nENVIO A FABRICAR\n"
+      puts "\nENVIO A FABRICAR #{sku} #{cantidad}\n"
 		  puts JSON.parse(producido.body)
 
       return producido
@@ -193,6 +192,7 @@ class ApplicationController < ActionController::Base
 
   '''Invetario de cocina + pulmón'''
   def get_inventories
+    puts "CONSULTANDO INVENTARIO COCINA + PULMON\n"
     recepcion = sku_with_stock(@@cocina,@@api_key)[0]
     pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
     productos = recepcion + pulmon
@@ -201,15 +201,12 @@ class ApplicationController < ActionController::Base
     respuesta = []
     for sku, dic in productos do
       total = 0
-      puts "SKU"
-      puts sku
       nombre = Product.find_by sku: sku.to_i
       for y in dic do
         total += y["total"]
       end
       begin
         res = {"sku": sku,"nombre": nombre["name"], "total": total}
-        puts "p #{p} -> total #{total}"
         respuesta << res
       rescue NoMethodError => e
       end
@@ -218,7 +215,15 @@ class ApplicationController < ActionController::Base
   end
 
   '''Implementar el metodo de la API'''
-  def despachar_producto
+  def despachar_producto(oc)
+    puts "Despacahar producto"
+  end
+
+  '''Notificar si se acepta o no una orden'''
+  def notificar_orden(orden, evaluacion)
+    if evaluacion
+    else
+    end
   end
 
 
