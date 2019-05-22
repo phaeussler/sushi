@@ -22,7 +22,6 @@ class OrdersController < ApplicationController
   def edit
   end
 
-
   def evaluar_pedido(cantidad, sku)
     stock = sku_with_stock(@@cocina, @@api_key)[0]
     stock = stock[0]["total"].to_i
@@ -42,7 +41,6 @@ class OrdersController < ApplicationController
       return true
     end
   end
-
 
  #Retorna true si el sku es producido por nosotros
   def check_sku(sku)

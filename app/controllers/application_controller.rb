@@ -12,6 +12,14 @@ class ApplicationController < ActionController::Base
   @@cocina = "5cc7b139a823b10004d8e6d2"
   @@lista_almacenes = [@@recepcion, @@despacho, @@pulmon, @@cocina]
   @@api_key = "RAPrFLl620Cg$o"
+  @@pedidos_pendientes = {}
+
+
+  @@ftp_user = "grupo1_dev"
+  @@ftp_password = "9me9BCjgkJ8b5MV"
+  @@ftp_url = "fierro.ing.puc.cl"
+  @@ftp_port = "22"
+
 
   def get_request(base_url, uri)
     # base_url : str ej "http://tuerca#{g_num}.ing.puc.cl/"
@@ -140,6 +148,23 @@ class ApplicationController < ActionController::Base
       return producido
     end
 
+    '''Para producir productos para la venta al publico y luego despacharlos'''
+    def fabricar_producto_final(id, sku, cantidad)
+      hash_str = hash("PUT#{sku}#{cantidad}#{id}", api_key)
+      producido = products_produced = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricar",
+  		  body:{
+  		  	"sku": sku,
+  		  	"cantidad": cantidad
+  		  }.to_json,
+  		  headers:{
+  		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
+  		    "Content-Type": "application/json"
+  		  })
+        puts "\nENVIO A FABRICAR PRODUCTO FINAL\n"
+  		  puts JSON.parse(producido.body)
+        return producido
+    end
+
    #Mueve todos los produsctos de un sku determinado
     def move_sku_almacen(almacenId_actual, almacenId_destino, sku)
           lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
@@ -147,6 +172,7 @@ class ApplicationController < ActionController::Base
             move_product_almacen(j["_id"], almacenId_destino)
       end
     end
+
     #Mueve una cantidad determinada de un sku entre dos almacenes
     def move_q_products_almacen(almacenId_actual, almacenId_destino, sku, cantidad)
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
@@ -190,6 +216,12 @@ class ApplicationController < ActionController::Base
     end
     respuesta
   end
+
+  '''Implementar el metodo de la API'''
+  def despachar_producto
+  end
+
+
 
 
 
