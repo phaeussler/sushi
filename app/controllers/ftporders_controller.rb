@@ -5,10 +5,11 @@ class FtpordersController < ApplicationController
   end
 
   '''Reviso si me llegaron ordenes'''
-  def revisar_ordenes
-    '''1. Conectarse con servidor ftp y revisar las ordenes'''
-    '''2. Borrar la orden del servidor ftp para no volver a analizarla'''
-    '''3. Retornar una lista con las ordenes'''
+  def orders
+    '''1. Me llega un POST con el id de la orden'''
+    '''2. Conectarse con servidor ftp y revisar las ordenes'''
+    '''3. Borrar la orden del servidor ftp para no volver a analizarla'''
+    '''4. Retornar la orden para luego analizarla'''
   end
 
   '''Generar el Id de la orden de compra y retorna la OC completa'''
