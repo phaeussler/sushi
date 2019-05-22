@@ -191,9 +191,9 @@ class ApplicationController < ActionController::Base
       end
     end
 
-  '''Invetario de rececpción + pulmón'''
+  '''Invetario de cocina + pulmón'''
   def get_inventories
-    recepcion = sku_with_stock(@@recepcion,@@api_key)[0]
+    recepcion = sku_with_stock(@@cocina,@@api_key)[0]
     pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
     productos = recepcion + pulmon
     # productos.group_by(&:capitalize).map {|k,v| [k, v.length]}

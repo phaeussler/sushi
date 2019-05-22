@@ -21,6 +21,8 @@ class FtpordersController < ApplicationController
 
   '''Fabrico producto a partir de una orden'''
   def fabricar_producto(id, sku, cantidad)
+    '''PREV --> Revisar que tengo lo necesario para producir el producto final'''
+
     '''1. Llamar al metodo fabricar_producto_final'''
     '''2. Analizar respuesta de la API'''
     '''2.1 Si la respuesta es positiva'''
