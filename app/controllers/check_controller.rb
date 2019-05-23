@@ -22,7 +22,7 @@ class CheckController < ApplicationController
     '''4. Mantener inventario de productos finales y de productos normales'''
     '''4. Analizar el tema de inventario'''
     #inventario_minimo(@lista_productos)
-    inventario_productos_finales(@lista_final)
+    #inventario_productos_finales(@lista_final)
     puts "INVENTARIO"
     msg = "Inventario Revisado"
     render json: msg, :status => 200
@@ -114,7 +114,7 @@ class CheckController < ApplicationController
         # if cantidad > 0
         '''Implementar pedir productos por ftp'''
           fabricar_producto(cantidad, producto[0], lista)
-        end
+        #end
       end
     end
   end
@@ -146,7 +146,7 @@ class CheckController < ApplicationController
       lot = production_lot(@sku, @cantidad)
       fabricar = fabricarSinPago(@@api_key, @sku.to_s, lot)
       respuesta = JSON.parse(fabricar.body)
-      handle_response(respuesta, ingrediente, lot, lista)
+      handle_response(respuesta, @sku, lot, lista)
     '''2.1 Si requiere de ingredientes para ser fabricado'''
     else
       ingredientes = []
@@ -159,74 +159,74 @@ class CheckController < ApplicationController
           numero = numero.to_i + 1
           numero = numero.to_s
       end
-    end
-
-    '''3. Tengo la receta y los ingredientes, busco el inventario de las materias_primas'''
-    contador = 0
-    inventario = get_inventories
-    for ingrediente in ingredientes
-      '''3.1 Cuanto necesito de cada ingrediente'''
-      '''3.1.1 Buscar la cantidad'''
-      quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
-      lot = 0
-      if quantity == nil
+      puts "Ingredientes -> #{total_ingredientes}"
+      puts ingredientes
+      '''3. Tengo la receta y los ingredientes, busco el inventario de las materias_primas'''
+      contador = 0
+      inventario = get_inventories
+      for ingrediente in ingredientes
+        '''3.1 Cuanto necesito de cada ingrediente'''
+        '''3.1.1 Buscar la cantidad'''
+        quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
         lot = 0
-      else
-        lot = production_lot_ingredient(quantity ,@cantidad)
-      end
-      '''3.1.2 Reviso el stock que tengo de ese producto'''
-      '''Si tengo el stock ahora'''
-      revisado = false
-      for producto in inventario
-        if ingrediente == producto[:sku].to_i
-          real = producto[:total].to_i
-          if real > lot
-            revisado = true
-            contador = contador + 1
+        if quantity == nil
+          lot = 0
+        else
+          lot = production_lot_ingredient(quantity ,@cantidad)
+        end
+        '''3.1.2 Reviso el stock que tengo de ese producto'''
+        '''Si tengo el stock ahora'''
+        revisado = false
+        for producto in inventario
+          if ingrediente == producto[:sku].to_i
+            real = producto[:total].to_i
+            if real > lot
+              revisado = true
+              contador = contador + 1
+            end
           end
         end
-      end
-      if !revisado
-        '''Puede ser que el stock venga en camino'''
-        for stock in lista
-          '''Si lo tengo en mi lista de stock'''
-          if ingrediente == stock[0].to_i
-            '''Si el stock viene en camino'''
-            revisado = true
-            '''Si el stock viene en camino y no hay suficiente'''
-            if stock[1] < lot
-              prod = Product.find_by sku: ingrediente
-              ingrediente = ingrediente.to_s
-              lot = pedir_ingrediente(ingrediente, lot)
-              if lot > 0
-                fabricar = fabricarSinPago(@@api_key, ingrediente, lot)
-                respuesta = JSON.parse(fabricar.body)
-                handle_response(respuesta, ingrediente, lot, lista)
+        if !revisado
+          '''Puede ser que el stock venga en camino'''
+          for stock in lista
+            '''Si lo tengo en mi lista de stock'''
+            if ingrediente == stock[0].to_i
+              '''Si el stock viene en camino'''
+              revisado = true
+              '''Si el stock viene en camino y no hay suficiente'''
+              if stock[1] < lot
+                prod = Product.find_by sku: ingrediente
+                lot = pedir_ingrediente(ingrediente, lot)
+                if lot > 0
+                  fabricar = fabricarSinPago(@@api_key, ingrediente.to_s, lot)
+                  respuesta = JSON.parse(fabricar.body)
+                  handle_response(respuesta, ingrediente, lot, lista)
+                end
               end
             end
           end
         end
-      end
-      '''Si el producto no está en stock o hay que pedirlo'''
-      if !revisado
-        prod = Product.find_by sku: ingrediente
-        ingrediente = ingrediente.to_s
-        lot = pedir_ingrediente(ingrediente, lot)
-        if lot > 0
-          fabricar = fabricarSinPago(@@api_key, ingrediente, lot)
-          respuesta = JSON.parse(fabricar.body)
-          handle_response(respuesta, ingrediente, lot, lista)
+        '''Si el producto no está en stock o hay que pedirlo'''
+        if !revisado
+          prod = Product.find_by sku: ingrediente
+          lot = pedir_ingrediente(ingrediente, lot)
+          if lot > 0
+            fabricar = fabricarSinPago(@@api_key, ingrediente.to_s, lot)
+            respuesta = JSON.parse(fabricar.body)
+            handle_response(respuesta, ingrediente, lot, lista)
+          end
         end
       end
-    end
 
-    '''4. Si tengo las materias primas para fabricar'''
-    if contador == total_ingredientes
-      fabricar = fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
-      respuesta = JSON.parse(fabricar.body)
-      handle_response(respuesta, @sku, cantidad, )
+      '''4. Si tengo las materias primas para fabricar'''
+      if contador == total_ingredientes
+        fabricar = fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
+        respuesta = JSON.parse(fabricar.body)
+        handle_response(respuesta, @sku, cantidad, )
+      end
     end
   end
+
 
   def fabricar_final(cantidad, sku, lista)
     '''1. Buscamos la receta'''
@@ -450,7 +450,5 @@ class CheckController < ApplicationController
   '''Pedir productos por la casilla ftp a otros grupos'''
   def pedir_productos_ftp
   end
-
-
 
 end

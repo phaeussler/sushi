@@ -42,7 +42,7 @@ class Handler < CheckController
     Inventario total es inventario incoming + inventario en cocina'''
     @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
     '''4. Analizar el tema de inventario'''
-    inventario_productos(@lista_productos)
+    inventario_minimo(@lista_productos)
     self.final_products_inventory(@lista_final)
     self.check_inventory
   end
