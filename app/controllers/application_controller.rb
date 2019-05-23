@@ -217,6 +217,9 @@ class ApplicationController < ActionController::Base
   '''Implementar el metodo de la API'''
   def despachar_producto(oc)
     puts "Despacahar producto"
+    '''Agregar a @@demanda la cantidad del sku que se pidio'''
+    '''@@demanda[oc["sku"] += oc["cantidad"] o algo así'''
+    '''Ojo que al principio @@demanda esta vacio, asique hay que inicializarlo'''
   end
 
   '''Notificar si se acepta o no una orden'''
@@ -224,6 +227,11 @@ class ApplicationController < ActionController::Base
     if evaluacion
     else
     end
+  end
+
+'''Enviar a fabricar productos finales, '''
+  def fabricar_producto_API(sku, cantidad)
+    puts "Metododo API"
   end
 
 
