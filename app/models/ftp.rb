@@ -15,21 +15,6 @@ class Ftp < ApplicationController
   end
 
 
-  '''Parsear la orden'''
-  def parse_orden(orden)
-    orden_final = {}
-    '''1. Obtener Id'''
-    id = orden.split("<id>")
-    orden_final["id"] = id.split("</id>")[0]
-    '''2. Obtener sku '''
-    sku = orden.split("<sku>")[1]
-    orden_final["sku"] = sku.split("</sku>")[0]
-    '''3. Obtener cantidad '''
-    cantidad = orden.split("<qty>")[1]
-    orden_final["cantidad"] = cantidad.split("</qty>")[0].to_i
-    return orden_final
-  end
-
   '''Reviso la orden segun su Id'''
   def ftp_orders(id)
     '''1. Me llega un POST con el id de la orden'''
@@ -93,8 +78,7 @@ class Ftp < ApplicationController
 
   Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
     @ordenes = []
-
-  sftp.dir.foreach("pedidos") do |entry|
+    sftp.dir.foreach("pedidos") do |entry|
     contador +=1
     if contador > 2
       if (Time.at(entry.attributes.mtime) > @@last_time)
