@@ -3,29 +3,26 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    sku = 1016
-    cantidad = 5
-    pedir_producto(sku, cantidad)
-    # '''1. Encontramos los productos que debemos mantener en un mínimo'''
-    # lista_sku1 = skus_monitorear()
-    # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
-    # lista de lista con cada elemento de la forma [sku, inventario minimo]'''
-    # lista_sku2 = encontar_minimos(lista_sku1)
-    # '''3. Para cada uno de los productos debo encontrar su inventario'''
-    # '''3.1 Encuentro los productos con stock en cocina'''
-    # productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    # '''3.2 Productos con inventario en pulmon'''
-    # pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
-    # '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
-    # hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-    # de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
-    # Inventario total es inventario incoming + inventario en cocina'''
-    # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
-    # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
-    # '''4. Mantener inventario de productos finales y de productos normales'''
-    # '''4. Analizar el tema de inventario'''
-    # #inventario_minimo(@lista_productos)
-    # #inventario_productos_finales(@lista_final)
+    '''1. Encontramos los productos que debemos mantener en un mínimo'''
+    lista_sku1 = skus_monitorear()
+    '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
+    lista de lista con cada elemento de la forma [sku, inventario minimo]'''
+    lista_sku2 = encontar_minimos(lista_sku1)
+    '''3. Para cada uno de los productos debo encontrar su inventario'''
+    '''3.1 Encuentro los productos con stock en cocina'''
+    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    '''3.2 Productos con inventario en pulmon'''
+    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
+    hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
+    de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
+    Inventario total es inventario incoming + inventario en cocina'''
+    '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
+    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
+    '''4. Mantener inventario de productos finales y de productos normales'''
+    '''4. Analizar el tema de inventario'''
+    #inventario_minimo(@lista_productos)
+    #inventario_productos_finales(@lista_final)
     puts "INVENTARIO"
     msg = "Inventario Revisado"
     render json: msg, :status => 200
@@ -486,50 +483,6 @@ class CheckController < ApplicationController
       "urlNotificacion": "http://tuerca1.ing.puc.cl/oc/{_id}/notification"
     }
 
-#     Las órdenes de compra se crean con dos identificadores:
-# - Proveedor: Id de grupo que proveerá los productos. Representa al grupo que va dirigida
-# la orden de compra.
-# - Cliente: Id de grupo que solicita los productos. Representa al grupo que está creando una
-# orden.
-
-
-
-
-
-#     Content-type 	
-
-# Siempre debe ser application/json
-# Parámetro
-# Campo 	Tipo 	Descripción
-# cliente 	String 	
-
-# Id de cliente: Grupo que genera la OC
-# proveedor 	String 	
-
-# Id de proveedor: Grupo que recibe la OC. Debe ser distinto a id de Cliente.
-# sku 	Number 	
-
-# Sku a producir, representado por un número.
-# fechaEntrega 	Date 	
-
-# Fecha solicitada para la entrega de los productos, representada en milisegundos a partir de 1970 (Javascript Date).
-# cantidad 	Number 	
-
-# Cantidad de productos del sku solicitado.
-# precioUnitario 	Number 	
-
-# Precio unitario de los productos que se están comprando.
-# canal 	String 	
-
-# Canal donde se está realizando la transacción.
-
-# Valores permitidos: "b2b", "b2c"
-# notas opcional 	String 	
-
-# Notas adicionales a la OC.
-# urlNotificacion opcional 	String 	
-
-# Url de notificacion de aceptación o rechazo de la OC. Si se usa dentro de la url la cadena {_id}, esta será reemplazada por el _id de la orden creada.
   end
 
 end
