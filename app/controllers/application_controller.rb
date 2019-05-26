@@ -10,8 +10,16 @@ class ApplicationController < ActionController::Base
   @@despacho = "5cc7b139a823b10004d8e6ce"
   @@pulmon = "5cc7b139a823b10004d8e6d1"
   @@cocina = "5cc7b139a823b10004d8e6d2"
-  @@lista_almacenes = [@@recepcion, @@despacho, @@pulmon, @@cocina]
   @@api_key = "RAPrFLl620Cg$o"
+  @@pedidos_pendientes = {}
+  @@demanda = {}
+
+
+  @@ftp_user = "grupo1_dev"
+  @@ftp_password = "9me9BCjgkJ8b5MV"
+  @@ftp_url = "fierro.ing.puc.cl"
+  @@ftp_port = "22"
+
 
   def get_request(base_url, uri)
     # base_url : str ej "http://tuerca#{g_num}.ing.puc.cl/"
@@ -74,7 +82,6 @@ class ApplicationController < ActionController::Base
     return JSON.parse(resp.body), resp.headers
   end
 
-
   def request_product(id, sku, api_key)
     uri = "stock?almacenId=#{id}&sku=#{sku}"
     hash_str = "GET#{id}#{sku}"
@@ -125,7 +132,7 @@ class ApplicationController < ActionController::Base
 
   def fabricarSinPago(api_key, sku, cantidad)
     hash_str = hash("PUT#{sku}#{cantidad}", api_key)
-    producido = products_produced = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricarSinPago",
+    producido = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricarSinPago",
 		  body:{
 		  	"sku": sku,
 		  	"cantidad": cantidad
@@ -134,10 +141,27 @@ class ApplicationController < ActionController::Base
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-      puts "\nENVIO A FABRICAR\n"
+      puts "\nENVIO A FABRICAR #{sku} #{cantidad}\n"
 		  puts JSON.parse(producido.body)
 
       return producido
+    end
+
+    '''Para producir productos para la venta al publico y luego despacharlos'''
+    def fabricar_producto_final(id, sku, cantidad)
+      hash_str = hash("PUT#{sku}#{cantidad}#{id}", api_key)
+      producido = products_produced = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricar",
+  		  body:{
+  		  	"sku": sku,
+  		  	"cantidad": cantidad
+  		  }.to_json,
+  		  headers:{
+  		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
+  		    "Content-Type": "application/json"
+  		  })
+        puts "\nENVIO A FABRICAR PRODUCTO FINAL\n"
+  		  puts JSON.parse(producido.body)
+        return producido
     end
 
    #Mueve todos los produsctos de un sku determinado
@@ -147,6 +171,7 @@ class ApplicationController < ActionController::Base
             move_product_almacen(j["_id"], almacenId_destino)
       end
     end
+
     #Mueve una cantidad determinada de un sku entre dos almacenes
     def move_q_products_almacen(almacenId_actual, almacenId_destino, sku, cantidad)
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
@@ -165,9 +190,10 @@ class ApplicationController < ActionController::Base
       end
     end
 
-  '''Invetario de rececpción + pulmón'''
+  '''Invetario de cocina + pulmón'''
   def get_inventories
-    recepcion = sku_with_stock(@@recepcion,@@api_key)[0]
+    puts "CONSULTANDO INVENTARIO COCINA + PULMON\n"
+    recepcion = sku_with_stock(@@cocina,@@api_key)[0]
     pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
     productos = recepcion + pulmon
     # productos.group_by(&:capitalize).map {|k,v| [k, v.length]}
@@ -175,21 +201,41 @@ class ApplicationController < ActionController::Base
     respuesta = []
     for sku, dic in productos do
       total = 0
-      puts "SKU"
-      puts sku
       nombre = Product.find_by sku: sku.to_i
       for y in dic do
         total += y["total"]
       end
       begin
         res = {"sku": sku,"nombre": nombre["name"], "total": total}
-        puts "p #{p} -> total #{total}"
         respuesta << res
       rescue NoMethodError => e
       end
     end
     respuesta
   end
+
+  '''Implementar el metodo de la API'''
+  def despachar_producto(oc)
+    puts "Despacahar producto"
+    '''Ver lo del pulmon'''
+    '''Agregar a @@demanda la cantidad del sku que se pidio'''
+    '''@@demanda[oc["sku"] += oc["cantidad"] o algo así'''
+    '''Ojo que al principio @@demanda esta vacio, asique hay que inicializarlo'''
+  end
+
+  '''Notificar si se acepta o no una orden'''
+  def notificar_orden(orden, evaluacion)
+    if evaluacion
+    else
+    end
+  end
+
+'''Enviar a fabricar productos finales, '''
+  def fabricar_producto_API(sku, cantidad)
+    puts "Metododo API"
+  end
+
+
 
 
 

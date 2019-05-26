@@ -1,8 +1,4 @@
 class Handler < CheckController
-  def handle
-    puts "Hola"
-  end
-  handle_asynchronously :handle, :run_at => Proc.new { 2.minutes.from_now }
 
   '''Debo poner docker-compose run web rake jobs:work para comenzar los jobs'''
   def empty_reception
@@ -26,7 +22,9 @@ class Handler < CheckController
     end
     self.empty_reception
   end
-  handle_asynchronously :empty_reception, :run_at => Proc.new {60.minutes.from_now }
+  handle_asynchronously :empty_reception, :run_at => Proc.new {45.minutes.from_now }
+
+  '''La idea es mantener un inventario minimo de materias primas y tambien de productos finales'''
 
   def check_inventory
     puts "INVENTARIO"
@@ -42,11 +40,29 @@ class Handler < CheckController
     hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
     de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
     Inventario total es inventario incoming + inventario en cocina'''
-    @lista_final = encontrar_incoming(lista_sku2, productos1)
+    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
     '''4. Analizar el tema de inventario'''
-    inventario(@lista_final)
+    inventario_minimo(@lista_productos)
+    self.final_products_inventory(@lista_final)
     self.check_inventory
   end
-  handle_asynchronously :check_inventory, :run_at => Proc.new {60.minutes.from_now }
+  handle_asynchronously :check_inventory, :run_at => Proc.new {30.minutes.from_now }
+
+  def final_products_inventory(lista_productos)
+    inventario_productos_finales(lista_productos)
+    self.final_products_inventory(lista_productos)
+  end
+  handle_asynchronously :final_products_inventory, :run_at => Proc.new {80.minutes.from_now }
+
+
+  '''Esto es en el caso que aceptemos ordenes que dejamos pendientes'''
+  def buscar_ordenes_compra
+    puts "REVISANDO ORDENES"
+
+    '''1. Revisar sku with stock en cocina'''
+    '''2. Revisar sku with stock en pulmos'''
+    '''3. Comparar con @@pedidos_pendientes'''
+    '''4. Si el pedido está, despacharlo con el metodo de la API'''
+  end
 
 end

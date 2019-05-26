@@ -22,7 +22,6 @@ class OrdersController < ApplicationController
   def edit
   end
 
-
   def evaluar_pedido(cantidad, sku)
     stock = sku_with_stock(@@cocina, @@api_key)[0]
     stock = stock[0]["total"].to_i
@@ -43,7 +42,6 @@ class OrdersController < ApplicationController
     end
   end
 
-
  #Retorna true si el sku es producido por nosotros
   def check_sku(sku)
     listas_sku = []
@@ -63,6 +61,7 @@ class OrdersController < ApplicationController
       return false
     end
   end
+
 
   # POST /orders
   # POST /orders.json
@@ -108,20 +107,10 @@ class OrdersController < ApplicationController
       request_system("almacenes", "GET", @@api_key )
       # ahora despachamos producto a bodega del grupo
       move_q_products_bodega(@@despacho, @almacenId, @sku, @cantidad)
-
-
-
     else
       res = "No es posible la solicitud"
 			render json: res, :status => 404
     end
-
-
-
-
-
-
-
   end
 
   # PATCH/PUT /orders/1
