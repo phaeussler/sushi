@@ -20,16 +20,18 @@ for i in 2..79
     sku: productos.cell('A', i),
     name: productos.cell('B', i),
     description: productos.cell('C', i),
-    sell_price: productos.cell('D', i),
-    ingredients: productos.cell('E', i),
-    used_by: productos.cell('F', i),
-    expected_duration_hours: productos.cell('G', i),
-    equivalence_units_hold: productos.cell('H', i),
-    unit: productos.cell('I', i),
-    production_lot: productos.cell('J', i),
-    expected_time_production_mins: productos.cell('K', i),
-    groups: productos.cell('L', i),
-    total_productor_groups: productos.cell('M', i)
+    cost_lot_production: productos.cell('D', i), # nuevo
+    sell_price: productos.cell('E', i),
+    ingredients: productos.cell('F', i),
+    used_by: productos.cell('G', i),
+    expected_duration_hours: productos.cell('H', i),
+    equivalence_units_hold: productos.cell('I', i),
+    unit: productos.cell('J', i),
+    production_lot: productos.cell('K', i),
+    expected_time_production_mins: productos.cell('L', i),
+    groups: productos.cell('M', i),
+    total_productor_groups: productos.cell('N', i),
+    production_type: productos.cell('AC', i) # nuevo
   )
 end
 
@@ -70,7 +72,8 @@ for i in  2..79
     ingredient5: recetas.cell('I', i),
     ingredient6: recetas.cell('J', i),
     space_for_production: recetas.cell('K', i),
-    space_for_receive_production: recetas.cell('L', i)
+    space_for_receive_production: recetas.cell('L', i),
+    production_type: recetas.cell('M', i) # nuevo
   )
 end
 
@@ -79,7 +82,7 @@ end
 
 asignacion = xlxs.sheet('Asignación')
 
-for i in  2..71
+for i in  2..113
   Assignation.create(
     sku: asignacion.cell('A', i),
     name: asignacion.cell('B', i),
@@ -98,5 +101,18 @@ for i in 2..24
     name: stock.cell('B', i),
     number_of_products: stock.cell('C', i),
     minimum_stock: stock.cell('D', i),
+    ingredients_number: stock.cell('E', i), # nuevo
+    ingredient_name: stock.cell('F', i), # nuevo
+    sku_ingredient: stock.cell('G', i) # nuevo
+  )
+end
+
+group_ids = xlxs.sheet('Ids de grupos')
+
+for i in 2..15
+  GroupIdOc.create(
+    group: group_ids.cell('A', i),
+    id_development: group_ids.cell('B', i),
+    id_production: group_ids.cell('C', i)
   )
 end

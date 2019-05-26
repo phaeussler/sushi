@@ -13,6 +13,7 @@ class CreateReceipts < ActiveRecord::Migration[5.1]
       t.string :ingredient6
       t.integer :space_for_production
       t.integer :space_for_receive_production
+      t.string :production_type
 
       t.timestamps
     end
