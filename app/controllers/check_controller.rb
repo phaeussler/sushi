@@ -3,26 +3,29 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    '''1. Encontramos los productos que debemos mantener en un mínimo'''
-    lista_sku1 = skus_monitorear()
-    '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
-    lista de lista con cada elemento de la forma [sku, inventario minimo]'''
-    lista_sku2 = encontar_minimos(lista_sku1)
-    '''3. Para cada uno de los productos debo encontrar su inventario'''
-    '''3.1 Encuentro los productos con stock en cocina'''
-    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    '''3.2 Productos con inventario en pulmon'''
-    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
-    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
-    hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-    de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
-    Inventario total es inventario incoming + inventario en cocina'''
-    '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
-    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
-    '''4. Mantener inventario de productos finales y de productos normales'''
-    '''4. Analizar el tema de inventario'''
-    #inventario_minimo(@lista_productos)
-    #inventario_productos_finales(@lista_final)
+    sku = 1016
+    cantidad = 5
+    pedir_producto(sku, cantidad)
+    # '''1. Encontramos los productos que debemos mantener en un mínimo'''
+    # lista_sku1 = skus_monitorear()
+    # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
+    # lista de lista con cada elemento de la forma [sku, inventario minimo]'''
+    # lista_sku2 = encontar_minimos(lista_sku1)
+    # '''3. Para cada uno de los productos debo encontrar su inventario'''
+    # '''3.1 Encuentro los productos con stock en cocina'''
+    # productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    # '''3.2 Productos con inventario en pulmon'''
+    # pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    # '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
+    # hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
+    # de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
+    # Inventario total es inventario incoming + inventario en cocina'''
+    # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
+    # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
+    # '''4. Mantener inventario de productos finales y de productos normales'''
+    # '''4. Analizar el tema de inventario'''
+    # #inventario_minimo(@lista_productos)
+    # #inventario_productos_finales(@lista_final)
     puts "INVENTARIO"
     msg = "Inventario Revisado"
     render json: msg, :status => 200
@@ -99,7 +102,7 @@ class CheckController < ApplicationController
 
   '''OJO QUE ACA PODEMOS INTEGRAR PRODUCTOS CRITICOS COMO EL ARROZ Y OTROS'''
   #Politica de inventario
-  '''Política 1: Cuando tengo menos de la cantiad minima * 1.3 gatillo el pedido/produccion del producto'''
+  '''Política 1: Cuando tengo menos de la cantidad minima * 1.3 gatillo el pedido/produccion del producto'''
   '''Política 2: Mantendo 2 veces el stock mínimo en inventario'''
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
   def inventario_minimo(lista)
@@ -294,6 +297,23 @@ class CheckController < ApplicationController
     end
   end
 
+  '''funcion para checkear si otro grupo tiene stock de un producto'''
+  def check_other_inventories(group, sku)
+    puts "check_other_inventories grupo #{group}"
+    code, body = get_request(group,"inventories")
+    if code == 200
+      for dic in JSON.parse(body)
+        if dic["sku"].to_i == sku
+          puts "check_other_inventories encontado"
+          return true
+        end
+      end
+    end
+    puts "check_other_inventories NO encontado"
+    return false
+  end
+
+
   '''Funcion para pedir los productos a otro grupo inputs(sku:str, cantidad:int), output cantidad_faltante:int'''
   def pedir_producto(sku, cantidad)
       producto = Product.find_by sku: sku
@@ -302,38 +322,41 @@ class CheckController < ApplicationController
       if not producto.incoming
         producto.incoming = 0
       end
-      #en forma aleatorea analizamos si es que nos pueden pasar los productos
+      # en forma aleatorea analizamos si es que nos pueden pasar los productos
+      puts "groups #{groups}"
       for group in groups.split(",").shuffle
-        unless group ==1
-          puts "\nGrupo #{group} cantidad #{cantidad}"
-          if cantidad > 0
-            code, body, headers = order_request(group, sku, @@recepcion, cantidad)
-            # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-            puts "Grupo #{group}, code #{code}"
-            if code == 200 or code == 201
-              body = JSON.parse(body)
-              puts "Body #{body}"
-              if body["aceptado"]
-                begin  # "try" block
-                  cantidad -= body['cantidad']
-                  producto.incoming += body['cantidad']
-                  producto.save
-                  puts "FIN DE PEDIR PRODUCTO 0"
-                  return 0
-                rescue TypeError => e
-                  if body['cantidad']
-                    producto.incoming += cantidad
+        puts group
+        unless group =="1"
+          if check_other_inventories(group, sku)
+            puts "\nGrupo #{group} cantidad #{cantidad}"
+            if cantidad > 0
+              code, body, headers = order_request(group, sku, @@recepcion, cantidad)
+              # Si el codigo es positivo restamos la cantidad que nos pueden pasar
+              puts "Grupo #{group}, code #{code}"
+              if code == 200 or code == 201
+                body = JSON.parse(body)
+                puts "Body #{body}"
+                if body["aceptado"]
+                  begin  # "try" block
+                    cantidad -= body['cantidad']
+                    producto.incoming += body['cantidad']
                     producto.save
+                    puts "FIN DE PEDIR PRODUCTO 0"
+                    return 0
+                  rescue TypeError => e
+                    puts e
+                    if body['cantidad']
+                      producto.incoming += cantidad
+                      producto.save
+                    end
+                    puts "FIN DE PEDIR PRODUCTO 0"
+                    return 0
                   end
-                  puts "FIN DE PEDIR PRODUCTO 0"
-                  return 0
                 end
               end
             end
           end
         end
-        puts "FIN DE PEDIR PRODUCTO"
-        return cantidad
       end
       puts "\nFIN DE PEDIR PRODUCTO #{cantidad}\n\n"
       return cantidad
@@ -448,7 +471,65 @@ class CheckController < ApplicationController
   end
 
   '''Pedir productos por la casilla ftp a otros grupos'''
-  def pedir_productos_ftp
+  def pedir_productos_ftp(sku, cantidad)
+    puts "PIDIENDO PRODUCTO FTP A OTRO GRUPO"
+
+    orden = {
+      "cliente": @@recepcion,
+      "proveedor": "4af9f23d8ead0e1d320000b2",
+      "sku": sku,
+      "fechaEntrega": 1493214596281,
+      "cantidad": cantidad,
+      "precioUnitario": "100",
+      "canal": "b2b",
+      "notas": "",
+      "urlNotificacion": "http://tuerca1.ing.puc.cl/oc/{_id}/notification"
+    }
+
+#     Las órdenes de compra se crean con dos identificadores:
+# - Proveedor: Id de grupo que proveerá los productos. Representa al grupo que va dirigida
+# la orden de compra.
+# - Cliente: Id de grupo que solicita los productos. Representa al grupo que está creando una
+# orden.
+
+
+
+
+
+#     Content-type 	
+
+# Siempre debe ser application/json
+# Parámetro
+# Campo 	Tipo 	Descripción
+# cliente 	String 	
+
+# Id de cliente: Grupo que genera la OC
+# proveedor 	String 	
+
+# Id de proveedor: Grupo que recibe la OC. Debe ser distinto a id de Cliente.
+# sku 	Number 	
+
+# Sku a producir, representado por un número.
+# fechaEntrega 	Date 	
+
+# Fecha solicitada para la entrega de los productos, representada en milisegundos a partir de 1970 (Javascript Date).
+# cantidad 	Number 	
+
+# Cantidad de productos del sku solicitado.
+# precioUnitario 	Number 	
+
+# Precio unitario de los productos que se están comprando.
+# canal 	String 	
+
+# Canal donde se está realizando la transacción.
+
+# Valores permitidos: "b2b", "b2c"
+# notas opcional 	String 	
+
+# Notas adicionales a la OC.
+# urlNotificacion opcional 	String 	
+
+# Url de notificacion de aceptación o rechazo de la OC. Si se usa dentro de la url la cadena {_id}, esta será reemplazada por el _id de la orden creada.
   end
 
 end
