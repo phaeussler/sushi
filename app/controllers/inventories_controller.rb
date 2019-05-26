@@ -10,10 +10,20 @@ class InventoriesController < ApplicationController
     puts "INDEX INVENTORY"
     @inventories = Inventory.all
      productos = get_inventories
-     render json: productos, :status => 200
-     puts "_________________-"
-     puts productos
-     #request_system("almacenes", "GET", @@api_key)
+     dispuestos = dispuesto_a_vender(productos)
+     render json: dispuestos, :status => 200
+  end
+
+  def dispuesto_a_vender(inventario)
+    puts "FUNCION"
+    for key in inventario
+      min = MinimumStock.find_by sku: key[:sku].to_i
+      if min == nil
+        min = 0
+      end
+      key[:total] -= min
+    end
+    return inventario
   end
 
 
@@ -81,4 +91,6 @@ class InventoriesController < ApplicationController
     def inventory_params
       params.fetch(:inventory, {})
     end
+
+
 end
