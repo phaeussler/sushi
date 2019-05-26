@@ -4,6 +4,7 @@ class CreateProducts < ActiveRecord::Migration[5.1]
       t.integer :sku
       t.string :name
       t.string :description
+      t.string :cost_lot_production
       t.integer :sell_price
       t.integer :ingredients
       t.integer :used_by
@@ -14,6 +15,7 @@ class CreateProducts < ActiveRecord::Migration[5.1]
       t.float :expected_time_production_mins
       t.string :groups
       t.integer :total_productor_groups
+      t.string :production_type
 
       t.timestamps
     end

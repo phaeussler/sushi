@@ -10,7 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190523112650) do
+
+ActiveRecord::Schema.define(version: 20190526222642) do
+
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -36,6 +38,14 @@ ActiveRecord::Schema.define(version: 20190523112650) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.index ["priority", "run_at"], name: "delayed_jobs_priority"
+  end
+
+  create_table "group_id_ocs", force: :cascade do |t|
+    t.integer "group"
+    t.string "id_development"
+    t.string "id_production"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "ingredients", force: :cascade do |t|
@@ -72,6 +82,9 @@ ActiveRecord::Schema.define(version: 20190523112650) do
     t.string "name"
     t.integer "number_of_products"
     t.integer "minimum_stock"
+    t.integer "ingredients_number"
+    t.string "ingredient_name"
+    t.integer "sku_ingredient"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -91,6 +104,7 @@ ActiveRecord::Schema.define(version: 20190523112650) do
     t.integer "sku"
     t.string "name"
     t.string "description"
+    t.string "cost_lot_production"
     t.integer "sell_price"
     t.integer "ingredients"
     t.integer "used_by"
@@ -101,6 +115,7 @@ ActiveRecord::Schema.define(version: 20190523112650) do
     t.float "expected_time_production_mins"
     t.string "groups"
     t.integer "total_productor_groups"
+    t.string "production_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "incoming"
@@ -119,6 +134,7 @@ ActiveRecord::Schema.define(version: 20190523112650) do
     t.string "ingredient6"
     t.integer "space_for_production"
     t.integer "space_for_receive_production"
+    t.string "production_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
