@@ -1,5 +1,5 @@
 class CheckController < ApplicationController
-  require 'securerandom'
+  
 
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
@@ -464,28 +464,6 @@ class CheckController < ApplicationController
   '''Para eso debo monitorear constantemente ingredientes y producir'''
 
 
-  '''Generar el Id de la orden de compra y retorna la OC completa'''
-  def orden_de_compra_id
-    id = SecureRandom.hex
-    return id
-  end
-
-  '''Pedir productos por la casilla ftp a otros grupos'''
-  def pedir_productos_ftp(sku, cantidad)
-    puts "PIDIENDO PRODUCTO FTP A OTRO GRUPO"
-
-    orden = {
-      "cliente": @@recepcion,
-      "proveedor": "4af9f23d8ead0e1d320000b2",
-      "sku": sku,
-      "fechaEntrega": 1493214596281,
-      "cantidad": cantidad,
-      "precioUnitario": "100",
-      "canal": "b2b",
-      "notas": "",
-      "urlNotificacion": "http://tuerca1.ing.puc.cl/oc/{_id}/notification"
-    }
-
-  end
+  
 
 end
