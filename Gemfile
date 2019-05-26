@@ -32,6 +32,8 @@ gem 'jbuilder', '~> 2.5'
 # gem 'bcrypt', '~> 3.1.7'
 gem 'net-ssh', '~> 5.2.0'
 gem 'roo', '~> 2.8.2'
+gem 'net-sftp', '~> 2.1', '>= 2.1.2'
+gem 'nokogiri', '~> 1.6', '>= 1.6.8'
 
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development

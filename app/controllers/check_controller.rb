@@ -1,3 +1,4 @@
+
 class CheckController < ApplicationController
   require 'securerandom'
 
@@ -267,7 +268,7 @@ class CheckController < ApplicationController
       for producto in inventario
         if ingrediente == producto[:sku].to_i
           real = producto[:total].to_i
-          if real > lot
+          if real >= lot
             revisado = true
             contador = contador + 1
           end
@@ -289,9 +290,28 @@ class CheckController < ApplicationController
       end
     end
     if contador == total_ingredientes
-      fabricar_producto_API(@sku, @cantidad)
+      resp = fabricar_producto_API(@sku, @cantidad)
+      handle_response_final(resp, @sku, @cantidad, lista)
       '''No olvidar hacer handlre response de esto'''
       '''¿Incoming?'''
+    end
+    fabricar_producto_API(@sku, @cantidad)
+  end
+
+  def handle_response_final(respuesta, sku, cantidad, lista)
+    if respuesta["error"]
+      if respuesta["error"] == "No existen suficientes materias primas"
+        fabricar_producto_final(cantidad, sku.to_i, lista)
+      end
+      if respuesta["error"].include? "Lote incorrecto"
+        num = respuesta["error"].scan(/\d/).join('')
+        num  = num.to_i
+        n = 1
+        while quantity > num * n
+          n = n + 1
+        end
+        fabricar_producto_API(sku, num*n)
+      end
     end
   end
 

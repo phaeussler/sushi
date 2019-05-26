@@ -1,4 +1,5 @@
 require 'json'
+require 'net/sftp'
 
 class ApplicationController < ActionController::Base
   # protect_from_forgery with: :exception
@@ -14,13 +15,17 @@ class ApplicationController < ActionController::Base
   @@pedidos_pendientes = {}
   @@demanda = {}
 
+    '''Ultima conexión al servidor SFTP'''
+    @@last_time = Time.now
+    '''Consulta al servidor SFTP las ordenes nuevas y las retorna'''
+
 
   @@ftp_user = "grupo1_dev"
   @@ftp_password = "9me9BCjgkJ8b5MV"
   @@ftp_url = "fierro.ing.puc.cl"
   @@ftp_port = "22"
 
-  
+
   def get_request(g_num, uri)
     begin  # "try" block
       base_url = "http://tuerca#{g_num}.ing.puc.cl"
@@ -219,13 +224,41 @@ class ApplicationController < ActionController::Base
     respuesta
   end
 
-  '''Implementar el metodo de la API'''
-  def despachar_producto(oc)
-    puts "Despacahar producto"
-    '''Ver lo del pulmon'''
-    '''Agregar a @@demanda la cantidad del sku que se pidio'''
-    '''@@demanda[oc["sku"] += oc["cantidad"] o algo así'''
-    '''Ojo que al principio @@demanda esta vacio, asique hay que inicializarlo'''
+  def preparar_despacho(orden)
+      restante = orden["qty"].to_i
+      cant_pulmon = sku_with_stock(@@pulmon)
+      suma = 0
+      for i in cant_pulmon
+        if i["_id"].to_s == orden["sku"].to_s
+          suma = i["total"].to_i
+        end
+      end
+      if suma >= orden["qty"].to_i
+        move_q_products_almacen(@@pulmon,@@despacho, orden["sku"], orden["qty"].to_i)
+      else
+        move_q_products_almacen(@@pulmon,@@despacho,orden["sku"],  suma)
+        restante -= suma
+        move_q_products_almacen(@@cocina,@@despacho, orden["sku"],  restante)
+      end
+  end
+
+  def despachar_producto(orden)
+    preparar_despacho(orden)
+    hash_str = hash("DELETE#{product_id}#{dir}#{precio}", @@api_key)
+    request = HTTParty.post("https://integracion-2019-prod.herokuapp.com/bodega/stock",
+      body:{
+        "productoId": product_id,
+        "oc": orden_id,
+        "direccion": dir,
+        "precio" : precio,
+          }.to_json,
+      headers:{
+        "Authorization": "INTEGRACION grupo1:#{hash_str}",
+        "Content-Type": "application/json"
+          })
+      puts "\nDespachar producto\n"
+    puts JSON.parse(request.body)
+    return request
   end
 
   '''Notificar si se acepta o no una orden'''
@@ -240,9 +273,49 @@ class ApplicationController < ActionController::Base
     puts "Metododo API"
   end
 
-
-
-
+  def get_ftp
+  @host = "fierro.ing.puc.cl"
+  @grupo = "grupo1_dev"
+  @password = "9me9BCjgkJ8b5MV"
+  contador = 0
+  Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
+    @ordenes = []
+    sftp.dir.foreach("pedidos") do |entry|
+    contador +=1
+    if contador > 2
+      if (Time.at(entry.attributes.mtime) > @@last_time)
+        orden =  {}
+        data = sftp.download!("pedidos/#{entry.name}")
+        json = Hash.from_xml(data).to_json
+        json = JSON.parse json
+        ''' agregor cada orden como un diccionarioa una lista'''
+        orden["id"] = json["order"]["id"]
+        orden["sku"] = json["order"]["sku"]
+        orden["qty"] = json["order"]["qty"]
+        if json["order"]["canal"]
+          orden["canal"] = json["order"]["canal"]
+          if orden["canal"] == "b2b"
+            if json["order"]["urlNotification"]
+              orden["url"] = json["order"]["urlNotification"]
+            end
+            if json["order"]["cliente"]
+              orden["cliente"] = json["order"]["cliente"]
+            end
+            if json["order"]["precioUnitario"]
+              orden["precioUnitario"] = json["order"]["precioUnitario"]
+            end
+          end
+        end
+        @ordenes << orden
+      end
+      contador += 1
+    end
+    end
+    # ejemplo de retorno [{"id"=>"5ce54a70ff732f000426a96f", "sku"=>"10005", "qty"=>"3"}]
+    @@last_time = Time.now
+    return @ordenes
+    end
+  end
 
 
 
