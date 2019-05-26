@@ -5,11 +5,15 @@ class InventoriesController < ApplicationController
   include InventoriesHelper
   require 'httparty'
 
+
+
   # GET /inventories
   def index
+    ftp_instance = Ftp.new
     puts "INDEX INVENTORY"
     @inventories = Inventory.all
      productos = get_inventories
+
      dispuestos = dispuesto_a_vender(productos)
      render json: dispuestos, :status => 200
   end
@@ -24,6 +28,7 @@ class InventoriesController < ApplicationController
       key[:total] -= min
     end
     return inventario
+
   end
 
 

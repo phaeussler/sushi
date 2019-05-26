@@ -1,6 +1,6 @@
 class Ftp < ApplicationController
-  require 'net/ftp'
-
+  require 'json'
+  require 'net/sftp'
 
   def execute
     '''Esto es temporal, deberia ser la orden que me llega'''
@@ -14,20 +14,6 @@ class Ftp < ApplicationController
     end
   end
 
-  '''Parsear la orden'''
-  def parse_orden(orden)
-    orden_final = {}
-    '''1. Obtener Id'''
-    id = orden.split("<id>")
-    orden_final["id"] = id.split("</id>")[0]
-    '''2. Obtener sku '''
-    sku = orden.split("<sku>")[1]
-    orden_final["sku"] = sku.split("</sku>")[0]
-    '''3. Obtener cantidad '''
-    cantidad = orden.split("<qty>")[1]
-    orden_final["cantidad"] = cantidad.split("</qty>")[0].to_i
-    return orden_final
-  end
 
   '''Reviso la orden segun su Id'''
   def ftp_orders(id)
@@ -66,6 +52,53 @@ class Ftp < ApplicationController
       return true
     else
       return false
+    end
+  end
+
+
+  '''Ultima conexión al servidor SFTP'''
+  @@last_time = Time.now
+  '''Consulta al servidor SFTP las ordenes nuevas y las retorna'''
+
+
+
+  def get_ftp()
+    ''' !!!!CAMBIAR A PRODUCCIÓN
+  Ambiente: PRODUCCIÓN
+  Usuario: grupo1
+  Clave: p7T4uNY3yqdDB8sS3
+  URL Servidor: fierro.ing.puc.cl
+  Puerto: 22 '''
+  @host = "fierro.ing.puc.cl"
+  @grupo = "grupo1_dev"
+  @password = "9me9BCjgkJ8b5MV"
+  contador = 0
+
+  puts @@last_time
+
+  Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
+    @ordenes = []
+    sftp.dir.foreach("pedidos") do |entry|
+    contador +=1
+    if contador > 2
+      if (Time.at(entry.attributes.mtime) > @@last_time)
+        orden =  {}
+        data = sftp.download!("pedidos/#{entry.name}")
+        json = Hash.from_xml(data).to_json
+        json = JSON.parse json
+        ''' agregor cada orden como un diccionarioa una lista'''
+        orden["id"] = json["order"]["id"]
+        orden["sku"] = json["order"]["sku"]
+        orden["qty"] = json["order"]["qty"]
+        @ordenes << orden
+      end
+      contador += 1
+    end
+    end
+    # ejemplo de retorno [{"id"=>"5ce54a70ff732f000426a96f", "sku"=>"10005", "qty"=>"3"}]
+    puts @ordenes
+    @@last_time = Time.now
+    return @ordenes
     end
   end
 

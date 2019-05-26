@@ -1,3 +1,4 @@
+
 class CheckController < ApplicationController
   require 'securerandom'
 
@@ -489,3 +490,4 @@ class CheckController < ApplicationController
   end
 
 end
+

@@ -1,3 +1,4 @@
+
 class Handler < CheckController
 
   '''Debo poner docker-compose run web rake jobs:work para comenzar los jobs'''
@@ -66,3 +67,4 @@ class Handler < CheckController
   end
 
 end
+

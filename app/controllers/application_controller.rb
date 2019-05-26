@@ -1,4 +1,5 @@
 require 'json'
+require 'net/sftp'
 
 class ApplicationController < ActionController::Base
   # protect_from_forgery with: :exception
@@ -239,10 +240,6 @@ class ApplicationController < ActionController::Base
   def fabricar_producto_API(sku, cantidad)
     puts "Metododo API"
   end
-
-
-
-
 
 
 
