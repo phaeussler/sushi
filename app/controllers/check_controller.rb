@@ -1,4 +1,5 @@
 class CheckController < ApplicationController
+  require 'securerandom'
 
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
@@ -444,7 +445,9 @@ class CheckController < ApplicationController
 
 
   '''Generar el Id de la orden de compra y retorna la OC completa'''
-  def orden_de_compra
+  def orden_de_compra_id
+    id = SecureRandom.hex
+    return id
   end
 
   '''Pedir productos por la casilla ftp a otros grupos'''
