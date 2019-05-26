@@ -157,23 +157,6 @@ class ApplicationController < ActionController::Base
       return producido
     end
 
-    '''Para producir productos para la venta al publico y luego despacharlos'''
-    def fabricar_producto_final(id, sku, cantidad)
-      hash_str = hash("PUT#{sku}#{cantidad}#{id}", api_key)
-      producido = products_produced = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricar",
-  		  body:{
-  		  	"sku": sku,
-  		  	"cantidad": cantidad
-  		  }.to_json,
-  		  headers:{
-  		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
-  		    "Content-Type": "application/json"
-  		  })
-        puts "\nENVIO A FABRICAR PRODUCTO FINAL\n"
-  		  puts JSON.parse(producido.body)
-        return producido
-    end
-
    #Mueve todos los produsctos de un sku determinado
     def move_sku_almacen(almacenId_actual, almacenId_destino, sku)
           lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
@@ -245,13 +228,13 @@ class ApplicationController < ActionController::Base
   def despachar_producto(orden)
     preparar_despacho(orden)
     hash_str = hash("DELETE#{product_id}#{dir}#{precio}", @@api_key)
-    request = HTTParty.post("https://integracion-2019-prod.herokuapp.com/bodega/stock",
+    request = HTTParty.delete("https://integracion-2019-prod.herokuapp.com/bodega/stock",
       body:{
-        "productoId": product_id,
-        "oc": orden_id,
-        "direccion": dir,
-        "precio" : precio,
-          }.to_json,
+        "productoId": orden["sku"],
+        "oc": orden["id"],
+        "direccion": orden["dir"],
+        "precio": orden["precioUnitario"] }.to_json,
+
       headers:{
         "Authorization": "INTEGRACION grupo1:#{hash_str}",
         "Content-Type": "application/json"
@@ -269,8 +252,20 @@ class ApplicationController < ActionController::Base
   end
 
 '''Enviar a fabricar productos finales, '''
-  def fabricar_producto_API(sku, cantidad)
-    puts "Metododo API"
+  def fabricar_producto_API(id, sku, cantidad)
+    hash_str = hash("PUT#{sku}#{cantidad}#{id}", api_key)
+    producido = products_produced = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricar",
+      body:{
+        "sku": sku,
+        "cantidad": cantidad
+      }.to_json,
+      headers:{
+        "Authorization": "INTEGRACION grupo1:#{hash_str}",
+        "Content-Type": "application/json"
+      })
+      puts "\nENVIO A FABRICAR PRODUCTO FINAL\n"
+      puts JSON.parse(producido.body)
+    return producido
   end
 
   def get_ftp
