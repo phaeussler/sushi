@@ -1,4 +1,6 @@
+
 class CheckController < ApplicationController
+  require 'securerandom'
 
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
@@ -99,7 +101,7 @@ class CheckController < ApplicationController
 
   '''OJO QUE ACA PODEMOS INTEGRAR PRODUCTOS CRITICOS COMO EL ARROZ Y OTROS'''
   #Politica de inventario
-  '''Política 1: Cuando tengo menos de la cantiad minima * 1.3 gatillo el pedido/produccion del producto'''
+  '''Política 1: Cuando tengo menos de la cantidad minima * 1.3 gatillo el pedido/produccion del producto'''
   '''Política 2: Mantendo 2 veces el stock mínimo en inventario'''
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
   def inventario_minimo(lista)
@@ -266,7 +268,7 @@ class CheckController < ApplicationController
       for producto in inventario
         if ingrediente == producto[:sku].to_i
           real = producto[:total].to_i
-          if real > lot
+          if real >= lot
             revisado = true
             contador = contador + 1
           end
@@ -288,11 +290,47 @@ class CheckController < ApplicationController
       end
     end
     if contador == total_ingredientes
-      fabricar_producto_API(@sku, @cantidad)
+      resp = fabricar_producto_API(@sku, @cantidad)
+      handle_response_final(resp, @sku, @cantidad, lista)
       '''No olvidar hacer handlre response de esto'''
       '''¿Incoming?'''
     end
+    fabricar_producto_API(@sku, @cantidad)
   end
+
+  def handle_response_final(respuesta, sku, cantidad, lista)
+    if respuesta["error"]
+      if respuesta["error"] == "No existen suficientes materias primas"
+        fabricar_producto_final(cantidad, sku.to_i, lista)
+      end
+      if respuesta["error"].include? "Lote incorrecto"
+        num = respuesta["error"].scan(/\d/).join('')
+        num  = num.to_i
+        n = 1
+        while quantity > num * n
+          n = n + 1
+        end
+        fabricar_producto_API(sku, num*n)
+      end
+    end
+  end
+
+  '''funcion para checkear si otro grupo tiene stock de un producto'''
+  def check_other_inventories(group, sku)
+    puts "check_other_inventories grupo #{group}"
+    code, body = get_request(group,"inventories")
+    if code == 200
+      for dic in JSON.parse(body)
+        if dic["sku"].to_i == sku
+          puts "check_other_inventories encontado"
+          return true
+        end
+      end
+    end
+    puts "check_other_inventories NO encontado"
+    return false
+  end
+
 
   '''Funcion para pedir los productos a otro grupo inputs(sku:str, cantidad:int), output cantidad_faltante:int'''
   def pedir_producto(sku, cantidad)
@@ -302,38 +340,41 @@ class CheckController < ApplicationController
       if not producto.incoming
         producto.incoming = 0
       end
-      #en forma aleatorea analizamos si es que nos pueden pasar los productos
+      # en forma aleatorea analizamos si es que nos pueden pasar los productos
+      puts "groups #{groups}"
       for group in groups.split(",").shuffle
-        unless group ==1
-          puts "\nGrupo #{group} cantidad #{cantidad}"
-          if cantidad > 0
-            code, body, headers = order_request(group, sku, @@recepcion, cantidad)
-            # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-            puts "Grupo #{group}, code #{code}"
-            if code == 200 or code == 201
-              body = JSON.parse(body)
-              puts "Body #{body}"
-              if body["aceptado"]
-                begin  # "try" block
-                  cantidad -= body['cantidad']
-                  producto.incoming += body['cantidad']
-                  producto.save
-                  puts "FIN DE PEDIR PRODUCTO 0"
-                  return 0
-                rescue TypeError => e
-                  if body['cantidad']
-                    producto.incoming += cantidad
+        puts group
+        unless group =="1"
+          if check_other_inventories(group, sku)
+            puts "\nGrupo #{group} cantidad #{cantidad}"
+            if cantidad > 0
+              code, body, headers = order_request(group, sku, @@recepcion, cantidad)
+              # Si el codigo es positivo restamos la cantidad que nos pueden pasar
+              puts "Grupo #{group}, code #{code}"
+              if code == 200 or code == 201
+                body = JSON.parse(body)
+                puts "Body #{body}"
+                if body["aceptado"]
+                  begin  # "try" block
+                    cantidad -= body['cantidad']
+                    producto.incoming += body['cantidad']
                     producto.save
+                    puts "FIN DE PEDIR PRODUCTO 0"
+                    return 0
+                  rescue TypeError => e
+                    puts e
+                    if body['cantidad']
+                      producto.incoming += cantidad
+                      producto.save
+                    end
+                    puts "FIN DE PEDIR PRODUCTO 0"
+                    return 0
                   end
-                  puts "FIN DE PEDIR PRODUCTO 0"
-                  return 0
                 end
               end
             end
           end
         end
-        puts "FIN DE PEDIR PRODUCTO"
-        return cantidad
       end
       puts "\nFIN DE PEDIR PRODUCTO #{cantidad}\n\n"
       return cantidad
@@ -444,11 +485,27 @@ class CheckController < ApplicationController
 
 
   '''Generar el Id de la orden de compra y retorna la OC completa'''
-  def orden_de_compra
+  def orden_de_compra_id
+    id = SecureRandom.hex
+    return id
   end
 
   '''Pedir productos por la casilla ftp a otros grupos'''
-  def pedir_productos_ftp
+  def pedir_productos_ftp(sku, cantidad)
+    puts "PIDIENDO PRODUCTO FTP A OTRO GRUPO"
+
+    orden = {
+      "cliente": @@recepcion,
+      "proveedor": "4af9f23d8ead0e1d320000b2",
+      "sku": sku,
+      "fechaEntrega": 1493214596281,
+      "cantidad": cantidad,
+      "precioUnitario": "100",
+      "canal": "b2b",
+      "notas": "",
+      "urlNotificacion": "http://tuerca1.ing.puc.cl/oc/{_id}/notification"
+    }
+
   end
 
 end

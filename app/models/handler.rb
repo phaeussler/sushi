@@ -3,9 +3,17 @@ class Handler < CheckController
   '''Debo poner docker-compose run web rake jobs:work para comenzar los jobs'''
   def empty_reception
     puts "RECEPCION"
+    '''Primero los productos importantes'''
+    productos_pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    if productos_pulmon.length > 0
+      for producto in productos_pulmon
+        if producto["_id"].to_i > 10000
+          move_sku_almacen(@@pulmon, @@cocina, producto["_id"])
+        end
+      end
+    end
     '''Productos con stock en rececpcion'''
     productos = sku_with_stock(@@recepcion, @@api_key)[0]
-    puts productos
     '''Por cada producto en la recepcion, moverlo a cocina'''
     if productos.length > 0
       for prod in productos
@@ -56,13 +64,12 @@ class Handler < CheckController
 
 
   '''Esto es en el caso que aceptemos ordenes que dejamos pendientes'''
-  def despachar_orden
+  def ordenes_de_compra_ftp
     puts "REVISANDO ORDENES"
-
-    '''1. Revisar sku with stock en cocina'''
-    '''2. Revisar sku with stock en pulmos'''
-    '''3. Comparar con @@pedidos_pendientes'''
-    '''4. Si el pedido está, despacharlo con el metodo de la API'''
+    ftp = Ftp.new
+    ftp.execute
+    self.ordenes_de_compra_ftp
   end
+  handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {15.minutes.from_now }
 
 end

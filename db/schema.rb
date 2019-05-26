@@ -10,7 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
+
 ActiveRecord::Schema.define(version: 20190526222642) do
+
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -66,6 +68,15 @@ ActiveRecord::Schema.define(version: 20190526222642) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "logs", force: :cascade do |t|
+    t.integer "id_caso"
+    t.string "activity"
+    t.integer "group"
+    t.integer "sku"
+    t.integer "price"
+    t.string "status"
+  end
+
   create_table "minimum_stocks", force: :cascade do |t|
     t.integer "sku"
     t.string "name"
@@ -79,9 +90,6 @@ ActiveRecord::Schema.define(version: 20190526222642) do
   end
 
   create_table "orders", force: :cascade do |t|
-    t.integer "sku"
-    t.integer "almacenId"
-    t.integer "cantidad"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
