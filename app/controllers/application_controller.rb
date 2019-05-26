@@ -15,13 +15,17 @@ class ApplicationController < ActionController::Base
   @@pedidos_pendientes = {}
   @@demanda = {}
 
+    '''Ultima conexión al servidor SFTP'''
+    @@last_time = Time.now
+    '''Consulta al servidor SFTP las ordenes nuevas y las retorna'''
+
 
   @@ftp_user = "grupo1_dev"
   @@ftp_password = "9me9BCjgkJ8b5MV"
   @@ftp_url = "fierro.ing.puc.cl"
   @@ftp_port = "22"
 
-  
+
   def get_request(g_num, uri)
     begin  # "try" block
       base_url = "http://tuerca#{g_num}.ing.puc.cl"
@@ -239,6 +243,50 @@ class ApplicationController < ActionController::Base
 '''Enviar a fabricar productos finales, '''
   def fabricar_producto_API(sku, cantidad)
     puts "Metododo API"
+  end
+
+  def get_ftp
+  @host = "fierro.ing.puc.cl"
+  @grupo = "grupo1_dev"
+  @password = "9me9BCjgkJ8b5MV"
+  contador = 0
+  Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
+    @ordenes = []
+    sftp.dir.foreach("pedidos") do |entry|
+    contador +=1
+    if contador > 2
+      if (Time.at(entry.attributes.mtime) > @@last_time)
+        orden =  {}
+        data = sftp.download!("pedidos/#{entry.name}")
+        json = Hash.from_xml(data).to_json
+        json = JSON.parse json
+        ''' agregor cada orden como un diccionarioa una lista'''
+        orden["id"] = json["order"]["id"]
+        orden["sku"] = json["order"]["sku"]
+        orden["qty"] = json["order"]["qty"]
+        if json["order"]["canal"]
+          orden["canal"] = json["order"]["canal"]
+          if orden["canal"] == "b2b"
+            if json["order"]["urlNotification"]
+              orden["url"] = json["order"]["urlNotification"]
+            end
+            if json["order"]["cliente"]
+              orden["cliente"] = json["order"]["cliente"]
+            end
+            if json["order"]["precioUnitario"]
+              orden["precioUnitario"] = json["order"]["precioUnitario"]
+            end
+          end
+        end
+        @ordenes << orden
+      end
+      contador += 1
+    end
+    end
+    # ejemplo de retorno [{"id"=>"5ce54a70ff732f000426a96f", "sku"=>"10005", "qty"=>"3"}]
+    @@last_time = Time.now
+    return @ordenes
+    end
   end
 
 
