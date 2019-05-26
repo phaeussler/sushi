@@ -92,6 +92,7 @@ class OrdersController < ApplicationController
     @almacenId = params[:almacenId]
     @cantidad = params[:cantidad]
     @id = params[:_id]
+    puts "LLEGA ORDEN"
     '''1. Con la Id voy a buscar al FTP'''
     ordenes = get_ftp
     evaluacion = false
