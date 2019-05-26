@@ -83,8 +83,6 @@ class OrdersController < ApplicationController
             Por ejemplo, falta un parámetro obligatorio"
             render json: res, :status => 400
 
-
-
     elsif !check_sku(@sku)
       res = "No tenemos ese sku"
   		render json: res, :status => 404
