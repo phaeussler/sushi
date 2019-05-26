@@ -5,14 +5,19 @@ class InventoriesController < ApplicationController
   include InventoriesHelper
   require 'httparty'
 
+
+
   # GET /inventories
   def index
+    ftp_instance = Ftp.new
     puts "INDEX INVENTORY"
     @inventories = Inventory.all
      productos = get_inventories
      render json: productos, :status => 200
      puts "_________________-"
-     puts productos
+     #puts productos
+     ftp_instance.get_ftp
+
      #request_system("almacenes", "GET", @@api_key)
   end
 
