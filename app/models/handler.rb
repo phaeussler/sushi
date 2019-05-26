@@ -1,3 +1,4 @@
+
 class Handler < CheckController
 
   '''Debo poner docker-compose run web rake jobs:work para comenzar los jobs'''
@@ -56,7 +57,7 @@ class Handler < CheckController
 
 
   '''Esto es en el caso que aceptemos ordenes que dejamos pendientes'''
-  def despachar_orden
+  def buscar_ordenes_compra
     puts "REVISANDO ORDENES"
 
     '''1. Revisar sku with stock en cocina'''
@@ -66,3 +67,4 @@ class Handler < CheckController
   end
 
 end
+

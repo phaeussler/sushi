@@ -21,12 +21,17 @@ class ApplicationController < ActionController::Base
   @@ftp_url = "fierro.ing.puc.cl"
   @@ftp_port = "22"
 
-
-  def get_request(base_url, uri)
-    # base_url : str ej "http://tuerca#{g_num}.ing.puc.cl/"
-    # uri : str orders or inventories ....
-    response = HTTParty.get("#{base_url}/#{uri}")
-    return response.code, response.body
+  
+  def get_request(g_num, uri)
+    begin  # "try" block
+      base_url = "http://tuerca#{g_num}.ing.puc.cl"
+      # uri : str orders or inventories ....
+      response = HTTParty.get("#{base_url}/#{uri}")
+      return response.code, response.body
+    rescue Errno::ECONNREFUSED, Net::ReadTimeout => e
+      puts "Error del otro grupo #{e}"
+      return 500, {}, {}
+    end
   end
 
   def order_request(g_num, sku, storeId, quantity)
@@ -218,6 +223,7 @@ class ApplicationController < ActionController::Base
   '''Implementar el metodo de la API'''
   def despachar_producto(oc)
     puts "Despacahar producto"
+    '''Ver lo del pulmon'''
     '''Agregar a @@demanda la cantidad del sku que se pidio'''
     '''@@demanda[oc["sku"] += oc["cantidad"] o algo así'''
     '''Ojo que al principio @@demanda esta vacio, asique hay que inicializarlo'''
