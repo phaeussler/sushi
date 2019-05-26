@@ -224,13 +224,41 @@ class ApplicationController < ActionController::Base
     respuesta
   end
 
-  '''Implementar el metodo de la API'''
-  def despachar_producto(oc)
-    puts "Despacahar producto"
-    '''Ver lo del pulmon'''
-    '''Agregar a @@demanda la cantidad del sku que se pidio'''
-    '''@@demanda[oc["sku"] += oc["cantidad"] o algo así'''
-    '''Ojo que al principio @@demanda esta vacio, asique hay que inicializarlo'''
+  def preparar_despacho(orden)
+      restante = orden["qty"].to_i
+      cant_pulmon = sku_with_stock(@@pulmon)
+      suma = 0
+      for i in cant_pulmon
+        if i["_id"].to_s == orden["sku"].to_s
+          suma = i["total"].to_i
+        end
+      end
+      if suma >= orden["qty"].to_i
+        move_q_products_almacen(@@pulmon,@@despacho, orden["sku"], orden["qty"].to_i)
+      else
+        move_q_products_almacen(@@pulmon,@@despacho,orden["sku"],  suma)
+        restante -= suma
+        move_q_products_almacen(@@cocina,@@despacho, orden["sku"],  restante)
+      end
+  end
+
+  def despachar_producto(orden)
+    preparar_despacho(orden)
+    hash_str = hash("DELETE#{product_id}#{dir}#{precio}", @@api_key)
+    request = HTTParty.post("https://integracion-2019-prod.herokuapp.com/bodega/stock",
+      body:{
+        "productoId": product_id,
+        "oc": orden_id,
+        "direccion": dir,
+        "precio" : precio,
+          }.to_json,
+      headers:{
+        "Authorization": "INTEGRACION grupo1:#{hash_str}",
+        "Content-Type": "application/json"
+          })
+      puts "\nDespachar producto\n"
+    puts JSON.parse(request.body)
+    return request
   end
 
   '''Notificar si se acepta o no una orden'''
