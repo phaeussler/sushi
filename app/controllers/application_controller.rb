@@ -48,6 +48,7 @@ class ApplicationController < ActionController::Base
     #   body_dict = {sku: sku, almacenId: storeId, cantidad:quantity}.to_json
     # else
     body_dict = {sku: sku, almacenId: storeId, cantidad:quantity, oc: id}.to_json
+    puts "order_request #{body_dict}"
     # end
     request_group("orders", g_num, body_dict)
     end
@@ -353,8 +354,7 @@ class ApplicationController < ActionController::Base
         return JSON.parse(response.body)
   end
 
-
-
+  """crea una fecha en el futuro 4 hrs por ahora"""
   def create_deliver_date(sku)
     product = Product.find_by sku: sku
     groups = product.groups
@@ -368,14 +368,11 @@ class ApplicationController < ActionController::Base
     
   end
 
+  """busca el id de oc de cada grupo"""
   def find_oc_group(n_group)
     puts "find_oc_group"
     group = GroupIdOc.find_by group: n_group.to_s
-    if @@server == "dev"
-      return group.id_development
-    else
-      return group.id_production
-    end
+    return @@server == "dev" ? group.id_development : group.id_production
   end
 
   '''Crea una oc al servidor'''
@@ -391,7 +388,7 @@ class ApplicationController < ActionController::Base
       "proveedor": find_oc_group(group),
       # "cliente": @@id_oc_prod,
       # "proveedor": @@id_oc_dev,
-      "sku": sku,
+      "sku": sku, 
       "fechaEntrega": create_deliver_date(sku) ,
       "cantidad": qty.to_s,
       "precioUnitario": price,

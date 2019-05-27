@@ -9,11 +9,10 @@ class CheckController < ApplicationController
     cantidad = 5
     sku = 1001
     # oc_code, oc_body = create_oc(sku, cantidad, 1)
-    # # body = oc.body
-    # puts "body #{body}"
-    # puts "id #{body["_id"]}"
-    # code, body, headers = order_request(3, sku, @@recepcion, cantidad, body["_id"])
-    # puts "#{code} #{body}"
+    # puts "body #{oc_body}"
+    # puts "id #{oc_body["_id"]}"
+    # code, body, headers = order_request(1, sku, @@recepcion, cantidad, oc_body["_id"])
+    # puts "#{code}"
     pedir_otro_grupo_oc(sku, cantidad)
 
 
@@ -384,48 +383,54 @@ class CheckController < ApplicationController
     return cantidad
   end
 
-  '''Le pide un ingrediente a los grupo'''
+  '''Le pide un ingrediente a los grupo y retorna la cantidad faltante'''
   def pedir_otro_grupo_oc(sku, cantidad)
     puts "PIDIENDO INGREDIENTE A OTRO GRUPO"
     producto = Product.find_by sku: sku
     groups = producto.groups
-    # Deberiamos hacer una migracion para corregir esto
+    # Deberiamos hacer una migracion para corregir esto, ya que hay valores nul
     if not producto.incoming
       producto.incoming = 0
     end
-    #en forma aleatorea analizamos si es que nos pueden pasar los productos
+    # en forma aleatorea analizamos si es que nos pueden pasar los productos de los grupos que lo prodcen
     for group in groups.split(",").shuffle
       unless group ==1
         puts "\n\n\ngroup #{group}"
         if cantidad > 0
-          # if producto.sell_price
+          # Primero creamos la orden de compra
           puts "Metodo oc"
           oc_code, oc_body = create_oc(sku, cantidad, group)
           puts "body_oc #{oc_body}"
-          code, body, headers = order_request(group, sku, @@recepcion, cantidad, oc_body["_id"])
-          # else
-          #   puts "Metodo sin oc"
-          #   code, body, headers = order_request(group, sku, @@recepcion, cantidad)
-          # end
-          # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-          puts "CREATE OC -> #{code}"
-          if code == 200 or code == 201
-            puts "#{headers} #{body}"
-            body = JSON.parse(body)
-            if body["aceptado"]
-              begin  # "try" block
-                cantidad -= body['cantidad']
-                producto.incoming += body['cantidad']
-                producto.save
-                puts 'pedir_ingrediente_oc 0'
-                return cantidad
-              rescue TypeError => e
-                if body['cantidad']
-                  producto.incoming += cantidad
+          if oc_code == 200
+            # Si es aceptado hacemos el request al otro grupo con el id de la orden
+            code, body, headers = order_request(group, sku, @@recepcion, cantidad, oc_body["_id"])
+            # else
+            #   puts "Metodo sin oc"
+            #   code, body, headers = order_request(group, sku, @@recepcion, cantidad)
+            # end
+            # Si el codigo es positivo restamos la cantidad que nos pueden pasar
+            puts "ORDER REQUEST -> #{code}"
+            # Reviso si fue aceptado, deberia ser 201 el codigo pero hay grupos que lo tienen implementado con 200
+            if code == 200 or code == 201
+              puts "#{headers} #{body}"
+              body = JSON.parse(body)
+              if body["aceptado"]
+                # Si es aceptado entonces le agrego a incoming
+                begin  # "try" block
+                  cantidad -= body['cantidad']
+                  producto.incoming += body['cantidad']
                   producto.save
                   puts 'pedir_ingrediente_oc 0'
+                  return cantidad
+                rescue TypeError => e
+                  # El grupo 6 retorna cantidad true en vez de numero
+                  if body['cantidad']
+                    producto.incoming += cantidad
+                    producto.save
+                    puts 'pedir_ingrediente_oc 0'
+                    return 0
+                  end
                 end
-                return 0
               end
             end
           end
