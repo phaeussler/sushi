@@ -6,37 +6,29 @@ class Ftp < ApplicationController
     '''Esto es temporal, deberia ser la orden que me llega'''
     ordenes = get_ftp
     evaluacion = false
-    orden = ordenes[0]
     for orden in ordenes
-      if orden["canal"]
-        if orden["canal"] == "b2b"
-          '''NO hago nada'''
-        else
-          evaluacion = evaluar_orden_de_compra(orden)
-        end
+      if orden["canal"] == "b2b"
+        '''NO hago nada'''
       else
         evaluacion = evaluar_orden_de_compra(orden)
-      end
-      if evaluacion
-        puts "DEPACHANDO"
-        despachar_producto(orden)
+        if evaluacion
+          '''Notificar aceptacion'''
+          recepcionar_oc(orden)
+          despachar_productos_sku(orden)
+        else
+          '''Notificar rechazo'''
+          rechazar_oc(orden)
+        end
       end
     end
   end
 
 
-  '''Reviso la orden segun su Id'''
-  def ftp_order(id)
-    '''1. Me llega un POST con el id de la orden'''
-    '''2. Conectarse con servidor ftp y revisar las ordenes y encontrar aquella con el Id'''
-    '''3. Borrar la orden del servidor ftp para no volver a analizarla'''
-    '''4. Retornar la orden para luego analizarla'''
-  end
-
   def evaluar_orden_de_compra(orden)
+    '''Aqui hay que hacer el GET OC'''
     puts "Evaluando Orden"
     sku = orden["sku"]
-    cantidad = orden["qty"].to_i
+    cantidad = orden["cantidad"].to_i
     '''1. Consultar inventario '''
     inventario = get_inventories
     stock = 0
@@ -53,9 +45,5 @@ class Ftp < ApplicationController
       return false
     end
   end
-
-
-
-
 
 end

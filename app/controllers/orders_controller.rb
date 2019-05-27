@@ -64,9 +64,10 @@ class OrdersController < ApplicationController
   end
 
   def evaluar_orden_ftp(orden)
+    '''Aqui hay que hacer el get OC'''
     puts "Evaluando Orden"
     sku = orden["sku"]
-    cantidad = orden["qty"].to_i
+    cantidad = orden["cantidad"].to_i
     '''1. Consultar inventario '''
     inventario = get_inventories
     stock = 0
@@ -94,21 +95,19 @@ class OrdersController < ApplicationController
     @id = params[:_id]
     puts "LLEGA ORDEN"
     '''1. Con la Id voy a buscar al FTP'''
-    ordenes = get_ftp
+    orden = obtener_oc(@id)[0]
     evaluacion = false
-    for orden in ordenes
-      if orden["id"].to_s == @id.to_s
-        orden_ftp = orden
-        '''2. Evaluar Orden'''
-        evaluacion = evaluar_orden_ftp(orden_ftp)
-        notificar_orden(orden_ftp, evaluacion)
-      else
-        notificar_orden(orden_ftp, evaluacion)
-      end
-      if evaluacion
-        despachar_producto(orden)
-      end
+    '''2. Evaluar Orden'''
+    evaluacion = evaluar_orden_ftp(orden)
+    if evaluacion
+      '''Notificar aceptacion'''
+      recepcionar_oc(orden)
+      despachar_productos_sku(orden)
+   else
+      rechazar_oc(orden)
+      '''Notificar rechazo'''
     end
+
 
 
     # if @cantidad.blank? || @grupo.blank? || @sku.blank? || @almacenId.blank?

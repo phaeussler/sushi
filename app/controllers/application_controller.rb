@@ -158,7 +158,8 @@ class ApplicationController < ActionController::Base
     end
 
    #Mueve todos los produsctos de un sku determinado
-    def move_sku_almacen(almacenId_actual, almacenId_destino, sku)
+
+  def move_sku_almacen(almacenId_actual, almacenId_destino, sku)
           lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
           for j in lista_productos do
             move_product_almacen(j["_id"], almacenId_destino)
@@ -166,7 +167,7 @@ class ApplicationController < ActionController::Base
     end
 
     #Mueve una cantidad determinada de un sku entre dos almacenes
-    def move_q_products_almacen(almacenId_actual, almacenId_destino, sku, cantidad)
+  def move_q_products_almacen(almacenId_actual, almacenId_destino, sku, cantidad)
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
@@ -175,7 +176,7 @@ class ApplicationController < ActionController::Base
     end
 
     #Mueva una cantidad determinada a la bodega de de un grupo
-    def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad)
+  def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad)
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
@@ -208,7 +209,7 @@ class ApplicationController < ActionController::Base
   end
 
   def preparar_despacho(orden)
-      restante = orden["qty"].to_i
+      restante = orden["cantidad"].to_i
       cant_pulmon = sku_with_stock(@@pulmon)
       suma = 0
       for i in cant_pulmon
@@ -216,8 +217,8 @@ class ApplicationController < ActionController::Base
           suma = i["total"].to_i
         end
       end
-      if suma >= orden["qty"].to_i
-        move_q_products_almacen(@@pulmon,@@despacho, orden["sku"], orden["qty"].to_i)
+      if suma >= orden["cantidad"].to_i
+        move_q_products_almacen(@@pulmon,@@despacho, orden["sku"], orden["cantidad"].to_i)
       else
         move_q_products_almacen(@@pulmon,@@despacho,orden["sku"],  suma)
         restante -= suma
@@ -225,15 +226,26 @@ class ApplicationController < ActionController::Base
       end
   end
 
-  def despachar_producto(orden)
+  def despachar_productos_sku(orden)
     preparar_despacho(orden)
+    lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
+    cantidad = orden["cantidad"].to_i
+    dir = "hola12345"
+    precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
+    for i in 0..cantidad -1 do
+          despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
+    end
+  end
+
+  '''Arreglar --> FALTA DIR'''
+  def despachar_producto(product_id, orden_id, dir, precio)
     hash_str = hash("DELETE#{product_id}#{dir}#{precio}", @@api_key)
     request = HTTParty.delete("https://integracion-2019-prod.herokuapp.com/bodega/stock",
       body:{
-        "productoId": orden["sku"],
-        "oc": orden["id"],
-        "direccion": orden["dir"],
-        "precio": orden["precioUnitario"] }.to_json,
+        "productoId": product_id,
+        "oc": orden_id,
+        "direccion": dir,
+        "precio": precio }.to_json,
 
       headers:{
         "Authorization": "INTEGRACION grupo1:#{hash_str}",
@@ -242,13 +254,6 @@ class ApplicationController < ActionController::Base
       puts "\nDespachar producto\n"
     puts JSON.parse(request.body)
     return request
-  end
-
-  '''Notificar si se acepta o no una orden'''
-  def notificar_orden(orden, evaluacion)
-    if evaluacion
-    else
-    end
   end
 
 '''Enviar a fabricar productos finales, '''
@@ -269,49 +274,62 @@ class ApplicationController < ActionController::Base
   end
 
   def get_ftp
-  @host = "fierro.ing.puc.cl"
-  @grupo = "grupo1_dev"
-  @password = "9me9BCjgkJ8b5MV"
-  contador = 0
-  Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
-    @ordenes = []
-    sftp.dir.foreach("pedidos") do |entry|
-    contador +=1
-    if contador > 2
-      if (Time.at(entry.attributes.mtime) > @@last_time)
-        orden =  {}
-        data = sftp.download!("pedidos/#{entry.name}")
-        json = Hash.from_xml(data).to_json
-        json = JSON.parse json
-        ''' agregor cada orden como un diccionarioa una lista'''
-        orden["id"] = json["order"]["id"]
-        orden["sku"] = json["order"]["sku"]
-        orden["qty"] = json["order"]["qty"]
-        if json["order"]["canal"]
-          orden["canal"] = json["order"]["canal"]
-          if orden["canal"] == "b2b"
-            if json["order"]["urlNotification"]
-              orden["url"] = json["order"]["urlNotification"]
-            end
-            if json["order"]["cliente"]
-              orden["cliente"] = json["order"]["cliente"]
-            end
-            if json["order"]["precioUnitario"]
-              orden["precioUnitario"] = json["order"]["precioUnitario"]
-            end
+    @host = "fierro.ing.puc.cl"
+    @grupo = "grupo1_dev"
+    @password = "9me9BCjgkJ8b5MV"
+    contador = 0
+    Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
+      @ordenes = []
+      sftp.dir.foreach("pedidos") do |entry|
+        contador +=1
+        if contador > 2
+          if (Time.at(entry.attributes.mtime) > @@last_time)
+            data = sftp.download!("pedidos/#{entry.name}")
+            json = Hash.from_xml(data).to_json
+            json = JSON.parse json
+            ''' agregor cada orden como un diccionarioa una lista'''
+            id = json["order"]["id"]
+            orden = obtener_oc(id)[0]
+            @ordenes << orden
           end
+          contador += 1
         end
-        @ordenes << orden
       end
-      contador += 1
-    end
-    end
-    # ejemplo de retorno [{"id"=>"5ce54a70ff732f000426a96f", "sku"=>"10005", "qty"=>"3"}]
-    @@last_time = Time.now
-    return @ordenes
+      @@last_time = Time.now
+      return @ordenes
     end
   end
 
+  def recepcionar_oc(orden)
+      url ="https://integracion-2019-dev.herokuapp.com/oc/recepcionar/#{orden["_id"]}"
+      response = HTTParty.get(url,
+        headers:{
+  		    "Content-Type": "application/json"})
+        puts JSON.parse(response.body)
+        return JSON.parse(response.body), response.headers
+  end
 
+  def rechazar_oc(orden_id)
+    motivo = "Porque si"
+    url ="https://integracion-2019-dev.herokuapp.com/oc/rechazar/#{orden_id}"
+    response = HTTParty.post(url, body:{
+        "id": orden,
+        "rechazo": motivo,}.to_json,
+         headers:{
+      		"Content-Type": "application/json"
+        })
+        puts "\nRechazar OC\n"
+        puts JSON.parse(response.body)
+    return JSON.parse(response.body), response.headers
+  end
+
+  def obtener_oc(id)
+      url ="https://integracion-2019-dev.herokuapp.com/oc/obtener/#{id}"
+      response = HTTParty.get(url,
+        headers:{
+  		    "Content-Type": "application/json"})
+        puts JSON.parse(response.body)
+        return JSON.parse(response.body)
+  end
 
 end
