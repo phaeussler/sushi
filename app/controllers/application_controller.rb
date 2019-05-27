@@ -356,4 +356,25 @@ class ApplicationController < ActionController::Base
     move_q_products_bodega(@@despacho, almacenId, sku, cantidad)
   end
 
+  def obtener_hook()
+    uri = "hook"
+    hash_str = "GET"
+    return request_system(uri, hash_str, @@api_key)
+  end
+
+  def setear_hook()
+    url = "http://tuerca1.ing.puc.cl/ftporders"
+    hash_str = hash("PUT#{url}", @@api_key)
+    request = HTTParty.put("https://integracion-2019-#{@@server}.herokuapp.com/bodega/hook",
+    body:{
+      "url": url,
+    }.to_json,
+    headers:{
+      "Authorization": "INTEGRACION grupo1:#{hash_str}",
+      "Content-Type": "application/json"
+    })
+    puts "\nSetear Hook\n"
+    puts request.code
+  end
+
 end

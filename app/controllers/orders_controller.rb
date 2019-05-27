@@ -88,14 +88,17 @@ class OrdersController < ApplicationController
   # POST /orders
   # POST /orders.json
   def create
+    orden = {}
     @grupo = request.headers["group"]
     @sku = params[:sku]
     @almacenId = params[:almacenId]
     @cantidad = params[:cantidad]
-    @id = params[:_id]
+    orden["sku"] = @sku
+    orden["cantidad"] = @cantidad
+    #@id = params[:oc]
     puts "LLEGA ORDEN"
     '''1. Con la Id voy a buscar al FTP'''
-    orden = obtener_oc(@id)[0]
+    #orden = obtener_oc(@id)[0]
     evaluacion = false
     '''2. Evaluar Orden'''
     evaluacion = evaluar_orden_ftp(orden)
