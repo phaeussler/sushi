@@ -42,11 +42,15 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def order_request(g_num, sku, storeId, quantity)
-        # g_num : int [1..14]
-        # uri = "orders?sku=#{sku}&almacenId=#{storeId}&cantidad=#{quantity}"
-        body_dict = {sku: sku, almacenId: storeId, cantidad:quantity}.to_json
-        request_group("orders", g_num, body_dict)
+  def order_request(g_num, sku, storeId, quantity, id)
+    # g_num : int [1..14]
+    # # uri = "orders?sku=#{sku}&almacenId=#{storeId}&cantidad=#{quantity}"
+    # if id
+    #   body_dict = {sku: sku, almacenId: storeId, cantidad:quantity}.to_json
+    # else
+    body_dict = {sku: sku, almacenId: storeId, cantidad:quantity, oc: id}.to_json
+    # end
+    request_group("orders", g_num, body_dict)
     end
 
   #funcion que hace funcion post a los grupos
@@ -65,13 +69,14 @@ class ApplicationController < ActionController::Base
       # puts JSON.parse(resp.body)
       # puts "Header #{resp.headers}"
       return resp.code, resp.body, resp.headers
-    rescue Errno::ECONNREFUSED, Net::ReadTimeout => e
+    rescue Errno::ECONNREFUSED, Net::ReadTimeout, Net::OpenTimeout, EOFError => e
       puts "Error del otro grupo #{e}"
       return 500, {}, {}
     end
   end
 
   def request_oc(uri, body)
+
     base_url ="https://integracion-2019-#{@@server}.herokuapp.com/"
     puts "request oc #{base_url+uri} body #{body.to_json}"
     request = HTTParty.put(base_url+uri,
@@ -79,8 +84,9 @@ class ApplicationController < ActionController::Base
 		  headers:{
 		    "Content-Type": "application/json"
       })
-    puts request.code, request.headers, request.body
-    return request
+    # puts request.code, request.headers, request.body
+    puts "request_oc #{request.code}"
+    return request.code, JSON.parse(request.body)
     end
 
   #funcion de hash
@@ -353,6 +359,52 @@ class ApplicationController < ActionController::Base
         return JSON.parse(response.body)
   end
 
+  def create_deliver_date(sku)
+    product = Product.find_by sku: sku
+    groups = product.groups
+    groups = product.groups.split(",")
+    return ((Time.now.to_f + 100000) * 1000).to_i
+    # if groups.include?("1")
+    #   return ((Time.now.to_f + product.expected_time_production_mins/2)*1000).to_i
+    # else
+    #   return (Time.now.to_f*1000 + (product.expected_time_production_mins*1.2)*1000).to_i
+    # end
+    
+  end
+
+  def find_oc_group(n_group)
+    puts "find_oc_group"
+    group = GroupIdOc.find_by group: n_group.to_s
+    if @@server == "dev"
+      return group.id_development
+    else
+      return group.id_production
+    end
+  end
+
+  '''Crea una oc al servidor'''
+  def create_oc(sku, qty, group)
+    # Primero debo buscar el id del grupo
+    puts "CREAR ORDER"
+    group = "5cc66e378820160004a4c3c9"
+    product = Product.find_by sku: sku
+    cliente = @@server == "dev" ? @@id_oc_dev : @@id_oc_prod
+    price = product.sell_price ? product.sell_price : 1
+    order = {
+      "cliente": cliente,
+      "proveedor": find_oc_group(group),
+      # "cliente": @@id_oc_prod,
+      # "proveedor": @@id_oc_dev,
+      "sku": sku,
+      "fechaEntrega": create_deliver_date(sku) ,
+      "cantidad": qty.to_s,
+      "precioUnitario": price,
+      "canal": "b2b",
+      "notas": "Please",
+      "urlNotificacion": "http://tuerca1.ing.puc.cl/orders/{_id}/notification"
+    }
+    return request_oc('oc/crear', order)
+
   def despachar_http(sku, cantidad, almacenId)
     # primero movemos producto de cocina a despacho
     move_q_products_almacen(@@cocina, @@despacho, sku, cantidad)
@@ -380,6 +432,7 @@ class ApplicationController < ActionController::Base
     })
     puts "\nSetear Hook\n"
     puts request.code
+
   end
 
 end
