@@ -348,4 +348,12 @@ class ApplicationController < ActionController::Base
         return JSON.parse(response.body)
   end
 
+  def despachar_http(sku, cantidad, almacenId)
+    # primero movemos producto de cocina a despacho
+    move_q_products_almacen(@@cocina, @@despacho, sku, cantidad)
+    request_system("almacenes", "GET", @@api_key )
+    # ahora despachamos producto a bodega del grupo
+    move_q_products_bodega(@@despacho, almacenId, sku, cantidad)
+  end
+
 end

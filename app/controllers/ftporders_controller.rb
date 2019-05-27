@@ -11,6 +11,7 @@ class FtpordersController < ApplicationController
   '''POST a la URL'''
   # POST/ftporders
   def create
+    puts "HOLA"
   end
 
 

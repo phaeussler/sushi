@@ -56,9 +56,6 @@ class OrdersController < ApplicationController
         listas_sku << product["sku"]
       end
     end
-
-
-
     if  listas_sku.include?(sku.to_i)
       return true
     else
@@ -102,49 +99,33 @@ class OrdersController < ApplicationController
     evaluacion = false
     '''2. Evaluar Orden'''
     evaluacion = evaluar_orden_ftp(orden)
-    if evaluacion
-      '''Notificar aceptacion'''
-      recepcionar_oc(orden)
-      despachar_productos_sku(orden)
-   else
-      rechazar_oc(orden)
-      '''Notificar rechazo'''
+
+    if !check_sku(orden["sku"])
+      res = "No tenemos ese sku"
+  		render json: res, :status => 404
     end
 
+    if evaluacion
+      '''Notificar aceptacion'''
+      res = {
+        "sku": @sku,
+        "cantidad": @cantidad,
+        "almacenId": @almacenId,
+        "grupoProveedor": 1,
+        "aceptado": true,
+        "despachado": true
+      }
+      render json: res, :status => 201
+      recepcionar_oc(orden)
+      despachar_http(@sku, @cantidad, @almacenId)
+      #despachar_productos_sku(orden)
+   else
+     res = "No es posible la solicitud"
+     render json: res, :status => 404
+    rechazar_oc(orden)
+    '''Notificar rechazo'''
+    end
 
-
-    # if @cantidad.blank? || @grupo.blank? || @sku.blank? || @almacenId.blank?
-    #
-    #   res = "No se creó el pedido por un error del cliente en la solicitud.
-    #         Por ejemplo, falta un parámetro obligatorio"
-    #         render json: res, :status => 400
-    #
-    # elsif !check_sku(@sku)
-    #   res = "No tenemos ese sku"
-  	# 	render json: res, :status => 404
-    # end
-    #
-    #
-    # if evaluar_pedido(@cantidad, @sku)
-    #
-    #   res = {
-    #     "sku": @sku,
-    #     "cantidad": @cantidad,
-    #     "almacenId": @almacenId,
-    #     "grupoProveedor": 1,
-    #     "aceptado": true,
-    #     "despachado": true
-    #   }
-    #   render json: res, :status => 201
-    #   # primero movemos producto de cosina a despacho
-    #   move_q_products_almacen(@@cocina, @@despacho, @sku, @cantidad)
-    #   request_system("almacenes", "GET", @@api_key )
-    #   # ahora despachamos producto a bodega del grupo
-    #   move_q_products_bodega(@@despacho, @almacenId, @sku, @cantidad)
-    # else
-    #   res = "No es posible la solicitud"
-		# 	render json: res, :status => 404
-    # end
   end
 
   # PATCH/PUT /orders/1
@@ -214,7 +195,7 @@ class OrdersController < ApplicationController
     # else
     #   return (Time.now.to_f*1000 + (product.expected_time_production_mins*1.2)*1000).to_i
     # end
-    
+
   end
 
   '''Crea una oc al servidor'''
