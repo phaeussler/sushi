@@ -7,6 +7,7 @@ class ApplicationController < ActionController::Base
   helper_method :grup_request
   include HTTParty
 
+
   @@recepcion = "5cc7b139a823b10004d8e6cd"
   @@despacho = "5cc7b139a823b10004d8e6ce"
   @@pulmon = "5cc7b139a823b10004d8e6d1"

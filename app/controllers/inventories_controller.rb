@@ -19,7 +19,6 @@ class InventoriesController < ApplicationController
   end
 
   def dispuesto_a_vender(inventario)
-    puts "FUNCION"
     for key in inventario
       min = MinimumStock.find_by sku: key[:sku].to_i
       if min == nil
