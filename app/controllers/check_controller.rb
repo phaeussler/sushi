@@ -23,8 +23,8 @@ class CheckController < ApplicationController
     @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
     '''4. Mantener inventario de productos finales y de productos normales'''
     '''4. Analizar el tema de inventario'''
-    inventario_minimo(@lista_productos)
-    #inventario_productos_finales(@lista_final)
+    #inventario_minimo(@lista_productos)
+    inventario_productos_finales(@lista_final)
     puts "INVENTARIO"
     msg = "Inventario Revisado"
     render json: msg, :status => 200
