@@ -5,6 +5,19 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
+    require 'json'
+    cantidad = 5
+    sku = 1001
+    # oc_code, oc_body = create_oc(sku, cantidad, 1)
+    # # body = oc.body
+    # puts "body #{body}"
+    # puts "id #{body["_id"]}"
+    # code, body, headers = order_request(3, sku, @@recepcion, cantidad, body["_id"])
+    # puts "#{code} #{body}"
+    pedir_otro_grupo_oc(sku, cantidad)
+
+
+    
     # '''1. Encontramos los productos que debemos mantener en un mínimo'''
     # lista_sku1 = skus_monitorear()
     # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
@@ -22,8 +35,8 @@ class CheckController < ApplicationController
     # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
     # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
     # '''4. Mantener inventario de productos finales y de productos normales'''
-    fabricarSinPago(@@api_key, "1005", 10)
-    '''4. Analizar el tema de inventario'''
+    # fabricarSinPago(@@api_key, "1005", 10)
+    # '''4. Analizar el tema de inventario'''
     #inventario_minimo(@lista_productos)
     #inventario_productos_finales(@lista_final)
     puts "INVENTARIO"
@@ -331,54 +344,7 @@ class CheckController < ApplicationController
   end
 
 
-  '''Funcion para pedir los productos a otro grupo inputs(sku:str, cantidad:int), output cantidad_faltante:int'''
-  def pedir_producto(sku, cantidad)
-      producto = Product.find_by sku: sku
-      groups = producto.groups
-      # Deberiamos hacer una migracion para corregir esto
-      if not producto.incoming
-        producto.incoming = 0
-      end
-      # en forma aleatorea analizamos si es que nos pueden pasar los productos
-      puts "groups #{groups}"
-      for group in groups.split(",").shuffle
-        puts group
-        unless group =="1"
-          if check_other_inventories(group, sku)
-            puts "\nGrupo #{group} cantidad #{cantidad}"
-            if cantidad > 0
-              code, body, headers = order_request(group, sku, @@recepcion, cantidad)
-              # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-              puts "Grupo #{group}, code #{code}"
-              if code == 200 or code == 201
-                body = JSON.parse(body)
-                puts "Body #{body}"
-                if body["aceptado"]
-                  begin  # "try" block
-                    cantidad -= body['cantidad']
-                    producto.incoming += body['cantidad']
-                    producto.save
-                    puts "FIN DE PEDIR PRODUCTO 0"
-                    return 0
-                  rescue TypeError => e
-                    puts e
-                    if body['cantidad']
-                      producto.incoming += cantidad
-                      producto.save
-                    end
-                    puts "FIN DE PEDIR PRODUCTO 0"
-                    return 0
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
-      puts "\nFIN DE PEDIR PRODUCTO #{cantidad}\n\n"
-      return cantidad
-  end
-
+ 
   '''Le pide un ingrediente a los grupo'''
   def pedir_ingrediente(sku, cantidad)
     puts "PIDIENDO INGREDIENTE A OTRO GRUPO"
@@ -415,6 +381,58 @@ class CheckController < ApplicationController
       end
       return cantidad
     end
+    return cantidad
+  end
+
+  '''Le pide un ingrediente a los grupo'''
+  def pedir_otro_grupo_oc(sku, cantidad)
+    puts "PIDIENDO INGREDIENTE A OTRO GRUPO"
+    producto = Product.find_by sku: sku
+    groups = producto.groups
+    # Deberiamos hacer una migracion para corregir esto
+    if not producto.incoming
+      producto.incoming = 0
+    end
+    #en forma aleatorea analizamos si es que nos pueden pasar los productos
+    for group in groups.split(",").shuffle
+      unless group ==1
+        puts "\n\n\ngroup #{group}"
+        if cantidad > 0
+          # if producto.sell_price
+          puts "Metodo oc"
+          oc_code, oc_body = create_oc(sku, cantidad, group)
+          puts "body_oc #{oc_body}"
+          code, body, headers = order_request(group, sku, @@recepcion, cantidad, oc_body["_id"])
+          # else
+          #   puts "Metodo sin oc"
+          #   code, body, headers = order_request(group, sku, @@recepcion, cantidad)
+          # end
+          # Si el codigo es positivo restamos la cantidad que nos pueden pasar
+          puts "CREATE OC -> #{code}"
+          if code == 200 or code == 201
+            puts "#{headers} #{body}"
+            body = JSON.parse(body)
+            if body["aceptado"]
+              begin  # "try" block
+                cantidad -= body['cantidad']
+                producto.incoming += body['cantidad']
+                producto.save
+                puts 'pedir_ingrediente_oc 0'
+                return cantidad
+              rescue TypeError => e
+                if body['cantidad']
+                  producto.incoming += cantidad
+                  producto.save
+                  puts 'pedir_ingrediente_oc 0'
+                end
+                return 0
+              end
+            end
+          end
+        end
+      end
+    end
+    puts "pedir_ingrediente_oc #{cantidad}"
     return cantidad
   end
 
