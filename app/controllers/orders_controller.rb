@@ -85,23 +85,11 @@ class OrdersController < ApplicationController
   # POST /orders
   # POST /orders.json
   def create
-    orden = {}
     @grupo = request.headers["group"]
     @sku = params[:sku]
     @almacenId = params[:almacenId]
     @cantidad = params[:cantidad]
     @id = params[:oc]
-    # begin
-    #   if params[:id]
-    #     @id = params[:id]
-    #   elsif params[:_id]
-    #     @id = params[:_id]
-    #   elsif params[:oc]
-    #     @id = params[:oc]
-    #   end
-    # rescue
-    # end
-
 
     orden = obtener_oc(@id)[0]
     puts orden
@@ -113,7 +101,10 @@ class OrdersController < ApplicationController
     #orden = obtener_oc(@id)[0]
     evaluacion = false
     '''2. Evaluar Orden'''
-    evaluacion = evaluar_orden_ftp(orden)
+    begin
+      evaluacion = evaluar_orden_ftp(orden)
+    rescue NoMethodError => e
+    end
 
     if evaluacion
       '''Notificar aceptacion'''
@@ -126,14 +117,20 @@ class OrdersController < ApplicationController
         "despachado": true
       }
       render json: res, :status => 201
-      recepcionar_oc(orden)
-      #despachar_http(@sku, @cantidad, @almacenId)
-      despachar_productos_sku(orden)
+      begin
+        recepcionar_oc(orden)
+        #despachar_http(@sku, @cantidad, @almacenId)
+        despachar_productos_sku(orden)
+      rescue NoMethodError => e
+      end
    else
      res = "No es posible la solicitud"
      render json: res, :status => 404
      '''Notificar rechazo'''
-     rechazar_oc(orden)
+     begin
+       rechazar_oc(orden)
+     rescue NoMethodError => e
+     end
     end
 
   end
