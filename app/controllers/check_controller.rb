@@ -1,26 +1,28 @@
+
 class CheckController < ApplicationController
   
 
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    '''1. Encontramos los productos que debemos mantener en un mínimo'''
-    lista_sku1 = skus_monitorear()
-    '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
-    lista de lista con cada elemento de la forma [sku, inventario minimo]'''
-    lista_sku2 = encontar_minimos(lista_sku1)
-    '''3. Para cada uno de los productos debo encontrar su inventario'''
-    '''3.1 Encuentro los productos con stock en cocina'''
-    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    '''3.2 Productos con inventario en pulmon'''
-    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
-    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
-    hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-    de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
-    Inventario total es inventario incoming + inventario en cocina'''
-    '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
-    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
-    '''4. Mantener inventario de productos finales y de productos normales'''
+    # '''1. Encontramos los productos que debemos mantener en un mínimo'''
+    # lista_sku1 = skus_monitorear()
+    # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
+    # lista de lista con cada elemento de la forma [sku, inventario minimo]'''
+    # lista_sku2 = encontar_minimos(lista_sku1)
+    # '''3. Para cada uno de los productos debo encontrar su inventario'''
+    # '''3.1 Encuentro los productos con stock en cocina'''
+    # productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    # '''3.2 Productos con inventario en pulmon'''
+    # pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    # '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
+    # hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
+    # de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
+    # Inventario total es inventario incoming + inventario en cocina'''
+    # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
+    # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
+    # '''4. Mantener inventario de productos finales y de productos normales'''
+    fabricarSinPago(@@api_key, "1005", 10)
     '''4. Analizar el tema de inventario'''
     #inventario_minimo(@lista_productos)
     #inventario_productos_finales(@lista_final)
@@ -125,7 +127,7 @@ class CheckController < ApplicationController
   def inventario_productos_finales(lista)
     for producto in lista
         #Por definir la cantidad
-        cantidad = 10
+        cantidad = 20
         fabricar_final(cantidad, producto[0], lista)
     end
   end
@@ -267,7 +269,7 @@ class CheckController < ApplicationController
       for producto in inventario
         if ingrediente == producto[:sku].to_i
           real = producto[:total].to_i
-          if real > lot
+          if real >= lot
             revisado = true
             contador = contador + 1
           end
@@ -289,9 +291,26 @@ class CheckController < ApplicationController
       end
     end
     if contador == total_ingredientes
-      fabricar_producto_API(@sku, @cantidad)
-      '''No olvidar hacer handlre response de esto'''
-      '''¿Incoming?'''
+      resp = fabricar_producto_API(@sku, @cantidad)
+      handle_response_final(resp, @sku, @cantidad, lista)
+    end
+    fabricar_producto_API(@sku, @cantidad)
+  end
+
+  def handle_response_final(respuesta, sku, cantidad, lista)
+    if respuesta["error"]
+      if respuesta["error"] == "No existen suficientes materias primas"
+        fabricar_producto_final(cantidad, sku.to_i, lista)
+      end
+      if respuesta["error"].include? "Lote incorrecto"
+        num = respuesta["error"].scan(/\d/).join('')
+        num  = num.to_i
+        n = 1
+        while quantity > num * n
+          n = n + 1
+        end
+        fabricar_producto_API(sku, num*n)
+      end
     end
   end
 

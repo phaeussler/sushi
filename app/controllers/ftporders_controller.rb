@@ -10,7 +10,7 @@ class FtpordersController < ApplicationController
   '''Manejar la respuesta del otro grupo'''
   '''POST a la URL'''
   # POST/ftporders
-  def endpoint_notificacion
+  def create
   end
 
 

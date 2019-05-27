@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  group: 1
+  id_development: MyString
+  id_production: MyString
+
+two:
+  group: 1
+  id_development: MyString
+  id_production: MyString

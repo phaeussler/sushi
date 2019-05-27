@@ -1,3 +1,4 @@
+
 class OrdersController < ApplicationController
   before_action :set_order, only: [:show, :edit, :update, :destroy]
   helper_method :order_request
@@ -65,6 +66,27 @@ class OrdersController < ApplicationController
     end
   end
 
+  def evaluar_orden_ftp(orden)
+    '''Aqui hay que hacer el get OC'''
+    puts "Evaluando Orden"
+    sku = orden["sku"]
+    cantidad = orden["cantidad"].to_i
+    '''1. Consultar inventario '''
+    inventario = get_inventories
+    stock = 0
+    for producto in inventario
+      if producto[:sku] == sku
+        stock = producto[:total].to_i
+      end
+    end
+    '''2. Acepto o Rechazo'''
+    '''Ojo que acá se puede hacer algo más avanzado como revisar si tengo los ingredientes para fabricar y mandar a fabricar'''
+    if stock - cantidad > 0
+      return true
+    else
+      return false
+    end
+  end
 
   # POST /orders
   # POST /orders.json
@@ -73,45 +95,56 @@ class OrdersController < ApplicationController
     @sku = params[:sku]
     @almacenId = params[:almacenId]
     @cantidad = params[:cantidad]
-
-    puts @grupo
-    puts @sku
-    puts @almacenId
-    puts @cantidad
-
-
-    if @cantidad.blank? || @grupo.blank? || @sku.blank? || @almacenId.blank?
-
-      res = "No se creó el pedido por un error del cliente en la solicitud.
-            Por ejemplo, falta un parámetro obligatorio"
-            render json: res, :status => 400
-
-    elsif !check_sku(@sku)
-      res = "No tenemos ese sku"
-  		render json: res, :status => 404
+    @id = params[:_id]
+    puts "LLEGA ORDEN"
+    '''1. Con la Id voy a buscar al FTP'''
+    orden = obtener_oc(@id)[0]
+    evaluacion = false
+    '''2. Evaluar Orden'''
+    evaluacion = evaluar_orden_ftp(orden)
+    if evaluacion
+      '''Notificar aceptacion'''
+      recepcionar_oc(orden)
+      despachar_productos_sku(orden)
+   else
+      rechazar_oc(orden)
+      '''Notificar rechazo'''
     end
 
 
-    if evaluar_pedido(@cantidad, @sku)
 
-      res = {
-        "sku": @sku,
-        "cantidad": @cantidad,
-        "almacenId": @almacenId,
-        "grupoProveedor": 1,
-        "aceptado": true,
-        "despachado": true
-      }
-      render json: res, :status => 201
-      # primero movemos producto de cosina a despacho
-      move_q_products_almacen(@@cocina, @@despacho, @sku, @cantidad)
-      request_system("almacenes", "GET", @@api_key )
-      # ahora despachamos producto a bodega del grupo
-      move_q_products_bodega(@@despacho, @almacenId, @sku, @cantidad)
-    else
-      res = "No es posible la solicitud"
-			render json: res, :status => 404
-    end
+    # if @cantidad.blank? || @grupo.blank? || @sku.blank? || @almacenId.blank?
+    #
+    #   res = "No se creó el pedido por un error del cliente en la solicitud.
+    #         Por ejemplo, falta un parámetro obligatorio"
+    #         render json: res, :status => 400
+    #
+    # elsif !check_sku(@sku)
+    #   res = "No tenemos ese sku"
+  	# 	render json: res, :status => 404
+    # end
+    #
+    #
+    # if evaluar_pedido(@cantidad, @sku)
+    #
+    #   res = {
+    #     "sku": @sku,
+    #     "cantidad": @cantidad,
+    #     "almacenId": @almacenId,
+    #     "grupoProveedor": 1,
+    #     "aceptado": true,
+    #     "despachado": true
+    #   }
+    #   render json: res, :status => 201
+    #   # primero movemos producto de cosina a despacho
+    #   move_q_products_almacen(@@cocina, @@despacho, @sku, @cantidad)
+    #   request_system("almacenes", "GET", @@api_key )
+    #   # ahora despachamos producto a bodega del grupo
+    #   move_q_products_bodega(@@despacho, @almacenId, @sku, @cantidad)
+    # else
+    #   res = "No es posible la solicitud"
+		# 	render json: res, :status => 404
+    # end
   end
 
   # PATCH/PUT /orders/1
