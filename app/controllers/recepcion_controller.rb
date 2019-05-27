@@ -6,9 +6,19 @@ class RecepcionController < CheckController
   # GET /recepcion
   def index
     puts "RECEPCION"
+    '''Primero los productos importantes'''
+    puts "REVISANDO PULMON"
+    productos_pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    if productos_pulmon.length > 0
+      for producto in productos_pulmon
+        if producto["_id"].to_i > 10000
+          move_sku_almacen(@@pulmon, @@cocina, producto["_id"])
+        end
+      end
+    end
+    puts "REVISANDO RECEPCION"
     '''Productos con stock en rececpcion'''
     productos = sku_with_stock(@@recepcion, @@api_key)[0]
-    puts productos
     '''Por cada producto en la recepcion, moverlo a cocina'''
     if productos.length > 0
       for prod in productos
@@ -24,7 +34,8 @@ class RecepcionController < CheckController
       puts "RECEPCION VACIA"
     end
 
-    msg = "Recepcion Vaciada"
+
+    msg = "Jobs"
     render json: msg,   :status => 200
 
   end

@@ -53,9 +53,6 @@ class OrdersController < ApplicationController
         listas_sku << product["sku"]
       end
     end
-
-
-
     if  listas_sku.include?(sku.to_i)
       return true
     else
@@ -92,56 +89,50 @@ class OrdersController < ApplicationController
     @sku = params[:sku]
     @almacenId = params[:almacenId]
     @cantidad = params[:cantidad]
-    @id = params[:_id]
+    @id = params[:oc]
+
+    orden = obtener_oc(@id)[0]
+    puts orden
+    # orden["sku"] = @sku
+    # orden["cantidad"] = @cantidad
+    #@id = params[:oc]
     puts "LLEGA ORDEN"
     '''1. Con la Id voy a buscar al FTP'''
-    orden = obtener_oc(@id)[0]
+    #orden = obtener_oc(@id)[0]
     evaluacion = false
     '''2. Evaluar Orden'''
-    evaluacion = evaluar_orden_ftp(orden)
-    if evaluacion
-      '''Notificar aceptacion'''
-      recepcionar_oc(orden)
-      despachar_productos_sku(orden)
-   else
-      rechazar_oc(orden)
-      '''Notificar rechazo'''
+    begin
+      evaluacion = evaluar_orden_ftp(orden)
+    rescue NoMethodError => e
     end
 
+    if evaluacion
+      '''Notificar aceptacion'''
+      res = {
+        "sku": @sku,
+        "cantidad": @cantidad,
+        "almacenId": @almacenId,
+        "grupoProveedor": 1,
+        "aceptado": true,
+        "despachado": true
+      }
+      render json: res, :status => 201
+      begin
+        recepcionar_oc(orden)
+        #despachar_http(@sku, @cantidad, @almacenId)
+        despachar_productos_sku(orden)
+      rescue NoMethodError => e
+      end
+   else
+     res = "No es posible la solicitud"
+     render json: res, :status => 404
+     '''Notificar rechazo'''
+     begin
+       rechazar_oc(orden)
+     rescue NoMethodError => e
+     end
+    end
 
-
-    # if @cantidad.blank? || @grupo.blank? || @sku.blank? || @almacenId.blank?
-    #
-    #   res = "No se creó el pedido por un error del cliente en la solicitud.
-    #         Por ejemplo, falta un parámetro obligatorio"
-    #         render json: res, :status => 400
-    #
-    # elsif !check_sku(@sku)
-    #   res = "No tenemos ese sku"
-  	# 	render json: res, :status => 404
-    # end
-    #
-    #
-    # if evaluar_pedido(@cantidad, @sku)
-    #
-    #   res = {
-    #     "sku": @sku,
-    #     "cantidad": @cantidad,
-    #     "almacenId": @almacenId,
-    #     "grupoProveedor": 1,
-    #     "aceptado": true,
-    #     "despachado": true
-    #   }
-    #   render json: res, :status => 201
-    #   # primero movemos producto de cosina a despacho
-    #   move_q_products_almacen(@@cocina, @@despacho, @sku, @cantidad)
-    #   request_system("almacenes", "GET", @@api_key )
-    #   # ahora despachamos producto a bodega del grupo
-    #   move_q_products_bodega(@@despacho, @almacenId, @sku, @cantidad)
-    # else
-    #   res = "No es posible la solicitud"
-		# 	render json: res, :status => 404
-    # end
   end
 
   # PATCH/PUT /orders/1
@@ -179,7 +170,7 @@ class OrdersController < ApplicationController
 
     def order_params
       # params.require(:almacenId, :sku, :cantidad)
-      params.permit(:almacenId, :sku, :cantidad)
+      params.permit(:almacenId, :sku, :cantidad, :oc)
       # params.fetch(:order, {}).permit(:almacenId, :sku, :cantidad)
     end
     # # Never trust parameters from the scary internet, only allow the white list through.
@@ -201,6 +192,5 @@ class OrdersController < ApplicationController
 
   end
 
-  
 
   end

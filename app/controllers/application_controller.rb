@@ -7,6 +7,7 @@ class ApplicationController < ActionController::Base
   helper_method :grup_request
   include HTTParty
 
+
   @@recepcion = "5cc7b139a823b10004d8e6cd"
   @@despacho = "5cc7b139a823b10004d8e6ce"
   @@pulmon = "5cc7b139a823b10004d8e6d1"
@@ -75,8 +76,9 @@ class ApplicationController < ActionController::Base
   end
 
   def request_oc(uri, body)
-    base_url ="https://integracion-2019-dev.herokuapp.com/"
-    # puts "request oc #{base_url+uri} body #{body.to_json}"
+
+    base_url ="https://integracion-2019-#{@@server}.herokuapp.com/"
+    puts "request oc #{base_url+uri} body #{body.to_json}"
     request = HTTParty.put(base_url+uri,
 		  body:body.to_json,
 		  headers:{
@@ -254,7 +256,7 @@ class ApplicationController < ActionController::Base
     dir = "hola12345"
     precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
     for i in 0..cantidad -1 do
-          despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
+        despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
     end
   end
 
@@ -295,15 +297,18 @@ class ApplicationController < ActionController::Base
   end
 
   def get_ftp
+    puts "GETFTP"
     @host = "fierro.ing.puc.cl"
-    @grupo = "grupo1_dev"
-    @password = "9me9BCjgkJ8b5MV"
+    @grupo = "grupo1"
+    @grupo2 = "grupo1_dev"
+    @password = "p7T4uNY3yqdDB8sS3"
+    @password2 = "9me9BCjgkJ8b5MV"
     contador = 0
     Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
       @ordenes = []
       sftp.dir.foreach("pedidos") do |entry|
-        contador +=1
-        if contador > 2
+        contador += 1
+        if contador > 4 and contador < 10
           if (Time.at(entry.attributes.mtime) > @@last_time)
             data = sftp.download!("pedidos/#{entry.name}")
             json = Hash.from_xml(data).to_json
@@ -311,9 +316,9 @@ class ApplicationController < ActionController::Base
             ''' agregor cada orden como un diccionarioa una lista'''
             id = json["order"]["id"]
             orden = obtener_oc(id)[0]
+            puts orden
             @ordenes << orden
           end
-          contador += 1
         end
       end
       @@last_time = Time.now
@@ -322,7 +327,7 @@ class ApplicationController < ActionController::Base
   end
 
   def recepcionar_oc(orden)
-      url ="https://integracion-2019-dev.herokuapp.com/oc/recepcionar/#{orden["_id"]}"
+      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/recepcionar/#{orden["_id"]}"
       response = HTTParty.get(url,
         headers:{
   		    "Content-Type": "application/json"})
@@ -332,7 +337,7 @@ class ApplicationController < ActionController::Base
 
   def rechazar_oc(orden_id)
     motivo = "Porque si"
-    url ="https://integracion-2019-dev.herokuapp.com/oc/rechazar/#{orden_id}"
+    url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/rechazar/#{orden_id}"
     response = HTTParty.post(url, body:{
         "id": orden,
         "rechazo": motivo,}.to_json,
@@ -345,15 +350,14 @@ class ApplicationController < ActionController::Base
   end
 
   def obtener_oc(id)
-      url ="https://integracion-2019-dev.herokuapp.com/oc/obtener/#{id}"
+      puts "Obtener OC"
+      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/obtener/#{id}"
       response = HTTParty.get(url,
         headers:{
   		    "Content-Type": "application/json"})
         puts JSON.parse(response.body)
         return JSON.parse(response.body)
   end
-
-
 
   def create_deliver_date(sku)
     product = Product.find_by sku: sku
@@ -400,6 +404,35 @@ class ApplicationController < ActionController::Base
       "urlNotificacion": "http://tuerca1.ing.puc.cl/orders/{_id}/notification"
     }
     return request_oc('oc/crear', order)
+
+  def despachar_http(sku, cantidad, almacenId)
+    # primero movemos producto de cocina a despacho
+    move_q_products_almacen(@@cocina, @@despacho, sku, cantidad)
+    request_system("almacenes", "GET", @@api_key )
+    # ahora despachamos producto a bodega del grupo
+    move_q_products_bodega(@@despacho, almacenId, sku, cantidad)
+  end
+
+  def obtener_hook()
+    uri = "hook"
+    hash_str = "GET"
+    return request_system(uri, hash_str, @@api_key)
+  end
+
+  def setear_hook()
+    url = "http://tuerca1.ing.puc.cl/ftporders"
+    hash_str = hash("PUT#{url}", @@api_key)
+    request = HTTParty.put("https://integracion-2019-#{@@server}.herokuapp.com/bodega/hook",
+    body:{
+      "url": url,
+    }.to_json,
+    headers:{
+      "Authorization": "INTEGRACION grupo1:#{hash_str}",
+      "Content-Type": "application/json"
+    })
+    puts "\nSetear Hook\n"
+    puts request.code
+
   end
 
 end
