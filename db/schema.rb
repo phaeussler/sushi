@@ -12,7 +12,6 @@
 
 ActiveRecord::Schema.define(version: 20190526222642) do
 
-
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -96,6 +95,7 @@ ActiveRecord::Schema.define(version: 20190526222642) do
     t.datetime "updated_at", null: false
     t.integer "id_oc", default: 0
     t.string "status", default: ""
+    t.integer "precio", default: 0
   end
 
   create_table "product_jokes", force: :cascade do |t|

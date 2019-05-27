@@ -14,7 +14,7 @@ class ApplicationController < ActionController::Base
   @@api_key = "RAPrFLl620Cg$o"
   @@pedidos_pendientes = {}
   @@demanda = {}
-  @@server = "dev"
+  @@server = "prod"
 
     '''Ultima conexión al servidor SFTP'''
     @@last_time = Time.now
@@ -71,7 +71,7 @@ class ApplicationController < ActionController::Base
   end
 
   def request_oc(uri, body)
-    base_url ="https://integracion-2019-dev.herokuapp.com/"
+    base_url ="https://integracion-2019-#{@@server}.herokuapp.com/"
     puts "request oc #{base_url+uri} body #{body.to_json}"
     request = HTTParty.put(base_url+uri,
 		  body:body.to_json,
@@ -317,7 +317,7 @@ class ApplicationController < ActionController::Base
   end
 
   def recepcionar_oc(orden)
-      url ="https://integracion-2019-dev.herokuapp.com/oc/recepcionar/#{orden["_id"]}"
+      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/recepcionar/#{orden["_id"]}"
       response = HTTParty.get(url,
         headers:{
   		    "Content-Type": "application/json"})
@@ -327,7 +327,7 @@ class ApplicationController < ActionController::Base
 
   def rechazar_oc(orden_id)
     motivo = "Porque si"
-    url ="https://integracion-2019-dev.herokuapp.com/oc/rechazar/#{orden_id}"
+    url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/rechazar/#{orden_id}"
     response = HTTParty.post(url, body:{
         "id": orden,
         "rechazo": motivo,}.to_json,
@@ -340,7 +340,7 @@ class ApplicationController < ActionController::Base
   end
 
   def obtener_oc(id)
-      url ="https://integracion-2019-dev.herokuapp.com/oc/obtener/#{id}"
+      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/obtener/#{id}"
       response = HTTParty.get(url,
         headers:{
   		    "Content-Type": "application/json"})
