@@ -90,19 +90,21 @@ class OrdersController < ApplicationController
     @sku = params[:sku]
     @almacenId = params[:almacenId]
     @cantidad = params[:cantidad]
-    begin
-      if params[:id]
-        @id = params[:id]
-      elsif params[:_id]
-        @id = params[:_id]
-      elsif params[:oc]
-        @id = params[:oc]
-      end
-    rescue 
-    end
+    @id = params[:oc]
+    # begin
+    #   if params[:id]
+    #     @id = params[:id]
+    #   elsif params[:_id]
+    #     @id = params[:_id]
+    #   elsif params[:oc]
+    #     @id = params[:oc]
+    #   end
+    # rescue
+    # end
 
 
     orden = obtener_oc(@id)[0]
+    puts orden
     # orden["sku"] = @sku
     # orden["cantidad"] = @cantidad
     #@id = params[:oc]
@@ -171,7 +173,7 @@ class OrdersController < ApplicationController
 
     def order_params
       # params.require(:almacenId, :sku, :cantidad)
-      params.permit(:almacenId, :sku, :cantidad)
+      params.permit(:almacenId, :sku, :cantidad, :oc)
       # params.fetch(:order, {}).permit(:almacenId, :sku, :cantidad)
     end
     # # Never trust parameters from the scary internet, only allow the white list through.

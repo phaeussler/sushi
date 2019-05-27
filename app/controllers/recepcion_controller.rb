@@ -34,7 +34,8 @@ class RecepcionController < CheckController
       puts "RECEPCION VACIA"
     end
 
-    msg = "Recepcion Vaciada"
+
+    msg = "Jobs"
     render json: msg,   :status => 200
 
   end
