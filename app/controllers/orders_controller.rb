@@ -7,9 +7,6 @@ class OrdersController < ApplicationController
   # GET /orders.json
   def index
     @orders = Order.all
-    sku = 10010
-    qty = 5
-    create_oc(sku, qty, "1")
   end
 
   # GET /orders/1
@@ -93,8 +90,21 @@ class OrdersController < ApplicationController
     @sku = params[:sku]
     @almacenId = params[:almacenId]
     @cantidad = params[:cantidad]
-    orden["sku"] = @sku
-    orden["cantidad"] = @cantidad
+    begin
+      if params[:id]
+        @id = params[:id]
+      elsif params[:_id]
+        @id = params[:_id]
+      elsif params[:oc]
+        @id = params[:oc]
+      end
+    rescue 
+    end
+
+
+    orden = obtener_oc(@id)[0]
+    # orden["sku"] = @sku
+    # orden["cantidad"] = @cantidad
     #@id = params[:oc]
     puts "LLEGA ORDEN"
     '''1. Con la Id voy a buscar al FTP'''
@@ -102,11 +112,6 @@ class OrdersController < ApplicationController
     evaluacion = false
     '''2. Evaluar Orden'''
     evaluacion = evaluar_orden_ftp(orden)
-
-    if !check_sku(orden["sku"])
-      res = "No tenemos ese sku"
-  		render json: res, :status => 404
-    end
 
     if evaluacion
       '''Notificar aceptacion'''
@@ -120,13 +125,13 @@ class OrdersController < ApplicationController
       }
       render json: res, :status => 201
       recepcionar_oc(orden)
-      despachar_http(@sku, @cantidad, @almacenId)
-      #despachar_productos_sku(orden)
+      #despachar_http(@sku, @cantidad, @almacenId)
+      despachar_productos_sku(orden)
    else
      res = "No es posible la solicitud"
      render json: res, :status => 404
-    rechazar_oc(orden)
-    '''Notificar rechazo'''
+     '''Notificar rechazo'''
+     rechazar_oc(orden)
     end
 
   end

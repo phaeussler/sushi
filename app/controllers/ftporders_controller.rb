@@ -2,6 +2,9 @@ class FtpordersController < ApplicationController
 
   # GET /ftporders
   def index
+    puts "REVISANDO ORDENES"
+    ftp = Ftp.new
+    ftp.execute
     msg = "FTP"
     render json: msg,   :status => 200
   end

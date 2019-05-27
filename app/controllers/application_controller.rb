@@ -14,7 +14,7 @@ class ApplicationController < ActionController::Base
   @@api_key = "RAPrFLl620Cg$o"
   @@pedidos_pendientes = {}
   @@demanda = {}
-  @@server = "dev"
+  @@server = "prod"
 
     '''Ultima conexión al servidor SFTP'''
     @@last_time = Time.now
@@ -71,7 +71,7 @@ class ApplicationController < ActionController::Base
   end
 
   def request_oc(uri, body)
-    base_url ="https://integracion-2019-dev.herokuapp.com/"
+    base_url ="https://integracion-2019-#{@@server}.herokuapp.com/"
     puts "request oc #{base_url+uri} body #{body.to_json}"
     request = HTTParty.put(base_url+uri,
 		  body:body.to_json,
@@ -249,7 +249,7 @@ class ApplicationController < ActionController::Base
     dir = "hola12345"
     precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
     for i in 0..cantidad -1 do
-          despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
+        despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
     end
   end
 
@@ -290,15 +290,18 @@ class ApplicationController < ActionController::Base
   end
 
   def get_ftp
+    puts "GETFTP"
     @host = "fierro.ing.puc.cl"
-    @grupo = "grupo1_dev"
-    @password = "9me9BCjgkJ8b5MV"
+    @grupo = "grupo1"
+    @grupo2 = "grupo1_dev"
+    @password = "p7T4uNY3yqdDB8sS3"
+    @password2 = "9me9BCjgkJ8b5MV"
     contador = 0
     Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
       @ordenes = []
       sftp.dir.foreach("pedidos") do |entry|
-        contador +=1
-        if contador > 2
+        contador += 1
+        if contador > 4 and contador < 10
           if (Time.at(entry.attributes.mtime) > @@last_time)
             data = sftp.download!("pedidos/#{entry.name}")
             json = Hash.from_xml(data).to_json
@@ -306,9 +309,9 @@ class ApplicationController < ActionController::Base
             ''' agregor cada orden como un diccionarioa una lista'''
             id = json["order"]["id"]
             orden = obtener_oc(id)[0]
+            puts orden
             @ordenes << orden
           end
-          contador += 1
         end
       end
       @@last_time = Time.now
@@ -317,7 +320,7 @@ class ApplicationController < ActionController::Base
   end
 
   def recepcionar_oc(orden)
-      url ="https://integracion-2019-dev.herokuapp.com/oc/recepcionar/#{orden["_id"]}"
+      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/recepcionar/#{orden["_id"]}"
       response = HTTParty.get(url,
         headers:{
   		    "Content-Type": "application/json"})
@@ -327,7 +330,7 @@ class ApplicationController < ActionController::Base
 
   def rechazar_oc(orden_id)
     motivo = "Porque si"
-    url ="https://integracion-2019-dev.herokuapp.com/oc/rechazar/#{orden_id}"
+    url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/rechazar/#{orden_id}"
     response = HTTParty.post(url, body:{
         "id": orden,
         "rechazo": motivo,}.to_json,
@@ -340,7 +343,8 @@ class ApplicationController < ActionController::Base
   end
 
   def obtener_oc(id)
-      url ="https://integracion-2019-dev.herokuapp.com/oc/obtener/#{id}"
+      puts "Obtener OC"
+      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/obtener/#{id}"
       response = HTTParty.get(url,
         headers:{
   		    "Content-Type": "application/json"})
