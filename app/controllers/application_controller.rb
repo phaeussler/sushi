@@ -14,12 +14,15 @@ class ApplicationController < ActionController::Base
   @@api_key = "RAPrFLl620Cg$o"
   @@pedidos_pendientes = {}
   @@demanda = {}
+  @@server = "dev"
 
     '''Ultima conexión al servidor SFTP'''
     @@last_time = Time.now
     '''Consulta al servidor SFTP las ordenes nuevas y las retorna'''
 
 
+  @@id_oc_prod = "5cc66e378820160004a4c3bc"
+  @@id_oc_dev = "5cbd31b7c445af0004739be3"
   @@ftp_user = "grupo1_dev"
   @@ftp_password = "9me9BCjgkJ8b5MV"
   @@ftp_url = "fierro.ing.puc.cl"
@@ -67,6 +70,18 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def request_oc(uri, body)
+    base_url ="https://integracion-2019-dev.herokuapp.com/"
+    puts "request oc #{base_url+uri} body #{body.to_json}"
+    request = HTTParty.put(base_url+uri,
+		  body:body.to_json,
+		  headers:{
+		    "Content-Type": "application/json"
+      })
+    puts request.code, request.headers, request.body
+    return request
+    end
+
   #funcion de hash
   def hash(data, secret_key)
     require 'base64'
@@ -80,7 +95,7 @@ class ApplicationController < ActionController::Base
   #funcion que hace funcion get al sistema
   def request_system(uri,method_str, api_key)
     hash_str = hash(method_str, api_key)
-    base_url ="https://integracion-2019-prod.herokuapp.com/bodega/"
+    base_url ="https://integracion-2019-#{@@server}.herokuapp.com/bodega/"
     resp = HTTParty.get("#{base_url}#{uri}",
       headers:{
         "Authorization": "INTEGRACION grupo1:#{hash_str}",
@@ -109,7 +124,7 @@ class ApplicationController < ActionController::Base
   #almacen_id es id de destino.
   def move_product_almacen(product_id, almacen_id)
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
-    request = HTTParty.post("https://integracion-2019-prod.herokuapp.com/bodega/moveStock",
+    request = HTTParty.post("https://integracion-2019-#{@@server}.herokuapp.com/bodega/moveStock",
 		  body:{
 				"productoId": product_id,
 				"almacenId": almacen_id,
@@ -126,7 +141,7 @@ class ApplicationController < ActionController::Base
 
   def move_product_bodega(product_id, almacen_id)
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
-    request = HTTParty.post("https://integracion-2019-prod.herokuapp.com/bodega/moveStockBodega",
+    request = HTTParty.post("https://integracion-2019-#{@@server}.herokuapp.com/bodega/moveStockBodega",
 		  body:{
 				"productoId": product_id,
 				"almacenId": almacen_id,
@@ -135,14 +150,15 @@ class ApplicationController < ActionController::Base
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-      puts "\nMOVER BODEGA\n"
-      puts JSON.parse(request.body)
-      return request
+    puts "\nMOVER BODEGA\n"
+    puts JSON.parse(request.body)
+    return request
   end
 
   def fabricarSinPago(api_key, sku, cantidad)
     hash_str = hash("PUT#{sku}#{cantidad}", api_key)
-    producido = HTTParty.put("https://integracion-2019-dev.herokuapp.com/bodega/fabrica/fabricarSinPago",
+    producido = HTTParty.put("https://integracion-2019-#{@@server}.herokuapp.com/bodega/fabrica/fabricarSinPago",
+
 		  body:{
 		  	"sku": sku,
 		  	"cantidad": cantidad
