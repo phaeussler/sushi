@@ -142,7 +142,7 @@ class ApplicationController < ActionController::Base
 
   def fabricarSinPago(api_key, sku, cantidad)
     hash_str = hash("PUT#{sku}#{cantidad}", api_key)
-    producido = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricarSinPago",
+    producido = HTTParty.put("https://integracion-2019-dev.herokuapp.com/bodega/fabrica/fabricarSinPago",
 		  body:{
 		  	"sku": sku,
 		  	"cantidad": cantidad
