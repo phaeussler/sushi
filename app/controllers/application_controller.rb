@@ -183,6 +183,7 @@ class ApplicationController < ActionController::Base
     end
 
     #Mueve una cantidad determinada de un sku entre dos almacenes
+
   def move_q_products_almacen(almacenId_actual, almacenId_destino, sku, cantidad)
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
@@ -192,6 +193,7 @@ class ApplicationController < ActionController::Base
     end
 
     #Mueva una cantidad determinada a la bodega de de un grupo
+
   def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad)
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
@@ -253,7 +255,6 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  '''Arreglar --> FALTA DIR'''
   def despachar_producto(product_id, orden_id, dir, precio)
     hash_str = hash("DELETE#{product_id}#{dir}#{precio}", @@api_key)
     request = HTTParty.delete("https://integracion-2019-prod.herokuapp.com/bodega/stock",
@@ -380,5 +381,51 @@ class ApplicationController < ActionController::Base
     puts "\nSetear Hook\n"
     puts request.code
   end
+
+  def create_deliver_date(sku)
+    product = Product.find_by sku: sku
+    groups = product.groups
+    groups = product.groups.split(",")
+    return ((Time.now.to_f + 100000) * 1000).to_i
+    # if groups.include?("1")
+    #   return ((Time.now.to_f + product.expected_time_production_mins/2)*1000).to_i
+    # else
+    #   return (Time.now.to_f*1000 + (product.expected_time_production_mins*1.2)*1000).to_i
+    # end
+
+  end
+
+  def find_oc_group(n_group)
+    puts "find_oc_group"
+    group = GroupIdOc.find_by group: n_group.to_s
+    if @@server == "dev"
+      return group.id_development
+    else
+      return group.id_production
+    end
+  end
+
+  '''Crea una oc al servidor'''
+  def create_oc(sku, qty, group)
+    # Primero debo buscar el id del grupo
+    puts "CREAR ORDER"
+    group = "5cc66e378820160004a4c3c9"
+    product = Product.find_by sku: sku
+    cliente = @@server == "dev" ? @@id_oc_dev : @@id_oc_prod
+    price = product.sell_price ? product.sell_price : 1
+    order = {
+      "cliente": cliente,
+      "proveedor": find_oc_group(group),
+      # "cliente": @@id_oc_prod,
+      # "proveedor": @@id_oc_dev,
+      "sku": sku,
+      "fechaEntrega": create_deliver_date(sku) ,
+      "cantidad": qty.to_s,
+      "precioUnitario": price,
+      "canal": "b2b",
+      "notas": "Please",
+      "urlNotificacion": "http://tuerca1.ing.puc.cl/orders/{_id}/notification"
+    }
+return request_oc('oc/crear', order)
 
 end

@@ -238,7 +238,6 @@ class CheckController < ApplicationController
     end
   end
 
-
   def fabricar_final(cantidad, sku, lista)
     '''1. Buscamos la receta'''
     receta = Receipt.find_by sku: sku
