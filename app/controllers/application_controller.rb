@@ -41,7 +41,6 @@ class ApplicationController < ActionController::Base
     end
   end
 
-
   def order_request(g_num, sku, storeId, quantity, id)
     # g_num : int [1..14]
     # # uri = "orders?sku=#{sku}&almacenId=#{storeId}&cantidad=#{quantity}"
@@ -52,7 +51,7 @@ class ApplicationController < ActionController::Base
     puts "order_request #{body_dict}"
     # end
     request_group("orders", g_num, body_dict)
-
+  end
 
   #funcion que hace funcion post a los grupos
   def request_group(uri, g_num, body_dict)
@@ -279,7 +278,7 @@ class ApplicationController < ActionController::Base
     return request
   end
 
-'''Enviar a fabricar productos finales, '''
+  '''Enviar a fabricar productos finales, '''
   def fabricar_producto_API(id, sku, cantidad)
     hash_str = hash("PUT#{sku}#{cantidad}#{id}", @@api_key)
     producido = products_produced = HTTParty.put("https://integracion-2019-prod.herokuapp.com/bodega/fabrica/fabricar",
@@ -350,15 +349,14 @@ class ApplicationController < ActionController::Base
   end
 
   def obtener_oc(id)
-      puts "Obtener OC"
-      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/obtener/#{id}"
-      response = HTTParty.get(url,
-        headers:{
-  		    "Content-Type": "application/json"})
-        puts JSON.parse(response.body)
-        return JSON.parse(response.body)
+    puts "Obtener OC"
+    url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/obtener/#{id}"
+    response = HTTParty.get(url,
+    headers:{
+	    "Content-Type": "application/json"})
+    puts JSON.parse(response.body)
+    return JSON.parse(response.body)
   end
-
 
   """crea una fecha en el futuro 4 hrs por ahora"""
   def create_deliver_date(sku)
@@ -371,7 +369,7 @@ class ApplicationController < ActionController::Base
     # else
     #   return (Time.now.to_f*1000 + (product.expected_time_production_mins*1.2)*1000).to_i
     # end
-    
+
   end
 
   """busca el id de oc de cada grupo"""
@@ -394,7 +392,7 @@ class ApplicationController < ActionController::Base
       "proveedor": find_oc_group(group),
       # "cliente": @@id_oc_prod,
       # "proveedor": @@id_oc_dev,
-      "sku": sku, 
+      "sku": sku,
       "fechaEntrega": create_deliver_date(sku) ,
       "cantidad": qty.to_s,
       "precioUnitario": price,
@@ -403,6 +401,7 @@ class ApplicationController < ActionController::Base
       "urlNotificacion": "http://tuerca1.ing.puc.cl/orders/{_id}/notification"
     }
     return request_oc('oc/crear', order)
+  end
 
   def despachar_http(sku, cantidad, almacenId)
     # primero movemos producto de cocina a despacho
@@ -431,7 +430,6 @@ class ApplicationController < ActionController::Base
     })
     puts "\nSetear Hook\n"
     puts request.code
-
   end
 
   def create_deliver_date(sku)
@@ -478,6 +476,8 @@ class ApplicationController < ActionController::Base
       "notas": "Please",
       "urlNotificacion": "http://tuerca1.ing.puc.cl/orders/{_id}/notification"
     }
-return request_oc('oc/crear', order)
+    return request_oc('oc/crear', order)
+  end
+
 
 end
