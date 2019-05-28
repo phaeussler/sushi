@@ -30,7 +30,7 @@ class Handler < CheckController
     end
     self.empty_reception
   end
-  handle_asynchronously :empty_reception, :run_at => Proc.new {45.minutes.from_now }
+  handle_asynchronously :empty_reception, :run_at => Proc.new {10.minutes.from_now }
 
   '''La idea es mantener un inventario minimo de materias primas y tambien de productos finales'''
 
@@ -51,16 +51,16 @@ class Handler < CheckController
     @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
     '''4. Analizar el tema de inventario'''
     inventario_minimo(@lista_productos)
-    self.final_products_inventory(@lista_final)
     self.check_inventory
   end
-  handle_asynchronously :check_inventory, :run_at => Proc.new {30.minutes.from_now }
+  handle_asynchronously :check_inventory, :run_at => Proc.new {15.minutes.from_now }
 
   def final_products_inventory(lista_productos)
-    inventario_productos_finales(lista_productos)
+    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
+    inventario_productos_finales(@lista_final)
     self.final_products_inventory(lista_productos)
   end
-  handle_asynchronously :final_products_inventory, :run_at => Proc.new {80.minutes.from_now }
+  handle_asynchronously :final_products_inventory, :run_at => Proc.new {20.minutes.from_now }
 
 
   '''Esto es en el caso que aceptemos ordenes que dejamos pendientes'''
@@ -70,6 +70,6 @@ class Handler < CheckController
     ftp.execute
     self.ordenes_de_compra_ftp
   end
-  handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {15.minutes.from_now }
+  handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {12.minutes.from_now }
 
 end

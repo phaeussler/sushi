@@ -14,6 +14,7 @@ class ApplicationController < ActionController::Base
   @@api_key = "RAPrFLl620Cg$o"
   @@pedidos_pendientes = {}
   @@demanda = {}
+  @@first_execution = false
   @@server = "prod"
 
     '''Ultima conexión al servidor SFTP'''
@@ -64,7 +65,7 @@ class ApplicationController < ActionController::Base
           "group": "1",
           "Content-Type": "application/json"
         },
-        body: body_dict, timeout: 15)
+        body: body_dict, timeout: 30)
       # puts "Solicitud: #{resp.code}"
       # puts JSON.parse(resp.body)
       # puts "Header #{resp.headers}"
@@ -455,29 +456,6 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  '''Crea una oc al servidor'''
-  def create_oc(sku, qty, group)
-    # Primero debo buscar el id del grupo
-    puts "CREAR ORDER"
-    group = "5cc66e378820160004a4c3c9"
-    product = Product.find_by sku: sku
-    cliente = @@server == "dev" ? @@id_oc_dev : @@id_oc_prod
-    price = product.sell_price ? product.sell_price : 1
-    order = {
-      "cliente": cliente,
-      "proveedor": find_oc_group(group),
-      # "cliente": @@id_oc_prod,
-      # "proveedor": @@id_oc_dev,
-      "sku": sku,
-      "fechaEntrega": create_deliver_date(sku) ,
-      "cantidad": qty.to_s,
-      "precioUnitario": price,
-      "canal": "b2b",
-      "notas": "Please",
-      "urlNotificacion": "http://tuerca1.ing.puc.cl/orders/{_id}/notification"
-    }
-    return request_oc('oc/crear', order)
-  end
 
 
 end
