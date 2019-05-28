@@ -5,26 +5,26 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    '''1. Encontramos los productos que debemos mantener en un mínimo'''
-    lista_sku1 = skus_monitorear()
-    '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
-    lista de lista con cada elemento de la forma [sku, inventario minimo]'''
-    lista_sku2 = encontar_minimos(lista_sku1)
-    '''3. Para cada uno de los productos debo encontrar su inventario'''
-    '''3.1 Encuentro los productos con stock en cocina'''
-    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    '''3.2 Productos con inventario en pulmon'''
-    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
-    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
-    hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-    de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
-    Inventario total es inventario incoming + inventario en cocina'''
-    '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
-    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
-    '''4. Mantener inventario de productos finales y de productos normales'''
-    '''4. Analizar el tema de inventario'''
-    #inventario_minimo(@lista_productos)
-    inventario_productos_finales(@lista_final)
+    # '''1. Encontramos los productos que debemos mantener en un mínimo'''
+    # lista_sku1 = skus_monitorear()
+    # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
+    # lista de lista con cada elemento de la forma [sku, inventario minimo]'''
+    # lista_sku2 = encontar_minimos(lista_sku1)
+    # '''3. Para cada uno de los productos debo encontrar su inventario'''
+    # '''3.1 Encuentro los productos con stock en cocina'''
+    # productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    # '''3.2 Productos con inventario en pulmon'''
+    # pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    # '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
+    # hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
+    # de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
+    # Inventario total es inventario incoming + inventario en cocina'''
+    # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
+    # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
+    # '''4. Mantener inventario de productos finales y de productos normales'''
+    # '''4. Analizar el tema de inventario'''
+    # inventario_minimo(@lista_productos)
+    # inventario_productos_finales(@lista_final)
     puts "INVENTARIO"
     msg = "Inventario Revisado"
     render json: msg, :status => 200
@@ -238,7 +238,6 @@ class CheckController < ApplicationController
     end
   end
 
-
   def fabricar_final(cantidad, sku, lista)
     '''1. Buscamos la receta'''
     receta = Receipt.find_by sku: sku
@@ -299,10 +298,11 @@ class CheckController < ApplicationController
       end
     end
     if contador == total_ingredientes
-      resp = fabricar_producto_API(@sku, @cantidad)
-      handle_response_final(resp, @sku, @cantidad, lista)
+      fabricar = fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
+      respuesta = JSON.parse(fabricar.body)
+      handle_response(respuesta, @sku.to_s, @cantidad, lista)
     end
-    fabricar_producto_API(@sku, @cantidad)
+    fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
   end
 
   def handle_response_final(respuesta, sku, cantidad, lista)
@@ -337,7 +337,6 @@ class CheckController < ApplicationController
     puts "check_other_inventories NO encontado"
     return false
   end
-
 
   '''Funcion para pedir los productos a otro grupo inputs(sku:str, cantidad:int), output cantidad_faltante:int'''
   def pedir_producto(sku, cantidad)
@@ -387,35 +386,59 @@ class CheckController < ApplicationController
       return cantidad
   end
 
-  '''Le pide un ingrediente a los grupo'''
-  def pedir_ingrediente(sku, cantidad)
+
+  '''Le pide un ingrediente a los grupo y retorna la cantidad faltante'''
+  def pedir_otro_grupo_oc(sku, cantidad)
     puts "PIDIENDO INGREDIENTE A OTRO GRUPO"
     producto = Product.find_by sku: sku
     groups = producto.groups
-    # Deberiamos hacer una migracion para corregir esto
+    # Deberiamos hacer una migracion para corregir esto, ya que hay valores nul
     if not producto.incoming
       producto.incoming = 0
     end
-    #en forma aleatorea analizamos si es que nos pueden pasar los productos
+    # en forma aleatorea analizamos si es que nos pueden pasar los productos de los grupos que lo prodcen
     for group in groups.split(",").shuffle
       unless group ==1
         if cantidad > 0
-          code, body, headers = order_request(group, sku, @@recepcion, cantidad)
-          # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-          if code == 200 or code == 201
-            body = JSON.parse(body)
-            if body["aceptado"]
-              begin  # "try" block
-                cantidad -= body['cantidad']
-                producto.incoming += body['cantidad']
-                producto.save
-                return cantidad
-              rescue TypeError => e
-                if body['cantidad']
-                  producto.incoming += cantidad
+          # Primero creamos la orden de compra
+          puts "Metodo oc"
+          # oc_code, oc_body = create_oc(sku, cantidad, group)
+          # puts "body_oc #{oc_body}"
+          oc = create_oc(sku, cantidad, group)
+          oc_code = oc.code
+          oc_body = JSON.parse(oc.body)
+
+          if oc_code == 200
+
+            # Si es aceptado hacemos el request al otro grupo con el id de la orden
+            code, body, headers = order_request(group, sku, @@recepcion, cantidad, oc_body["_id"])
+            # else
+            #   puts "Metodo sin oc"
+            #   code, body, headers = order_request(group, sku, @@recepcion, cantidad)
+            # end
+            # Si el codigo es positivo restamos la cantidad que nos pueden pasar
+            puts "ORDER REQUEST -> #{code}"
+            # Reviso si fue aceptado, deberia ser 201 el codigo pero hay grupos que lo tienen implementado con 200
+            if code == 200 or code == 201
+              puts "#{headers} #{body}"
+              body = JSON.parse(body)
+              if body["aceptado"]
+                # Si es aceptado entonces le agrego a incoming
+                begin  # "try" block
+                  cantidad -= body['cantidad']
+                  producto.incoming += body['cantidad']
                   producto.save
+                  puts 'pedir_ingrediente_oc 0'
+                  return cantidad
+                rescue TypeError => e
+                  # El grupo 6 retorna cantidad true en vez de numero
+                  if body['cantidad']
+                    producto.incoming += cantidad
+                    producto.save
+                    puts 'pedir_ingrediente_oc 0'
+                    return 0
+                  end
                 end
-                return 0
               end
             end
           end
@@ -452,6 +475,9 @@ class CheckController < ApplicationController
     if respuesta["error"]
       if respuesta["error"] == "No existen suficientes materias primas"
         fabricar_producto(quantity, ingrediente.to_i, lista)
+      end
+      if respuesta["error"].include? "sku no encontado"
+        pedir_otro_grupo_oc(ingrediente, quantity)
       end
       if respuesta["error"].include? "Lote incorrecto"
         num = respuesta["error"].scan(/\d/).join('')

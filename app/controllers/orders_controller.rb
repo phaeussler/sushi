@@ -1,7 +1,7 @@
 
 class OrdersController < ApplicationController
   before_action :set_order, only: [:show, :edit, :update, :destroy]
-  helper_method :order_request
+  helper_method :order_request, :create_oc
   require 'securerandom'
   # GET /orders
   # GET /orders.json
@@ -192,36 +192,5 @@ class OrdersController < ApplicationController
 
   end
 
-  def create_deliver_date(sku)
-    product = Product.find_by sku: sku
-    groups = product.groups
-    groups = product.groups.split(",")
-    return ((Time.now.to_f + 100000) * 1000).to_i
-    # if groups.include?("1")
-    #   return ((Time.now.to_f + product.expected_time_production_mins/2)*1000).to_i
-    # else
-    #   return (Time.now.to_f*1000 + (product.expected_time_production_mins*1.2)*1000).to_i
-    # end
-
-  end
-
-  '''Crea una oc al servidor'''
-  def create_oc(sku, qty, group)
-    # Primero debo buscar el id del grupo
-    group = "5cc66e378820160004a4c3c9"
-    product = Product.find_by sku: sku
-    order = {
-      "cliente": @@id_oc_prod,
-      "proveedor": @@id_oc_dev,
-      "sku": sku,
-      "fechaEntrega": create_deliver_date(sku) ,
-      "cantidad": qty.to_s,
-      "precioUnitario": product.sell_price,
-      "canal": "b2b",
-      "notas": "Probando",
-      "urlNotificacion": "http://tuerca1.ing.puc.cl/orders/{_id}/notification"
-    }
-    request_oc('oc/crear', order)
-  end
 
   end
