@@ -5,8 +5,9 @@ class Ftp < ApplicationController
   def execute
     '''Esto es temporal, deberia ser la orden que me llega'''
     ordenes = get_ftp
-    evaluacion = false
+    puts "ORDENES"
     for orden in ordenes
+      evaluacion = false
       if orden["canal"] == "b2b"
         '''NO hago nada'''
       else

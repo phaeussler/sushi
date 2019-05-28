@@ -9,22 +9,21 @@ class InventoriesController < ApplicationController
 
   # GET /inventories
   def index
-    ftp_instance = Ftp.new
     puts "INDEX INVENTORY"
-    @inventories = Inventory.all
-     productos = get_inventories
+    productos = get_inventories
 
-     dispuestos = dispuesto_a_vender(productos)
-     render json: dispuestos, :status => 200
+     #dispuestos = dispuesto_a_vender(productos)
+     render json: productos, :status => 200
   end
 
   def dispuesto_a_vender(inventario)
     for key in inventario
       min = MinimumStock.find_by sku: key[:sku].to_i
+      min = min["minimum_stock"]
       if min == nil
         min = 0
       end
-      key[:total] -= min
+      key[:total] = (key[:total].to_i - min.to_i).to_s
     end
     return inventario
 

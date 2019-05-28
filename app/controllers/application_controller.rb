@@ -297,7 +297,7 @@ class ApplicationController < ActionController::Base
   end
 
   def get_ftp
-    puts "GETFTP"
+    puts "GET FTP"
     @host = "fierro.ing.puc.cl"
     @grupo = "grupo1"
     @grupo2 = "grupo1_dev"
@@ -412,13 +412,13 @@ class ApplicationController < ActionController::Base
     move_q_products_bodega(@@despacho, almacenId, sku, cantidad)
   end
 
-  def obtener_hook()
+  def obtener_hook
     uri = "hook"
     hash_str = "GET"
     return request_system(uri, hash_str, @@api_key)
   end
 
-  def setear_hook()
+  def setear_hook
     url = "http://tuerca1.ing.puc.cl/ftporders"
     hash_str = hash("PUT#{url}", @@api_key)
     request = HTTParty.put("https://integracion-2019-#{@@server}.herokuapp.com/bodega/hook",
@@ -456,6 +456,36 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def recepcion_a_pulmon(productos)
+    for i in productos
+      lista_productos = request_product(@@recepcion, i["_id"], @@api_key)[0]
+      puts lista_productos
+      for j in lista_productos do
+        move_product_almacen(j["_id"], @@cocina)
+        move_product_almacen(j["_id"], @@despacho)
+        move_product_almacen(j["_id"], @@pulmon)
+      end
+    end
+  end
+
+  def cocina_a_pulmon
+    for i in sku_with_stock(@@cocina, @@api_key)[0]
+      lista_productos = request_product(@@cocina, i["_id"], @@api_key)[0]
+      for j in lista_productos do
+        move_product_almacen(j["_id"], @@despacho)
+        move_product_almacen(j["_id"], @@pulmon)
+      end
+    end
+  end
+
+  def despacho_a_pulmon
+    for i in sku_with_stock(@@despacho, @@api_key)[0]
+      lista_productos = request_product(@@despacho, i["_id"], @@api_key)[0]
+      for j in lista_productos do
+        move_product_almacen(j["_id"], @@pulmon)
+      end
+    end
+  end
 
 
 end
