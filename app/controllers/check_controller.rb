@@ -60,9 +60,7 @@ class CheckController < ApplicationController
     for sku in lista_sku
       min = MinimumStock.find_by sku: sku
       if min
-        nueva_lista << [sku, min["minimu# if cantidad > 0
-        #   fabricar_producto(cantidad, producto[0], lista)
-        # endm_stock"]]
+        nueva_lista << [sku, min["minimum_stock"]]
       else
         nueva_lista << [sku, 0]
       end
