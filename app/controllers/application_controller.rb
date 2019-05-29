@@ -211,7 +211,7 @@ class ApplicationController < ActionController::Base
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
-            move_product_bodega(lista_productos[i]["_id"], almacenId_destino, oc, "0")
+            move_product_bodega(lista_productos[i]["_id"], almacenId_destino, oc, 1)
       end
     end
 
