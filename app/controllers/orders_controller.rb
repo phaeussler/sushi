@@ -23,43 +23,6 @@ class OrdersController < ApplicationController
   def edit
   end
 
-  def evaluar_pedido(cantidad, sku)
-    stock = sku_with_stock(@@cocina, @@api_key)[0]
-    stock = stock[0]["total"].to_i
-    #Encontrar el find by sku
-    min = 0
-    minimo = MinimumStock.all
-    minimo.each do |m|
-      if m["sku"] == sku.to_i
-        min = m["minimum_stock"]
-        break
-      end
-      end
-    cantidad = cantidad.to_i
-    if stock - cantidad < min
-      return false
-    else
-      return true
-    end
-  end
-
- #Retorna true si el sku es producido por nosotros
-  def check_sku(sku)
-    listas_sku = []
-    productos = Product.all
-    productos.each do |product|
-
-    if product["groups"].split(",")[0] == "1"
-        listas_sku << product["sku"]
-      end
-    end
-    if  listas_sku.include?(sku.to_i)
-      return true
-    else
-      return false
-    end
-  end
-
   def evaluar_orden_ftp(orden)
     '''Aqui hay que hacer el get OC'''
     puts "Evaluando Orden"
@@ -69,7 +32,7 @@ class OrdersController < ApplicationController
     inventario = get_inventories
     stock = 0
     for producto in inventario
-      if producto[:sku] == sku
+      if producto[:sku].to_i == sku.to_i
         stock = producto[:total].to_i
       end
     end
@@ -91,14 +54,11 @@ class OrdersController < ApplicationController
     @cantidad = params[:cantidad]
     @id = params[:oc]
 
-    orden = obtener_oc(@id)[0]
-    puts orden
-    # orden["sku"] = @sku
-    # orden["cantidad"] = @cantidad
-    #@id = params[:oc]
     puts "LLEGA ORDEN"
     '''1. Con la Id voy a buscar al FTP'''
-    #orden = obtener_oc(@id)[0]
+    orden = obtener_oc(@id)[0]
+    puts orden
+
     evaluacion = false
     '''2. Evaluar Orden'''
     begin
@@ -119,7 +79,6 @@ class OrdersController < ApplicationController
       render json: res, :status => 201
       begin
         recepcionar_oc(orden)
-        #despachar_http(@sku, @cantidad, @almacenId)
         despachar_productos_sku(orden)
       rescue NoMethodError => e
       end
