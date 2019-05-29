@@ -12,8 +12,7 @@ class ApplicationController < ActionController::Base
   @@pulmon = "5cc7b139a823b10004d8e6d1"
   @@cocina = "5cc7b139a823b10004d8e6d2"
   @@api_key = "RAPrFLl620Cg$o"
-  @@pedidos_pendientes = {}
-  @@demanda = {}
+  @@ordenes_pendientes = []
   @@first_execution = false
   @@server = "prod"
 
@@ -259,6 +258,7 @@ class ApplicationController < ActionController::Base
     for i in 0..cantidad -1 do
           despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
     end
+    @@ordenes_pendientes.delete(orden)
   end
 
   def despachar_producto(product_id, orden_id, dir, precio)
@@ -326,9 +326,9 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def recepcionar_oc(orden)
-      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/recepcionar/#{orden["_id"]}"
-      response = HTTParty.get(url,
+  def recepcionar_oc(orden_id)
+      url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/recepcionar/#{orden_id}"
+      response = HTTParty.post(url,
         headers:{
   		    "Content-Type": "application/json"})
         puts JSON.parse(response.body)
@@ -486,6 +486,22 @@ class ApplicationController < ActionController::Base
       end
     end
   end
+
+  def pendientes
+    stock = get_inventories
+    if stock.length > 0 and @@ordenes_pendientes.length > 0
+      for s in stock
+        for i in 0..@@ordenes_pendientes.length
+          if s[:sku].to_i == @@ordenes_pendientes[i]["sku"].to_i
+            if s[:total].to_i >= @@ordenes_pendientes[i]["cantidad"].to_i
+              despachar_productos_sku(orden)
+            end
+          end
+        end
+      end
+    end
+  end
+
 
 
 end

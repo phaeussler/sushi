@@ -21,8 +21,13 @@ class Handler < CheckController
   end
   handle_asynchronously :empty_reception, :run_at => Proc.new {5.minutes.from_now }
 
-  '''La idea es mantener un inventario minimo de materias primas y tambien de productos finales'''
 
+  def oc_pendientes
+    pendientes
+  end
+  handle_asynchronously :oc_pendientes, :run_at => Proc.new {5.minutes.from_now }
+
+  '''La idea es mantener un inventario minimo de materias primas y tambien de productos finales'''
   def check_inventory
     puts "INVENTARIO"
     '''1. Encontramos los productos que debemos mantener en un mínimo'''
@@ -41,7 +46,6 @@ class Handler < CheckController
     '''4. Analizar el tema de inventario'''
     inventario_minimo(@lista_productos)
     inventario_productos_finales(@lista_final)
-    despacho_a_pulmon
     self.check_inventory
   end
   handle_asynchronously :check_inventory, :run_at => Proc.new {15.minutes.from_now }

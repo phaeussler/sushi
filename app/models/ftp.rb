@@ -1,4 +1,4 @@
-class Ftp < ApplicationController
+class Ftp < CheckController
   require 'json'
   require 'net/sftp'
 
@@ -11,14 +11,22 @@ class Ftp < ApplicationController
       if orden["canal"] == "b2b"
         '''NO hago nada'''
       else
-        evaluacion = evaluar_orden_de_compra(orden)
+        sku = orden["sku"]
+        cantidad = orden["cantidad"]
+        evaluacion = evaluar_fabricar_final(cantidad, sku)
         if evaluacion
           '''Notificar aceptacion'''
-          recepcionar_oc(orden)
-          despachar_productos_sku(orden)
+          respuesta = fabricar_final(cantidad, sku)
+          if respuesta["error"]
+            rechazar_oc(orden["_id"])
+          else
+            recepcionar_oc(orden["_id"])
+            @@ordenes_pendientes << orden
+            #despachar_productos_sku(orden)
+          end
         else
           '''Notificar rechazo'''
-          rechazar_oc(orden)
+          rechazar_oc(orden["_id"])
         end
       end
     end
@@ -34,7 +42,7 @@ class Ftp < ApplicationController
     inventario = get_inventories
     stock = 0
     for producto in inventario
-      if producto[:sku] == sku
+      if producto[:sku].to_i == sku.to_i
         stock = producto[:total].to_i
       end
     end

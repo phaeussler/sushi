@@ -1,5 +1,5 @@
 
-class OrdersController < ApplicationController
+class OrdersController < CheController
   before_action :set_order, only: [:show, :edit, :update, :destroy]
   helper_method :order_request, :create_oc
   require 'securerandom'
@@ -62,32 +62,46 @@ class OrdersController < ApplicationController
     evaluacion = false
     '''2. Evaluar Orden'''
     begin
-      evaluacion = evaluar_orden_ftp(orden)
+      sku = orden["sku"]
+      cantidad = orden["cantidad"]
+      evaluacion = evaluar_fabricar_final(cantidad, sku)
     rescue NoMethodError => e
     end
 
     if evaluacion
-      '''Notificar aceptacion'''
-      res = {
-        "sku": @sku,
-        "cantidad": @cantidad,
-        "almacenId": @almacenId,
-        "grupoProveedor": 1,
-        "aceptado": true,
-        "despachado": true
-      }
-      render json: res, :status => 201
-      begin
-        recepcionar_oc(orden)
-        despachar_productos_sku(orden)
-      rescue NoMethodError => e
+      respuesta = fabricar_final(cantidad, sku)
+      if respuesta["error"]
+        res = "No es posible la solicitud"
+        render json: res, :status => 404
+        '''Notificar rechazo'''
+        begin
+          rechazar_oc(orden["_id"])
+        rescue NoMethodError => e
+        end
+      else
+        '''Notificar aceptacion'''
+        res = {
+          "sku": @sku,
+          "cantidad": @cantidad,
+          "almacenId": @almacenId,
+          "grupoProveedor": 1,
+          "aceptado": true,
+          "despachado": true
+        }
+        render json: res, :status => 201
+        begin
+          recepcionar_oc(orden["_id"])
+          @@ordenes_pendientes << orden
+          #despachar_productos_sku(orden)
+        rescue NoMethodError => e
+        end
       end
    else
      res = "No es posible la solicitud"
      render json: res, :status => 404
      '''Notificar rechazo'''
      begin
-       rechazar_oc(orden)
+       rechazar_oc(orden["_id"])
      rescue NoMethodError => e
      end
     end
