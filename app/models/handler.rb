@@ -13,7 +13,7 @@ class Handler < CheckController
       la recepcion. Una vez que este llega debemos restarlo de la columna incoming
       que se utiliza para calcular el inventario mínimo del producto'''
       actualizar_incoming(productos)
-      if !@@usinfusing_despacho
+      if !@@using_despacho
         despacho_a_pulmon
         cocina_a_pulmon
       end
@@ -41,7 +41,7 @@ class Handler < CheckController
     lista_sku2 = encontar_minimos(lista_sku1)
     '''3. Para cada uno de los productos debo encontrar su inventario'''
     '''3.1 Encuentro los productos con stock en cocina'''
-    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    productos1 = sku_with_stock(@@pulmon, @@api_key)[0]
     '''3.2 Encuentro el inventario incoming de los productos. Puede ser que ya
     hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
     de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].

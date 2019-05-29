@@ -5,31 +5,31 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    # '''1. Encontramos los productos que debemos mantener en un mínimo'''
-    # lista_sku1 = skus_monitorear()
-    # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
-    # lista de lista con cada elemento de la forma [sku, inventario minimo]'''
-    # lista_sku2 = encontar_minimos(lista_sku1)
-    # '''3. Para cada uno de los productos debo encontrar su inventario'''
-    # '''3.1 Encuentro los productos con stock en cocina'''
-    # productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    # '''3.2 Productos con inventario en pulmon'''
-    # pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
-    # '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
-    # hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-    # de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
-    # Inventario total es inventario incoming + inventario en cocina'''
-    # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
-    # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
-    # '''4. Mantener inventario de productos finales y de productos normales'''
-    # '''4. Analizar el tema de inventario'''
-    # # puts "-----------------PRODUCTOS-----------------"
-    # inventario_minimo(@lista_productos)
-    # # puts "-----------------PRODUCTOS FINALES-----------------"
-    # inventario_productos_finales(@lista_final)
-    # puts "INVENTARIO"
-    despacho_a_pulmon
-    cocina_a_pulmon
+    '''1. Encontramos los productos que debemos mantener en un mínimo'''
+    lista_sku1 = skus_monitorear()
+    '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
+    lista de lista con cada elemento de la forma [sku, inventario minimo]'''
+    lista_sku2 = encontar_minimos(lista_sku1)
+    '''3. Para cada uno de los productos debo encontrar su inventario'''
+    '''3.1 Encuentro los productos con stock en cocina'''
+    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    '''3.2 Productos con inventario en pulmon'''
+    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
+    hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
+    de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
+    Inventario total es inventario incoming + inventario en cocina'''
+    '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
+    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, pulmon)
+    '''4. Mantener inventario de productos finales y de productos normales'''
+    '''4. Analizar el tema de inventario'''
+    # puts "-----------------PRODUCTOS-----------------"
+    inventario_minimo(@lista_productos)
+    # puts "-----------------PRODUCTOS FINALES-----------------"
+    #inventario_productos_finales(@lista_final)
+    puts "INVENTARIO"
+    # despacho_a_pulmon
+    # cocina_a_pulmon
 
 
     msg = "Inventario Revisado"
@@ -119,12 +119,13 @@ class CheckController < ApplicationController
         end
         '''Pedir producto retorna 0 si logro pedir y la cantidad anterior si es
         que no logro pedir'''
-        # cantidad = pedir_producto(producto[0],cantidad)
-        # if cantidad > 0
         '''Implementar pedir productos por ftp'''
-          fabricar_producto(cantidad, producto[0], lista)
-        #end
+        puts "DEBERIA FABRICAR #{producto[0]} #{cantidad}"
+        fabricar_producto(cantidad, producto[0], lista)
+      else
+        puts "NO DEBO FABRICAR #{producto[0]}, porque tengo #{producto[1]} y su minimo es #{producto[2]}}"
       end
+
     end
   end
 
