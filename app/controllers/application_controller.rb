@@ -252,7 +252,7 @@ class ApplicationController < ActionController::Base
       end
   end
 
-  def despachar_productos_sku(orden)
+  def despachar_ftp(orden)
     preparar_despacho(orden)
     lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
     cantidad = orden["cantidad"].to_i
@@ -500,7 +500,7 @@ class ApplicationController < ActionController::Base
         for i in 0..@@ordenes_pendientes.length
           if s[:sku].to_i == @@ordenes_pendientes[i]["sku"].to_i
             if s[:total].to_i >= @@ordenes_pendientes[i]["cantidad"].to_i
-              despachar_productos_sku(orden)
+              despachar_ftp(orden)
             end
           end
         end
