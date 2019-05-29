@@ -329,49 +329,54 @@ class CheckController < ApplicationController
     total_ingredientes = receta["ingredients_number"]
     @sku = sku
     @cantidad = production_lot(@sku, cantidad)
-    '''2. Buscamos los ingredientes'''
-    ingredientes = []
-    numero = "1"
-    for j in 0...total_ingredientes
-      if receta["ingredient"+numero] != nil
-        sku = Product.find_by name: receta["ingredient"+numero]
-        ingredientes << sku["sku"]
+    if total_ingredientes == 0
+      return true
+    else
+      '''2. Buscamos los ingredientes'''
+      ingredientes = []
+      numero = "1"
+      for j in 0...total_ingredientes
+        if receta["ingredient"+numero] != nil
+          sku = Product.find_by name: receta["ingredient"+numero]
+          ingredientes << sku["sku"]
+        end
+          numero = numero.to_i + 1
+          numero = numero.to_s
       end
-        numero = numero.to_i + 1
-        numero = numero.to_s
-    end
-    puts "Ingredientes -> #{total_ingredientes}"
-    puts ingredientes
-    '''3. Stock de ingredientes'''
-    contador = 0
-    inventario =  get_inventories
-    for ingrediente in ingredientes
-      '''3.1 Cuanto necesito de cada ingrediente'''
-      quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
-      lot = 0
-      if quantity == nil
+      puts "Ingredientes -> #{total_ingredientes}"
+      puts ingredientes
+      '''3. Stock de ingredientes'''
+      contador = 0
+      inventario =  get_inventories
+      for ingrediente in ingredientes
+        '''3.1 Cuanto necesito de cada ingrediente'''
+        quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
         lot = 0
-      else
-        lot = production_lot_ingredient(quantity ,@cantidad)
-      end
-      revisado = false
-      '''3.2 Stock de cada producto'''
-      '''Lo puedo tener en inventario'''
-      for producto in inventario
-        if ingrediente == producto[:sku].to_i
-          real = producto[:total].to_i
-          if real >= lot
-            revisado = true
-            contador = contador + 1
+        if quantity == nil
+          lot = 0
+        else
+          lot = production_lot_ingredient(quantity ,@cantidad)
+        end
+        revisado = false
+        '''3.2 Stock de cada producto'''
+        '''Lo puedo tener en inventario'''
+        for producto in inventario
+          if ingrediente == producto[:sku].to_i
+            real = producto[:total].to_i
+            if real >= lot
+              revisado = true
+              contador = contador + 1
+            end
           end
         end
       end
+      if contador == total_ingredientes
+        return true
+      else
+        return false
+      end
     end
-    if contador == total_ingredientes
-      return true
-    else
-      return false
-    end
+
 
   end
 
@@ -382,45 +387,57 @@ class CheckController < ApplicationController
     total_ingredientes = receta["ingredients_number"]
     @sku = sku
     @cantidad = production_lot(@sku, cantidad)
-    '''2. Buscamos los ingredientes'''
-    ingredientes = []
-    numero = "1"
-    for j in 0...total_ingredientes
-      if receta["ingredient"+numero] != nil
-        sku = Product.find_by name: receta["ingredient"+numero]
-        ingredientes << sku["sku"]
+    if total_ingredientes == 0
+      lot = production_lot(@sku, @cantidad)
+      fabricar = fabricarSinPago(@@api_key, @sku.to_s, lot)
+      '''5. Manejar respuesta'''
+      puts "Manejando respuesta"
+      respuesta = JSON.parse(fabricar.body)
+      return respuesta
+    '''2.1 Si requiere de ingredientes para ser fabricado'''
+    else
+      '''2. Buscamos los ingredientes'''
+      ingredientes = []
+      numero = "1"
+      for j in 0...total_ingredientes
+        if receta["ingredient"+numero] != nil
+          sku = Product.find_by name: receta["ingredient"+numero]
+          ingredientes << sku["sku"]
+        end
+          numero = numero.to_i + 1
+          numero = numero.to_s
       end
-        numero = numero.to_i + 1
-        numero = numero.to_s
-    end
-    puts "Ingredientes -> #{total_ingredientes}"
-    puts ingredientes
-    '''3. Mover los productos del pulmon a la cocina'''
-    puts "Analizando"
-    for ingrediente in ingredientes
-      quantity = Ingredient.find_by(sku_product: sku, sku_ingredient: ingrediente)
-      lot = 0
-      if quantity == nil
+      puts "Ingredientes -> #{total_ingredientes}"
+      puts ingredientes
+      '''3. Mover los productos del pulmon a la cocina'''
+      puts "Analizando"
+      for ingrediente in ingredientes
+        quantity = Ingredient.find_by(sku_product: sku, sku_ingredient: ingrediente)
         lot = 0
-      else
-        lot = production_lot_ingredient(quantity ,@cantidad)
+        if quantity == nil
+          lot = 0
+        else
+          lot = production_lot_ingredient(quantity ,@cantidad)
+        end
+        '''1.1 Analizar cuanto tengo en cocina'''
+        puts "Revisando cuanto hay en despacho"
+        restante = revisar_si_hay_en_despacho(ingrediente, lot)
+        if restante > 0
+          puts "Moviendo de pulmon a despacho"
+          move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, restante)
+        end
       end
-      '''1.1 Analizar cuanto tengo en cocina'''
-      puts "Revisando cuanto hay en despacho"
-      restante = revisar_si_hay_en_despacho(ingrediente, lot)
-      if restante > 0
-        puts "Moviendo de pulmon a despacho"
-        move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, restante)
-      end
+      '''4. Mandar a producir'''
+      puts "Enviando a producir"
+      lot = production_lot(@sku, @cantidad)
+      fabricar = fabricarSinPago(@@api_key, @sku.to_s, lot)
+      #fabricar = fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
+      '''5. Manejar respuesta'''
+      puts "Manejando respuesta"
+      respuesta = JSON.parse(fabricar.body)
+      return respuesta
+      #handle_response(respuesta, sku.to_s, cantidad, lista)
     end
-    '''4. Mandar a producir'''
-    puts "Enviando a producir"
-    fabricar = fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
-    '''5. Manejar respuesta'''
-    puts "Manejando respuesta"
-    respuesta = JSON.parse(fabricar.body)
-    return respuesta
-    #handle_response(respuesta, sku.to_s, cantidad, lista)
   end
 
   '''funcion para checkear si otro grupo tiene stock de un producto'''
