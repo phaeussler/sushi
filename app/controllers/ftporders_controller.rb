@@ -12,13 +12,11 @@ class FtpordersController < ApplicationController
     # sku_with_stock(@@pulmon, @@api_key)
     # puts "DESPACHO"
     # sku_with_stock(@@despacho, @@api_key)
-    create_oc("1005", 1,1)
-
     #move_q_products_almacen(@@pulmon, @@despacho, "1005", 1)
     #recepcionar_oc("5cee8b0964c02f0004b31c0d")
     # recepcionar_oc("5cee11ac64c02f0004b26c60")
     # move_product_bodega("5cee2ea362883e00047d931a",@@recepcion ,"5cee11ac64c02f0004b26c60", 1)
-    rechazar_oc("5cee0ac023b15a000a923b09")
+
 
 
 
