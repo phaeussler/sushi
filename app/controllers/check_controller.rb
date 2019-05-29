@@ -239,6 +239,7 @@ class CheckController < ApplicationController
           end
           '''1.1 Analizar cuanto tengo en cocina'''
           puts "Revisando cuanto hay en despacho"
+          despacho_a_pulmon
           restante = revisar_si_hay_en_despacho(ingrediente, lot)
           if restante > 0
             @@using_despacho = true
@@ -427,6 +428,7 @@ class CheckController < ApplicationController
         end
         '''1.1 Analizar cuanto tengo en cocina'''
         puts "Revisando cuanto hay en despacho"
+        despacho_a_pulmon
         restante = revisar_si_hay_en_despacho(ingrediente, lot)
         if restante > 0
           puts "Moviendo de pulmon a despacho"
