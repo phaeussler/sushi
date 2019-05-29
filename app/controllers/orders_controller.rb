@@ -1,5 +1,5 @@
 
-class OrdersController < CheController
+class OrdersController < CheckController
   before_action :set_order, only: [:show, :edit, :update, :destroy]
   helper_method :order_request, :create_oc
   require 'securerandom'
