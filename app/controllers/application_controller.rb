@@ -330,6 +330,9 @@ class ApplicationController < ActionController::Base
   def recepcionar_oc(orden_id)
       url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/recepcionar/#{orden_id}"
       response = HTTParty.post(url,
+        body:{
+		  	"id": orden_id,
+		  }.to_json,
         headers:{
   		    "Content-Type": "application/json"})
         puts JSON.parse(response.body)
