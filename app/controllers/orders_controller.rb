@@ -80,7 +80,7 @@ class OrdersController < CheckController
       begin
         recepcionar_oc(orden["_id"])
         '''Despachar productos'''
-        despachar_http(@sku, @cantidad, @almacenId)
+        despachar_http(@sku, @cantidad, @almacenId, orden)
       rescue NoMethodError => e
       end
    else

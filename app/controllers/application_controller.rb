@@ -146,19 +146,20 @@ class ApplicationController < ActionController::Base
   end
 
   def move_product_bodega(product_id, almacen_id, oc, precio)
+    oc_id = oc["_id"]
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
     request = HTTParty.post("https://integracion-2019-#{@@server}.herokuapp.com/bodega/moveStockBodega",
 		  body:{
 				"productoId": product_id,
 				"almacenId": almacen_id,
-        "oc": oc,
+        "oc": oc_id,
         "precio": precio,
 		  }.to_json,
 		  headers:{
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-    puts "\nMOVER BODEGA\n"
+    puts "\nDespacho de #{product_id} a otro grupo\n"
     puts JSON.parse(request.body)
     return request
   end
@@ -203,6 +204,7 @@ class ApplicationController < ActionController::Base
     #Mueva una cantidad determinada a la bodega de de un grupo
 
   def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad, oc)
+     '''1. Lista con los productos que tengo con el sku pedido'''
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
@@ -411,10 +413,9 @@ class ApplicationController < ActionController::Base
   end
 
   def despachar_http(sku, cantidad, almacenId, orden)
-    # primero movemos producto de cocina a despacho
+    '''1. Mover del sku pedido, la cantidad pedida, de pulmon a despacho'''
     move_q_products_almacen(@@pulmon, @@despacho, sku, cantidad)
-    request_system("almacenes", "GET", @@api_key )
-    # ahora despachamos producto a bodega del grupo
+    '''3. Despachar a los otros grupos'
     move_q_products_bodega(@@despacho, almacenId, sku, cantidad, orden)
   end
 
