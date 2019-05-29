@@ -202,11 +202,11 @@ class ApplicationController < ActionController::Base
 
     #Mueva una cantidad determinada a la bodega de de un grupo
 
-  def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad)
+  def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad, oc)
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
-            move_product_bodega(lista_productos[i]["_id"], almacenId_destino)
+            move_product_bodega(lista_productos[i]["_id"], almacenId_destino, oc, "0")
       end
     end
 
@@ -410,12 +410,12 @@ class ApplicationController < ActionController::Base
     return request_oc('oc/crear', order)
   end
 
-  def despachar_http(sku, cantidad, almacenId)
+  def despachar_http(sku, cantidad, almacenId, orden)
     # primero movemos producto de cocina a despacho
-    move_q_products_almacen(@@cocina, @@despacho, sku, cantidad)
+    move_q_products_almacen(@@pulmon, @@despacho, sku, cantidad)
     request_system("almacenes", "GET", @@api_key )
     # ahora despachamos producto a bodega del grupo
-    move_q_products_bodega(@@despacho, almacenId, sku, cantidad)
+    move_q_products_bodega(@@despacho, almacenId, sku, cantidad, orden)
   end
 
   def obtener_hook

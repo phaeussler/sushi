@@ -62,39 +62,26 @@ class OrdersController < CheckController
     evaluacion = false
     '''2. Evaluar Orden'''
     begin
-      sku = orden["sku"]
-      cantidad = orden["cantidad"]
-      evaluacion = evaluar_fabricar_final(cantidad, sku)
+      evaluacion = evaluar_orden_ftp(orden)
     rescue NoMethodError => e
     end
 
     if evaluacion
-      respuesta = fabricar_final(cantidad, sku)
-      if respuesta["error"]
-        res = "No es posible la solicitud"
-        render json: res, :status => 404
-        '''Notificar rechazo'''
-        begin
-          rechazar_oc(orden["_id"])
-        rescue NoMethodError => e
-        end
-      else
-        '''Notificar aceptacion'''
-        res = {
-          "sku": @sku,
-          "cantidad": @cantidad,
-          "almacenId": @almacenId,
-          "grupoProveedor": 1,
-          "aceptado": true,
-          "despachado": true
-        }
-        render json: res, :status => 201
-        begin
-          recepcionar_oc(orden["_id"])
-          @@ordenes_pendientes << orden
-          #despachar_productos_sku(orden)
-        rescue NoMethodError => e
-        end
+      '''Notificar aceptacion'''
+      res = {
+        "sku": @sku,
+        "cantidad": @cantidad,
+        "almacenId": @almacenId,
+        "grupoProveedor": 1,
+        "aceptado": true,
+        "despachado": true
+      }
+      render json: res, :status => 201
+      begin
+        recepcionar_oc(orden["_id"])
+        '''Despachar productos'''
+        despachar_http(@sku, @cantidad, @almacenId)
+      rescue NoMethodError => e
       end
    else
      res = "No es posible la solicitud"

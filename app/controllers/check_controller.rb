@@ -133,7 +133,7 @@ class CheckController < ApplicationController
   def inventario_productos_finales(lista)
     for producto in lista
         #Por definir la cantidad
-        cantidad = 16
+        cantidad = 4
         stockear_final(cantidad, producto[0], lista)
     end
   end
