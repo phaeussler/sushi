@@ -145,12 +145,14 @@ class ApplicationController < ActionController::Base
       return request
   end
 
-  def move_product_bodega(product_id, almacen_id)
+  def move_product_bodega(product_id, almacen_id, oc, precio)
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
     request = HTTParty.post("https://integracion-2019-#{@@server}.herokuapp.com/bodega/moveStockBodega",
 		  body:{
 				"productoId": product_id,
 				"almacenId": almacen_id,
+        "oc": oc,
+        "precio": precio,
 		  }.to_json,
 		  headers:{
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
@@ -263,7 +265,7 @@ class ApplicationController < ActionController::Base
   end
 
   def despachar_producto(product_id, orden_id, dir, precio)
-    hash_str = hash("DELETE#{product_id}#{dir}#{precio}", @@api_key)
+    hash_str = hash("DELETE#{product_id}#{dir}#{precio}#{orden_id}", @@api_key)
     request = HTTParty.delete("https://integracion-2019-prod.herokuapp.com/bodega/stock",
       body:{
         "productoId": product_id,
@@ -343,7 +345,7 @@ class ApplicationController < ActionController::Base
     motivo = "Porque si"
     url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/rechazar/#{orden_id}"
     response = HTTParty.post(url, body:{
-        "id": orden,
+        "id": orden_id,
         "rechazo": motivo,}.to_json,
          headers:{
       		"Content-Type": "application/json"
