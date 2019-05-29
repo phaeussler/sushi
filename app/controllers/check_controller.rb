@@ -23,13 +23,12 @@ class CheckController < ApplicationController
     @lista_final, @lista_productos = encontrar_incoming(lista_sku2, pulmon)
     '''4. Mantener inventario de productos finales y de productos normales'''
     '''4. Analizar el tema de inventario'''
-    # puts "-----------------PRODUCTOS-----------------"
+    puts "-----------------PRODUCTOS-----------------"
     inventario_minimo(@lista_productos)
-    # puts "-----------------PRODUCTOS FINALES-----------------"
-    #inventario_productos_finales(@lista_final)
+    puts "-----------------PRODUCTOS FINALES-----------------"
+    inventario_productos_finales(@lista_final)
     puts "INVENTARIO"
-    # despacho_a_pulmon
-    # cocina_a_pulmon
+
 
 
     msg = "Inventario Revisado"
@@ -230,6 +229,13 @@ class CheckController < ApplicationController
         puts "Tengo todos los ingredientes y puedo fabricar"
         '''1. Mover los productos del pulmon a la cocina'''
         puts "Logica pulmon despacho"
+        '''O. Vaciar el despacho '''
+        puts "PRIMERO VACIO DESPACHO"
+        if !@@using_despacho
+          @@using_despacho = true
+          despacho_a_pulmon
+          @@using_despacho = false
+        end
         for ingrediente in ingredientes
           quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
           lot = 0
@@ -240,7 +246,6 @@ class CheckController < ApplicationController
           end
           '''1.1 Analizar cuanto tengo en cocina'''
           puts "Revisando cuanto hay en despacho"
-          despacho_a_pulmon
           restante = revisar_si_hay_en_despacho(ingrediente, lot)
           if restante > 0
             @@using_despacho = true
@@ -417,7 +422,13 @@ class CheckController < ApplicationController
       end
       puts "Ingredientes -> #{total_ingredientes}"
       puts ingredientes
-      '''3. Mover los productos del pulmon a la cocina'''
+      puts "PRIMERO VACIAR DESPACHO"
+      puts "PRIMERO VACIO DESPACHO"
+      if !@@using_despacho
+        @@using_despacho = true
+        despacho_a_pulmon
+        @@using_despacho = false
+      end
       puts "Analizando"
       for ingrediente in ingredientes
         quantity = Ingredient.find_by(sku_product: sku, sku_ingredient: ingrediente)
@@ -429,7 +440,6 @@ class CheckController < ApplicationController
         end
         '''1.1 Analizar cuanto tengo en cocina'''
         puts "Revisando cuanto hay en despacho"
-        despacho_a_pulmon
         restante = revisar_si_hay_en_despacho(ingrediente, lot)
         if restante > 0
           puts "Moviendo de pulmon a despacho"

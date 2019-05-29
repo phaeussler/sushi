@@ -4,7 +4,7 @@ class Handler < CheckController
   def empty_reception
     puts "RECEPCION"
     if !@@using_despacho
-      despacho_a_pulmon
+      #despacho_a_pulmon
       cocina_a_pulmon
     end
     '''Productos con stock en rececpcion'''
@@ -23,13 +23,13 @@ class Handler < CheckController
     end
     self.empty_reception
   end
-  handle_asynchronously :empty_reception, :run_at => Proc.new {5.minutes.from_now }
+  handle_asynchronously :empty_reception, :run_at => Proc.new {12.minutes.from_now }
 
 
   def oc_pendientes
     pendientes
   end
-  handle_asynchronously :oc_pendientes, :run_at => Proc.new {5.minutes.from_now }
+  handle_asynchronously :oc_pendientes, :run_at => Proc.new {15.minutes.from_now }
 
   '''La idea es mantener un inventario minimo de materias primas y tambien de productos finales'''
   def check_inventory
@@ -52,7 +52,7 @@ class Handler < CheckController
     inventario_productos_finales(@lista_final)
     self.check_inventory
   end
-  handle_asynchronously :check_inventory, :run_at => Proc.new {15.minutes.from_now }
+  handle_asynchronously :check_inventory, :run_at => Proc.new {30.minutes.from_now }
   #
   # def final_products_inventory
   #   @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
@@ -69,6 +69,6 @@ class Handler < CheckController
     ftp.execute
     self.ordenes_de_compra_ftp
   end
-  handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {10.minutes.from_now }
+  handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {15.minutes.from_now }
 
 end

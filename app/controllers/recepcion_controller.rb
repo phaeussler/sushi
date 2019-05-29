@@ -6,7 +6,10 @@ class RecepcionController < CheckController
   # GET /recepcion
   def index
     puts "RECEPCION"
-    puts "RECEPCION"
+    if !@@using_despacho
+      despacho_a_pulmon
+      cocina_a_pulmon
+    end
     '''Productos con stock en rececpcion'''
     productos = sku_with_stock(@@recepcion, @@api_key)[0]
     '''Por cada producto en la recepcion, moverlo a pulmon'''
