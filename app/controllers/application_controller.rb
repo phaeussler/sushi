@@ -197,7 +197,10 @@ class ApplicationController < ActionController::Base
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
+        begin
             move_product_almacen(lista_productos[i]["_id"], almacenId_destino)
+        rescue NoMethodError => e
+        end
       end
     end
 
