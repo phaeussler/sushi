@@ -115,7 +115,7 @@ class CheckController < ApplicationController
         '''Aplico Política 2 de Inventario'''
         cantidad = 2*producto[2] - producto[1]
         if cantidad == 0
-          cantidad = 20
+          cantidad = 5
         end
         '''Pedir producto retorna 0 si logro pedir y la cantidad anterior si es
         que no logro pedir'''

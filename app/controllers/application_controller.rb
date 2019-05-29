@@ -255,14 +255,17 @@ class ApplicationController < ActionController::Base
   end
 
   def despachar_ftp(orden)
+    '''1. Muevo los productos de pulmon a despacho'''
     preparar_despacho(orden)
     lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
     cantidad = orden["cantidad"].to_i
     dir = "hola12345"
     precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
+    '''2. Por cada uno de esos productos, lo despacho'''
     for i in 0..cantidad -1 do
           despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
     end
+    '''3. Elimino la orden de compra de pendientes'''
     @@ordenes_pendientes.delete(orden)
   end
 
@@ -495,6 +498,19 @@ class ApplicationController < ActionController::Base
   end
 
   def pendientes
+    '''1. Para asegurarnos, eliminar las ordenes que estan completas y actualizar las ordenes'''
+    new_orders = []
+    for i in @@ordenes_pendientes
+      orden = obtener_oc(i["_id"])[0]
+      if orden["estado"] != "aceptada"
+        @@ordenes_pendientes.delete(i)
+      else
+        new_orders << orden
+      end
+    end
+    @@ordenes_pendientes = new_orders
+
+    '''2. Si tengo el sku, y la cantidad en el inventario, despacharlo'''
     stock = get_inventories
     if stock.length > 0 and @@ordenes_pendientes.length > 0
       for s in stock
