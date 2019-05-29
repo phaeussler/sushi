@@ -13,6 +13,10 @@ class Handler < CheckController
       la recepcion. Una vez que este llega debemos restarlo de la columna incoming
       que se utiliza para calcular el inventario mínimo del producto'''
       actualizar_incoming(productos)
+      if !@@usinfusing_despacho
+        despacho_a_pulmon
+        cocina_a_pulmon
+      end
       puts "RECEPCION VACIADA"
     else
       puts "RECEPCION VACIA"

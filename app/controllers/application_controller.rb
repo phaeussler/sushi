@@ -15,6 +15,7 @@ class ApplicationController < ActionController::Base
   @@ordenes_pendientes = []
   @@first_execution = false
   @@server = "prod"
+  @@using_despacho = false
 
     '''Ultima conexión al servidor SFTP'''
     @@last_time = Time.now
