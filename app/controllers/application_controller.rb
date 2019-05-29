@@ -520,7 +520,9 @@ class ApplicationController < ActionController::Base
         for i in 0..@@ordenes_pendientes.length
           if s[:sku].to_i == @@ordenes_pendientes[i]["sku"].to_i
             if s[:total].to_i >= @@ordenes_pendientes[i]["cantidad"].to_i
+              @@using_despacho = true
               despachar_ftp(orden)
+              @@using_despacho = false
             end
           end
         end

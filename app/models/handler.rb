@@ -3,6 +3,10 @@ class Handler < CheckController
   '''Debo poner docker-compose run web rake jobs:work para comenzar los jobs'''
   def empty_reception
     puts "RECEPCION"
+    if !@@using_despacho
+      despacho_a_pulmon
+      cocina_a_pulmon
+    end
     '''Productos con stock en rececpcion'''
     productos = sku_with_stock(@@recepcion, @@api_key)[0]
     '''Por cada producto en la recepcion, moverlo a pulmon'''
@@ -13,10 +17,6 @@ class Handler < CheckController
       la recepcion. Una vez que este llega debemos restarlo de la columna incoming
       que se utiliza para calcular el inventario mínimo del producto'''
       actualizar_incoming(productos)
-      if !@@using_despacho
-        despacho_a_pulmon
-        cocina_a_pulmon
-      end
       puts "RECEPCION VACIADA"
     else
       puts "RECEPCION VACIA"
