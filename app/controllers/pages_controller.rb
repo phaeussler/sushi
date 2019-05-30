@@ -8,8 +8,8 @@ class PagesController < ApplicationController
       handler = Handler.new
       handler.empty_reception
       handler.check_inventory
-      handler.oc_pendientes
       handler.ordenes_de_compra_ftp
+      handler.oc_pendientes
     end
   end
 

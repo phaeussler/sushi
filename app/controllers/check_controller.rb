@@ -109,21 +109,23 @@ class CheckController < ApplicationController
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
   def inventario_minimo(lista)
     for producto in lista
-      '''Aplico Politica 1 de Inventario'''
-      if producto[1] <= producto[2] * 1.3
-        '''Aplico Política 2 de Inventario'''
-        cantidad = 2*producto[2] - producto[1]
-        if cantidad == 0
-          cantidad = 5
-        end
-        '''Pedir producto retorna 0 si logro pedir y la cantidad anterior si es
-        que no logro pedir'''
-        '''Implementar pedir productos por ftp'''
-        puts "DEBERIA FABRICAR #{producto[0]} #{cantidad}"
-        fabricar_producto(cantidad, producto[0], lista)
-      else
-        puts "NO DEBO FABRICAR #{producto[0]}, porque tengo #{producto[1]} y su minimo es #{producto[2]}}"
-      end
+      # '''Aplico Politica 1 de Inventario'''
+      # if producto[1] <= producto[2] * 1.3
+      #   '''Aplico Política 2 de Inventario'''
+      #   cantidad = 2*producto[2] - producto[1]
+      #   if cantidad == 0
+      #     cantidad = 5
+      #   end
+      #   '''Pedir producto retorna 0 si logro pedir y la cantidad anterior si es
+      #   que no logro pedir'''
+      #   '''Implementar pedir productos por ftp'''
+      #   puts "DEBERIA FABRICAR #{producto[0]} #{cantidad}"
+      #   fabricar_producto(cantidad, producto[0], lista)
+      # else
+      #   puts "NO DEBO FABRICAR #{producto[0]}, porque tengo #{producto[1]} y su minimo es #{producto[2]}}"
+      # end
+      cantidad = 10
+      fabricar_producto(cantidad, producto[0], lista)
 
     end
   end

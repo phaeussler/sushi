@@ -52,7 +52,7 @@ class Handler < CheckController
     inventario_productos_finales(@lista_final)
     self.check_inventory
   end
-  handle_asynchronously :check_inventory, :run_at => Proc.new {30.minutes.from_now }
+  handle_asynchronously :check_inventory, :run_at => Proc.new {20.minutes.from_now }
   #
   # def final_products_inventory
   #   @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)

@@ -258,16 +258,25 @@ class ApplicationController < ActionController::Base
   end
 
   def despachar_ftp(orden)
-    '''1. Muevo los productos de pulmon a despacho'''
-    preparar_despacho(orden)
-    lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
+    '''Ojo que para hacerlo mas rapido muevo de a un producto'''
     cantidad = orden["cantidad"].to_i
     dir = "hola12345"
     precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
-    '''2. Por cada uno de esos productos, lo despacho'''
     for i in 0..cantidad -1 do
-          despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
+        move_q_products_almacen(@@pulmon,@@despacho, orden["sku"], 1)
+        lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
+        despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
     end
+    '''1. Muevo los productos de pulmon a despacho'''
+    #preparar_despacho(orden)
+    # lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
+    # cantidad = orden["cantidad"].to_i
+    # dir = "hola12345"
+    # precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
+    # '''2. Por cada uno de esos productos, lo despacho'''
+    # for i in 0..cantidad -1 do
+    #       despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
+    # end
     '''3. Elimino la orden de compra de pendientes'''
     @@ordenes_pendientes.delete(orden)
   end
