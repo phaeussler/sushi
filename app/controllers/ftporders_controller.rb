@@ -18,7 +18,7 @@ class FtpordersController < CheckController
 
 #
 ''' pedir a otros grupos '''
-(1..10).each do |i|
+(1..5).each do |i|
     pedir_otro_grupo_oc("1002", 10)
     pedir_otro_grupo_oc("1003", 10)
     pedir_otro_grupo_oc("1004", 10)
