@@ -1,24 +1,48 @@
-class FtpordersController < ApplicationController
+class FtpordersController < CheckController
 
   # GET /ftporders
   def index
     msg = "FTP"
     render json: msg,   :status => 200
-    # puts "RECECPCION"
-    # sku_with_stock(@@recepcion, @@api_key)
-    # puts "COCINA"
-    # sku_with_stock(@@cocina, @@api_key)
-    # puts "PULMON"
-    # sku_with_stock(@@pulmon, @@api_key)
-    # puts "DESPACHO"
-    # sku_with_stock(@@despacho, @@api_key)
-    #move_q_products_almacen(@@pulmon, @@despacho, "1005", 1)
-    #recepcionar_oc("5cee8b0964c02f0004b31c0d")
-    # recepcionar_oc("5cee11ac64c02f0004b26c60")
-    # move_product_bodega("5cee2ea362883e00047d931a",@@recepcion ,"5cee11ac64c02f0004b26c60", 1)
+    #
+  fabricarSinPago(@@api_key, "1001",20)
+  fabricarSinPago(@@api_key, "1002",20)
+  fabricarSinPago(@@api_key, "1005",20)
+  fabricarSinPago(@@api_key,"1008", 20)
+  fabricarSinPago(@@api_key,"1009", 20)
+  fabricarSinPago(@@api_key,"1090", 30)
+  fabricarSinPago(@@api_key,"1010", 20)
+  fabricarSinPago(@@api_key,"1010", 20)
+  fabricarSinPago(@@api_key,"1015", 20)
+  fabricarSinPago(@@api_key,"1016", 10)
+
+#
+''' pedir a otros grupos '''
+(1..10).each do |i|
+    pedir_otro_grupo_oc("1002", 10)
+    pedir_otro_grupo_oc("1003", 10)
+    pedir_otro_grupo_oc("1004", 10)
+    pedir_otro_grupo_oc("1006", 10)
+    pedir_otro_grupo_oc("1007", 10)
+    pedir_otro_grupo_oc("1011", 10)
+    pedir_otro_grupo_oc("1012", 10)
+    pedir_otro_grupo_oc("1013", 10)
+    pedir_otro_grupo_oc("1014", 10)
+end
 
 
+#  despacho_a_pulmon
+#     cocina_a_pulmon
+productos = sku_with_stock(@@recepcion, @@api_key)[0]
+recepcion_a_pulmon(productos)
 
+'''para producir minimos secundarios '''
+    lista_sku1 = skus_monitorear()
+    lista_sku2 = encontar_minimos(lista_sku1)
+    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
+    puts @lista_productos
+    inventario_minimo(@lista_productos)
 
   end
 

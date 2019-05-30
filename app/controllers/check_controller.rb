@@ -109,6 +109,7 @@ class CheckController < ApplicationController
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
   def inventario_minimo(lista)
     for producto in lista
+
       # '''Aplico Politica 1 de Inventario'''
       # if producto[1] <= producto[2] * 1.3
       #   '''Aplico Política 2 de Inventario'''
@@ -126,7 +127,6 @@ class CheckController < ApplicationController
       # end
       cantidad = 10
       fabricar_producto(cantidad, producto[0], lista)
-
     end
   end
 

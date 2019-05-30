@@ -176,7 +176,7 @@ class ApplicationController < ActionController::Base
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-      puts "\nENVIO A FABRICAR #{sku} #{cantidad}\n"
+      puts "\n____________ENVIO A FABRICAR_________ #{sku} #{cantidad}\n"
 		  puts JSON.parse(producido.body)
 
       return producido
@@ -206,12 +206,14 @@ class ApplicationController < ActionController::Base
 
     #Mueva una cantidad determinada a la bodega de de un grupo
 
+
   def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad, oc)
      '''1. Lista con los productos que tengo con el sku pedido'''
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
             move_product_bodega(lista_productos[i]["_id"], almacenId_destino, oc, 1)
+
       end
     end
 
@@ -479,16 +481,15 @@ class ApplicationController < ActionController::Base
   end
 
   def recepcion_a_pulmon(productos)
-    for i in productos
-      lista_productos = request_product(@@recepcion, i["_id"], @@api_key)[0]
-      puts lista_productos
-      for j in lista_productos do
-        move_product_almacen(j["_id"], @@cocina)
-        move_product_almacen(j["_id"], @@despacho)
-        move_product_almacen(j["_id"], @@pulmon)
+      for i in sku_with_stock(@@recepcion, @@api_key)[0]
+        lista_productos = request_product(@@recepcion, i["_id"], @@api_key)[0]
+        for j in lista_productos do
+          move_product_almacen(j["_id"], @@cocina)
+          move_product_almacen(j["_id"], @@despacho)
+          move_product_almacen(j["_id"], @@pulmon)
+        end
       end
     end
-  end
 
   def cocina_a_pulmon
     for i in sku_with_stock(@@cocina, @@api_key)[0]
