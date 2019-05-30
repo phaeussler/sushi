@@ -462,7 +462,7 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def recepcion_a_pulmon()
+  def recepcion_a_pulmon(productos)
       for i in sku_with_stock(@@recepcion, @@api_key)[0]
         lista_productos = request_product(@@recepcion, i["_id"], @@api_key)[0]
         for j in lista_productos do
