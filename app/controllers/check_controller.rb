@@ -122,6 +122,7 @@ class CheckController < ApplicationController
         # cantidad = pedir_producto(producto[0],cantidad)
         # if cantidad > 0
         '''Implementar pedir productos por ftp'''
+          cantidad = 10
           fabricar_producto(cantidad, producto[0], lista)
         #end
       end
