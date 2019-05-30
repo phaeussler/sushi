@@ -3,6 +3,10 @@ class Handler < CheckController
   '''Debo poner docker-compose run web rake jobs:work para comenzar los jobs'''
   def empty_reception
     puts "RECEPCION"
+    if !@@using_despacho
+      #despacho_a_pulmon
+      cocina_a_pulmon
+    end
     '''Productos con stock en rececpcion'''
     productos = sku_with_stock(@@recepcion, @@api_key)[0]
     '''Por cada producto en la recepcion, moverlo a pulmon'''
@@ -13,23 +17,19 @@ class Handler < CheckController
       la recepcion. Una vez que este llega debemos restarlo de la columna incoming
       que se utiliza para calcular el inventario mínimo del producto'''
       actualizar_incoming(productos)
-      if !@@usinfusing_despacho
-        despacho_a_pulmon
-        cocina_a_pulmon
-      end
       puts "RECEPCION VACIADA"
     else
       puts "RECEPCION VACIA"
     end
     self.empty_reception
   end
-  handle_asynchronously :empty_reception, :run_at => Proc.new {5.minutes.from_now }
+  handle_asynchronously :empty_reception, :run_at => Proc.new {12.minutes.from_now }
 
 
   def oc_pendientes
     pendientes
   end
-  handle_asynchronously :oc_pendientes, :run_at => Proc.new {5.minutes.from_now }
+  handle_asynchronously :oc_pendientes, :run_at => Proc.new {15.minutes.from_now }
 
   '''La idea es mantener un inventario minimo de materias primas y tambien de productos finales'''
   def check_inventory
@@ -41,7 +41,7 @@ class Handler < CheckController
     lista_sku2 = encontar_minimos(lista_sku1)
     '''3. Para cada uno de los productos debo encontrar su inventario'''
     '''3.1 Encuentro los productos con stock en cocina'''
-    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    productos1 = sku_with_stock(@@pulmon, @@api_key)[0]
     '''3.2 Encuentro el inventario incoming de los productos. Puede ser que ya
     hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
     de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
@@ -52,7 +52,7 @@ class Handler < CheckController
     inventario_productos_finales(@lista_final)
     self.check_inventory
   end
-  handle_asynchronously :check_inventory, :run_at => Proc.new {15.minutes.from_now }
+  handle_asynchronously :check_inventory, :run_at => Proc.new {20.minutes.from_now }
   #
   # def final_products_inventory
   #   @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
@@ -69,6 +69,6 @@ class Handler < CheckController
     ftp.execute
     self.ordenes_de_compra_ftp
   end
-  handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {10.minutes.from_now }
+  handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {15.minutes.from_now }
 
 end

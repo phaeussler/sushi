@@ -5,31 +5,30 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    # '''1. Encontramos los productos que debemos mantener en un mínimo'''
-    # lista_sku1 = skus_monitorear()
-    # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
-    # lista de lista con cada elemento de la forma [sku, inventario minimo]'''
-    # lista_sku2 = encontar_minimos(lista_sku1)
-    # '''3. Para cada uno de los productos debo encontrar su inventario'''
-    # '''3.1 Encuentro los productos con stock en cocina'''
-    # productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    # '''3.2 Productos con inventario en pulmon'''
-    # pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
-    # '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
-    # hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-    # de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
-    # Inventario total es inventario incoming + inventario en cocina'''
-    # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
-    # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, productos1)
-    # '''4. Mantener inventario de productos finales y de productos normales'''
-    # '''4. Analizar el tema de inventario'''
-    # # puts "-----------------PRODUCTOS-----------------"
-    # inventario_minimo(@lista_productos)
-    # # puts "-----------------PRODUCTOS FINALES-----------------"
-    # inventario_productos_finales(@lista_final)
-    # puts "INVENTARIO"
-    despacho_a_pulmon
-    cocina_a_pulmon
+    '''1. Encontramos los productos que debemos mantener en un mínimo'''
+    lista_sku1 = skus_monitorear()
+    '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
+    lista de lista con cada elemento de la forma [sku, inventario minimo]'''
+    lista_sku2 = encontar_minimos(lista_sku1)
+    '''3. Para cada uno de los productos debo encontrar su inventario'''
+    '''3.1 Encuentro los productos con stock en cocina'''
+    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    '''3.2 Productos con inventario en pulmon'''
+    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
+    hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
+    de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
+    Inventario total es inventario incoming + inventario en cocina'''
+    '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
+    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, pulmon)
+    '''4. Mantener inventario de productos finales y de productos normales'''
+    '''4. Analizar el tema de inventario'''
+    puts "-----------------PRODUCTOS-----------------"
+    inventario_minimo(@lista_productos)
+    puts "-----------------PRODUCTOS FINALES-----------------"
+    inventario_productos_finales(@lista_final)
+    puts "INVENTARIO"
+
 
 
     msg = "Inventario Revisado"
@@ -110,22 +109,24 @@ class CheckController < ApplicationController
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
   def inventario_minimo(lista)
     for producto in lista
-      '''Aplico Politica 1 de Inventario'''
-      if producto[1] <= producto[2] * 1.3
-        '''Aplico Política 2 de Inventario'''
-        cantidad = 2*producto[2] - producto[1]
-        if cantidad == 0
-          cantidad = 20
-        end
-        '''Pedir producto retorna 0 si logro pedir y la cantidad anterior si es
-        que no logro pedir'''
-        # cantidad = pedir_producto(producto[0],cantidad)
-        # if cantidad > 0
-        '''Implementar pedir productos por ftp'''
-          cantidad = 10
-          fabricar_producto(cantidad, producto[0], lista)
-        #end
-      end
+
+      # '''Aplico Politica 1 de Inventario'''
+      # if producto[1] <= producto[2] * 1.3
+      #   '''Aplico Política 2 de Inventario'''
+      #   cantidad = 2*producto[2] - producto[1]
+      #   if cantidad == 0
+      #     cantidad = 5
+      #   end
+      #   '''Pedir producto retorna 0 si logro pedir y la cantidad anterior si es
+      #   que no logro pedir'''
+      #   '''Implementar pedir productos por ftp'''
+      #   puts "DEBERIA FABRICAR #{producto[0]} #{cantidad}"
+      #   fabricar_producto(cantidad, producto[0], lista)
+      # else
+      #   puts "NO DEBO FABRICAR #{producto[0]}, porque tengo #{producto[1]} y su minimo es #{producto[2]}}"
+      # end
+      cantidad = 10
+      fabricar_producto(cantidad, producto[0], lista)
     end
   end
 
@@ -134,7 +135,7 @@ class CheckController < ApplicationController
   def inventario_productos_finales(lista)
     for producto in lista
         #Por definir la cantidad
-        cantidad = 16
+        cantidad = 4
         stockear_final(cantidad, producto[0], lista)
     end
   end
@@ -230,6 +231,13 @@ class CheckController < ApplicationController
         puts "Tengo todos los ingredientes y puedo fabricar"
         '''1. Mover los productos del pulmon a la cocina'''
         puts "Logica pulmon despacho"
+        '''O. Vaciar el despacho '''
+        puts "PRIMERO VACIO DESPACHO"
+        if !@@using_despacho
+          @@using_despacho = true
+          despacho_a_pulmon
+          @@using_despacho = false
+        end
         for ingrediente in ingredientes
           quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
           lot = 0
@@ -240,7 +248,6 @@ class CheckController < ApplicationController
           end
           '''1.1 Analizar cuanto tengo en cocina'''
           puts "Revisando cuanto hay en despacho"
-          despacho_a_pulmon
           restante = revisar_si_hay_en_despacho(ingrediente, lot)
           if restante > 0
             @@using_despacho = true
@@ -417,7 +424,13 @@ class CheckController < ApplicationController
       end
       puts "Ingredientes -> #{total_ingredientes}"
       puts ingredientes
-      '''3. Mover los productos del pulmon a la cocina'''
+      puts "PRIMERO VACIAR DESPACHO"
+      puts "PRIMERO VACIO DESPACHO"
+      if !@@using_despacho
+        @@using_despacho = true
+        despacho_a_pulmon
+        @@using_despacho = false
+      end
       puts "Analizando"
       for ingrediente in ingredientes
         quantity = Ingredient.find_by(sku_product: sku, sku_ingredient: ingrediente)
@@ -429,7 +442,6 @@ class CheckController < ApplicationController
         end
         '''1.1 Analizar cuanto tengo en cocina'''
         puts "Revisando cuanto hay en despacho"
-        despacho_a_pulmon
         restante = revisar_si_hay_en_despacho(ingrediente, lot)
         if restante > 0
           puts "Moviendo de pulmon a despacho"

@@ -3,7 +3,7 @@ class Ftp < CheckController
   require 'net/sftp'
 
   def execute
-    '''Esto es temporal, deberia ser la orden que me llega'''
+    '''1. Veo las ordenes que me llegan '''
     ordenes = get_ftp
     puts "ORDENES"
     for orden in ordenes
@@ -13,17 +13,23 @@ class Ftp < CheckController
       else
         sku = orden["sku"]
         cantidad = orden["cantidad"]
+        '''2. Por casa orden, evaluo si puedo producir el producto'''
         evaluacion = evaluar_fabricar_final(cantidad, sku)
         if evaluacion
           '''Notificar aceptacion'''
+          '''3. Mando a fabricar el producto, si es que la evaluacion es positiva'''
           respuesta = fabricar_final(cantidad, sku)
+          '''3.1 Si hay un error en la fabricación'''
           if respuesta["error"]
             rechazar_oc(orden["_id"])
+          '''3.2 Si va todo bien en la fabricacion'''
           else
+            '''3.2.1 Recepciono la orden'''
             recepcionar_oc(orden["_id"])
+            '''3.2.2 Agrego la orden a pendientes'''
             @@ordenes_pendientes << orden
-            #despachar_productos_sku(orden)
           end
+        '''4. Si la evaluacion es negativa, rechazo la orden'''
         else
           '''Notificar rechazo'''
           rechazar_oc(orden["_id"])
@@ -32,27 +38,5 @@ class Ftp < CheckController
     end
   end
 
-
-  def evaluar_orden_de_compra(orden)
-    '''Aqui hay que hacer el GET OC'''
-    puts "Evaluando Orden"
-    sku = orden["sku"]
-    cantidad = orden["cantidad"].to_i
-    '''1. Consultar inventario '''
-    inventario = get_inventories
-    stock = 0
-    for producto in inventario
-      if producto[:sku].to_i == sku.to_i
-        stock = producto[:total].to_i
-      end
-    end
-    '''2. Acepto o Rechazo'''
-    '''Ojo que acá se puede hacer algo más avanzado como revisar si tengo los ingredientes para fabricar y mandar a fabricar'''
-    if stock - cantidad > 0
-      return true
-    else
-      return false
-    end
-  end
 
 end

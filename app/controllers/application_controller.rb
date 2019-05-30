@@ -146,19 +146,20 @@ class ApplicationController < ActionController::Base
   end
 
   def move_product_bodega(product_id, almacen_id, oc, precio)
+    oc_id = oc["_id"]
     hash_str = hash("POST#{product_id}#{almacen_id}", @@api_key)
     request = HTTParty.post("https://integracion-2019-#{@@server}.herokuapp.com/bodega/moveStockBodega",
 		  body:{
 				"productoId": product_id,
 				"almacenId": almacen_id,
-        "oc": oc,
+        "oc": oc_id,
         "precio": precio,
 		  }.to_json,
 		  headers:{
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-    puts "\nMOVER BODEGA\n"
+    puts "\nDespacho de #{product_id} a otro grupo\n"
     puts JSON.parse(request.body)
     return request
   end
@@ -196,17 +197,23 @@ class ApplicationController < ActionController::Base
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
+        begin
             move_product_almacen(lista_productos[i]["_id"], almacenId_destino)
+        rescue NoMethodError => e
+        end
       end
     end
 
     #Mueva una cantidad determinada a la bodega de de un grupo
 
-  def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad, oc, precio)
+
+  def move_q_products_bodega(almacenId_actual, almacenId_destino, sku, cantidad, oc)
+     '''1. Lista con los productos que tengo con el sku pedido'''
       lista_productos = request_product(almacenId_actual, sku, @@api_key)[0]
       cantidad = cantidad.to_i
       for i in 0..cantidad -1 do
-            move_product_bodega(lista_productos[i]["_id"], almacenId_destino, oc , precio)
+            move_product_bodega(lista_productos[i]["_id"], almacenId_destino, oc, 1)
+
       end
     end
 
@@ -252,15 +259,27 @@ class ApplicationController < ActionController::Base
       end
   end
 
-  def despachar_productos_sku(orden)
-    preparar_despacho(orden)
-    lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
+  def despachar_ftp(orden)
+    '''Ojo que para hacerlo mas rapido muevo de a un producto'''
     cantidad = orden["cantidad"].to_i
     dir = "hola12345"
     precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
     for i in 0..cantidad -1 do
-          despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
+        move_q_products_almacen(@@pulmon,@@despacho, orden["sku"], 1)
+        lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
+        despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
     end
+    '''1. Muevo los productos de pulmon a despacho'''
+    #preparar_despacho(orden)
+    # lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
+    # cantidad = orden["cantidad"].to_i
+    # dir = "hola12345"
+    # precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
+    # '''2. Por cada uno de esos productos, lo despacho'''
+    # for i in 0..cantidad -1 do
+    #       despachar_producto(lista_productos[i]["_id"], orden["_id"], dir, precio)
+    # end
+    '''3. Elimino la orden de compra de pendientes'''
     @@ordenes_pendientes.delete(orden)
   end
 
@@ -410,12 +429,11 @@ class ApplicationController < ActionController::Base
     return request_oc('oc/crear', order)
   end
 
-  def despachar_http(sku, cantidad, almacenId)
-    # primero movemos producto de cocina a despacho
-    move_q_products_almacen(@@cocina, @@despacho, sku, cantidad)
-    request_system("almacenes", "GET", @@api_key )
-    # ahora despachamos producto a bodega del grupo
-    move_q_products_bodega(@@despacho, almacenId, sku, cantidad)
+  def despachar_http(sku, cantidad, almacenId, orden)
+    '''1. Mover del sku pedido, la cantidad pedida, de pulmon a despacho'''
+    move_q_products_almacen(@@pulmon, @@despacho, sku, cantidad)
+    '''3. Despachar a los otros grupos'
+    move_q_products_bodega(@@despacho, almacenId, sku, cantidad, orden)
   end
 
   def obtener_hook
@@ -493,13 +511,28 @@ class ApplicationController < ActionController::Base
   end
 
   def pendientes
+    '''1. Para asegurarnos, eliminar las ordenes que estan completas y actualizar las ordenes'''
+    new_orders = []
+    for i in @@ordenes_pendientes
+      orden = obtener_oc(i["_id"])[0]
+      if orden["estado"] != "aceptada"
+        @@ordenes_pendientes.delete(i)
+      else
+        new_orders << orden
+      end
+    end
+    @@ordenes_pendientes = new_orders
+
+    '''2. Si tengo el sku, y la cantidad en el inventario, despacharlo'''
     stock = get_inventories
     if stock.length > 0 and @@ordenes_pendientes.length > 0
       for s in stock
         for i in 0..@@ordenes_pendientes.length
           if s[:sku].to_i == @@ordenes_pendientes[i]["sku"].to_i
             if s[:total].to_i >= @@ordenes_pendientes[i]["cantidad"].to_i
-              despachar_productos_sku(orden)
+              @@using_despacho = true
+              despachar_ftp(orden)
+              @@using_despacho = false
             end
           end
         end
