@@ -1,5 +1,6 @@
 class Handler < CheckController
-
+  '''docker-compose run web bundle exec bin/delayed_job -n 4 start
+'''
   '''Debo poner docker-compose run web rake jobs:work para comenzar los jobs'''
   def empty_reception
     puts "RECEPCION"
