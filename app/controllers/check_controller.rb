@@ -26,10 +26,8 @@ class CheckController < ApplicationController
     puts "-----------------PRODUCTOS-----------------"
     inventario_minimo(@lista_productos)
     puts "-----------------PRODUCTOS FINALES-----------------"
-    inventario_productos_finales(@lista_final)
+    #inventario_productos_finales(@lista_final)
     puts "INVENTARIO"
-
-
 
     msg = "Inventario Revisado"
     render json: msg, :status => 200
@@ -108,7 +106,7 @@ class CheckController < ApplicationController
   '''Política 2: Mantendo 2 veces el stock mínimo en inventario'''
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
   def inventario_minimo(lista)
-    for producto in lista
+    #for producto in lista
 
       # '''Aplico Politica 1 de Inventario'''
       # if producto[1] <= producto[2] * 1.3
@@ -125,9 +123,9 @@ class CheckController < ApplicationController
       # else
       #   puts "NO DEBO FABRICAR #{producto[0]}, porque tengo #{producto[1]} y su minimo es #{producto[2]}}"
       # end
-      cantidad = 10
-      fabricar_producto(cantidad, producto[0], lista)
-    end
+      cantidad = 20
+      fabricar_producto(cantidad, 1116, lista)
+    #end
   end
 
   '''Podemos analizar la demanda para producir mas o menos de ciertos productos finales'''
@@ -138,9 +136,8 @@ class CheckController < ApplicationController
         cantidad = 4
         stockear_final(cantidad, producto[0], lista)
         #fabricar_final(cantidad, producto[0])
-
+      end
     end
-  end
 
   '''Pedir el producto a la fábrica'''
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
@@ -252,8 +249,8 @@ class CheckController < ApplicationController
           puts "Revisando cuanto hay en despacho"
           @@using_despacho = true
           puts "Moviendo de pulmon a despacho"
-          move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, restante)
-          end
+          move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, lot)
+
         end
         '''2. Mandar a producir'''
         puts "Enviando a producir"
@@ -263,7 +260,6 @@ class CheckController < ApplicationController
         @@using_despacho = false
         respuesta = JSON.parse(fabricar.body)
         handle_response(respuesta, @sku, cantidad, lista)
-
       end
     end
   end
