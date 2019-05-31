@@ -123,7 +123,7 @@ class CheckController < ApplicationController
       # else
       #   puts "NO DEBO FABRICAR #{producto[0]}, porque tengo #{producto[1]} y su minimo es #{producto[2]}}"
       # end
-      cantidad = 20
+      cantidad = 10
       fabricar_producto(cantidad, producto[0], lista)
     end
   end
