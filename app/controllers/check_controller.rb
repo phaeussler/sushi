@@ -260,9 +260,10 @@ class CheckController < ApplicationController
         fabricar = fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
         '''3. Manejar respuesta'''
         puts "Manejando respuesta"
+        @@using_despacho = false
         respuesta = JSON.parse(fabricar.body)
         handle_response(respuesta, @sku, cantidad, lista)
-        @@using_despacho = false
+
       end
     end
   end
