@@ -135,8 +135,10 @@ class CheckController < ApplicationController
   def inventario_productos_finales(lista)
     for producto in lista
         #Por definir la cantidad
-        cantidad = 4
-        stockear_final(cantidad, producto[0], lista)
+        cantidad = 6
+        stockear_final(antidad, producto[0], lista)
+        #fabricar_final(cantidad, producto[0])
+
     end
   end
 
@@ -239,7 +241,7 @@ class CheckController < ApplicationController
           @@using_despacho = false
         end
         for ingrediente in ingredientes
-          quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
+          quantity = Ingredient.find_by(sku_product: @sku.to_i, sku_ingredient: ingrediente)
           lot = 0
           if quantity == nil
             lot = 0
@@ -248,11 +250,9 @@ class CheckController < ApplicationController
           end
           '''1.1 Analizar cuanto tengo en cocina'''
           puts "Revisando cuanto hay en despacho"
-          restante = revisar_si_hay_en_despacho(ingrediente, lot)
-          if restante > 0
-            @@using_despacho = true
-            puts "Moviendo de pulmon a despacho"
-            move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, restante)
+          @@using_despacho = true
+          puts "Moviendo de pulmon a despacho"
+          move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, restante)
           end
         end
         '''2. Mandar a producir'''
@@ -297,7 +297,7 @@ class CheckController < ApplicationController
     inventario =  get_inventories
     for ingrediente in ingredientes
       '''3.1 Cuanto necesito de cada ingrediente'''
-      quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
+      quantity = Ingredient.find_by(sku_product: @sku.to_i, sku_ingredient: ingrediente.to_i)
       lot = 0
       if quantity == nil
         lot = 0
@@ -402,6 +402,7 @@ class CheckController < ApplicationController
     total_ingredientes = receta["ingredients_number"]
     @sku = sku
     @cantidad = production_lot(@sku, cantidad)
+    puts "#{@sku} --> #{@cantidad}"
     if total_ingredientes == 0
       lot = production_lot(@sku, @cantidad)
       fabricar = fabricarSinPago(@@api_key, @sku.to_s, lot)
@@ -411,6 +412,7 @@ class CheckController < ApplicationController
       return respuesta
     '''2.1 Si requiere de ingredientes para ser fabricado'''
     else
+      puts "REVISANDO INGREDIENTES"
       '''2. Buscamos los ingredientes'''
       ingredientes = []
       numero = "1"
@@ -424,40 +426,28 @@ class CheckController < ApplicationController
       end
       puts "Ingredientes -> #{total_ingredientes}"
       puts ingredientes
-      puts "PRIMERO VACIAR DESPACHO"
-      puts "PRIMERO VACIO DESPACHO"
-      if !@@using_despacho
-        @@using_despacho = true
-        despacho_a_pulmon
-        @@using_despacho = false
-      end
       puts "Analizando"
       for ingrediente in ingredientes
-        quantity = Ingredient.find_by(sku_product: sku, sku_ingredient: ingrediente)
+        quantity = Ingredient.find_by(sku_product: @sku.to_i, sku_ingredient: ingrediente.to_i)
         lot = 0
+        puts "CANTIDAD INGREDIENTE #{quantity}"
         if quantity == nil
           lot = 0
         else
           lot = production_lot_ingredient(quantity ,@cantidad)
         end
-        '''1.1 Analizar cuanto tengo en cocina'''
-        puts "Revisando cuanto hay en despacho"
-        restante = revisar_si_hay_en_despacho(ingrediente, lot)
-        if restante > 0
-          puts "Moviendo de pulmon a despacho"
-          move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, restante)
-        end
+        puts "MOVIENDO INGREDIENTE #{ingrediente} A COCINA"
+        move_q_products_almacen(@@pulmon, @@cocina, ingrediente.to_s, lot)
       end
       '''4. Mandar a producir'''
       puts "Enviando a producir"
       lot = production_lot(@sku, @cantidad)
       fabricar = fabricarSinPago(@@api_key, @sku.to_s, lot)
-      #fabricar = fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
       '''5. Manejar respuesta'''
       puts "Manejando respuesta"
       respuesta = JSON.parse(fabricar.body)
+      handle_response_final(respuesta, @sku.to_s, @cantidad)
       return respuesta
-      #handle_response(respuesta, sku.to_s, cantidad, lista)
     end
   end
 
@@ -600,20 +590,26 @@ class CheckController < ApplicationController
 
   '''Calcula lote de produccion de un ingrediente'''
   def production_lot_ingredient(quantity1, cantidad)
-    quantity = quantity1["production_lot"]
-    n = 1
-    while cantidad > (quantity * n).to_i
-      n = n + 1
-    end
-    return (quantity * n).to_i
+
+    veces_lote = cantidad / quantity1["production_lot"].to_i
+    quantity = quantity1["quantity_for_lot"] * veces_lote.to_i
+      puts "CANTIDAD #{cantidad} | LOTE #{ quantity1["production_lot"]} | VECES LOTE #{veces_lote} | TOTAL #{quantity}"
+      # n = 1
+      # while cantidad > (quantity * n).to_i
+      #   n = n + 1
+      # end
+      # return (quantity * n).to_i
+    return quantity.to_i
   end
 
   '''Maneja las respuestas de fabricarSinPago'''
   def handle_response(respuesta, ingrediente, quantity, lista)
     if respuesta["error"]
-      if respuesta["error"] == "No existen suficientes materias primas"
+      if respuesta["error"] == "No existen"
+        puts "NO HABIAN MATERIAS PRIMAS"
         if respuesta["detalles"]
           for detalle in respuesta["detalles"]
+            puts "Detalles --> #{detalle}"
           cantidad = detalle[0]["requerido"].to_i - detalle[0]["disponible"].to_i
           fabricar_producto(cantidad, detalle[0]["sku"], lista)
           end
@@ -641,6 +637,23 @@ class CheckController < ApplicationController
     end
   end
 
+  def handle_response_final(respuesta, producto, quantity)
+    if respuesta["error"].include? "sku no"
+      puts "PIDIENDO A OTRO GRUPO"
+      pedir_otro_grupo_oc(producto, quantity)
+      '''OJO MANEJAR LA RESPUESTA DE OTRO GRUPO'''
+    end
+    if respuesta["error"].include? "Lote incorrecto"
+      num = respuesta["error"].scan(/\d/).join('')
+      num  = num.to_i
+      n = 1
+      while quantity > num * n
+        n = n + 1
+      end
+      fabricar_final(num * n, producto)
+    end
+  end
+
   '''Esta es la funcion que actualiza el incoming de cada producto'''
   def actualizar_incoming(productos)
     for producto in productos
@@ -657,15 +670,7 @@ class CheckController < ApplicationController
     end
   end
 
-  def revisar_si_hay_en_despacho(sku, cantidad)
-    sku_cocina = sku_with_stock(@@despacho, @@api_key)[0]
-    restante = cantidad.to_i
-    for i in sku_cocina
-      if i["_id"] == sku.to_s
-        restante -= i["total"].to_i
-      end
-    end
-    return restante
-  end
+
+
 
 end
