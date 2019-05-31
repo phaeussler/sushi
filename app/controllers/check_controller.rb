@@ -106,7 +106,7 @@ class CheckController < ApplicationController
   '''Política 2: Mantendo 2 veces el stock mínimo en inventario'''
   '''Lista tiene la forma [sku, inventario total, inventario minimo]'''
   def inventario_minimo(lista)
-    #for producto in lista
+    for producto in lista
 
       # '''Aplico Politica 1 de Inventario'''
       # if producto[1] <= producto[2] * 1.3
@@ -124,8 +124,8 @@ class CheckController < ApplicationController
       #   puts "NO DEBO FABRICAR #{producto[0]}, porque tengo #{producto[1]} y su minimo es #{producto[2]}}"
       # end
       cantidad = 20
-      fabricar_producto(cantidad, 1116, lista)
-    #end
+      fabricar_producto(cantidad, producto[0], lista)
+    end
   end
 
   '''Podemos analizar la demanda para producir mas o menos de ciertos productos finales'''
@@ -421,6 +421,8 @@ class CheckController < ApplicationController
           numero = numero.to_i + 1
           numero = numero.to_s
       end
+      puts "VACIAR COCINA"
+      #cocina_a_pulmon
       puts "Ingredientes -> #{total_ingredientes}"
       puts ingredientes
       puts "Analizando"
