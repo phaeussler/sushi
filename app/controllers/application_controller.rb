@@ -241,6 +241,36 @@ class ApplicationController < ActionController::Base
     respuesta
   end
 
+  '''Invetario de cocina + pulmón de los productos que produzco'''
+  def avaible_to_sell
+    puts "CONSULTANDO INVENTARIO COCINA + PULMON\n"
+    recepcion = sku_with_stock(@@cocina,@@api_key)[0]
+    pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
+    productos = recepcion + pulmon
+    # productos.group_by(&:capitalize).map {|k,v| [k, v.length]}
+    productos = productos.group_by{|x| x["_id"]}
+    respuesta = []
+    for sku, dic in productos do
+      puts "sku #{sku.to_i} #{sku.class.name}"
+      total = 0
+      product = Product.find_by sku: sku.to_i
+      if product["groups"].split(",")[0] == "1"
+        for y in dic do
+          total += y["total"]
+        end
+        total -= 50
+        if total > 0
+          begin
+            res = {"sku": sku,"nombre": product["name"], "total": total}
+            respuesta << res
+          rescue NoMethodError => e
+          end
+        end
+      end
+    end
+    respuesta
+  end
+
   def preparar_despacho(orden)
       restante = orden["cantidad"].to_i
       cant_pulmon = sku_with_stock(@@pulmon)

@@ -10,10 +10,10 @@ class InventoriesController < ApplicationController
   # GET /inventories
   def index
     puts "INDEX INVENTORY"
-    productos = get_inventories
+    products = avaible_to_sell
 
      #dispuestos = dispuesto_a_vender(productos)
-     render json: productos, :status => 200
+     render json: products, :status => 200
   end
 
   def dispuesto_a_vender(inventario)
