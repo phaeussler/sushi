@@ -4,7 +4,7 @@ class CreateMinimumStocks < ActiveRecord::Migration[5.1]
       t.integer :sku
       t.string :name
       t.integer :number_of_products
-      t.integer :minimum_stock
+      t.integer :minimum_stock, default: 0
       t.integer :ingredients_number # nuevo
       t.string :ingredient_name # nuevo
       t.integer :sku_ingredient # nuevo

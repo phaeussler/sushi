@@ -241,6 +241,29 @@ class ApplicationController < ActionController::Base
     respuesta
   end
 
+  def get_dict_inventories
+    puts "CONSULTANDO INVENTARIO COCINA + PULMON\n"
+    recepcion = sku_with_stock(@@cocina,@@api_key)[0]
+    pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
+    productos = recepcion + pulmon
+    # productos.group_by(&:capitalize).map {|k,v| [k, v.length]}
+    productos = productos.group_by{|x| x["_id"]}
+    respuesta = {}
+    for sku, dic in productos do
+      total = 0
+      nombre = Product.find_by sku: sku.to_i
+      for y in dic do
+        total += y["total"]
+      end
+      begin
+        res = {"sku": sku,"nombre": nombre["name"], "total": total}
+        respuesta[sku] = res
+      rescue NoMethodError => e
+      end
+    end
+    respuesta
+  end
+
   '''Invetario de cocina + pulmón de los productos que produzco'''
   def avaible_to_sell
     puts "CONSULTANDO INVENTARIO COCINA + PULMON\n"

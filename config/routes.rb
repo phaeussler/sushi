@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :all_inventories
   root to: 'pages#home'
   resources :ftporders
   resources :orders
