@@ -6,15 +6,20 @@ class ApplicationController < ActionController::Base
   protect_from_forgery unless: -> { request.format.json? }
   helper_method :grup_request
   include HTTParty
-
-  @@recepcion = "5cc7b139a823b10004d8e6cd"
-  @@despacho = "5cc7b139a823b10004d8e6ce"
-  @@pulmon = "5cc7b139a823b10004d8e6d1"
-  @@cocina = "5cc7b139a823b10004d8e6d2"
+  @@server = "dev"
+  # @@recepcion = "5cc7b139a823b10004d8e6cd"
+  # @@despacho = "5cc7b139a823b10004d8e6ce"
+  # @@pulmon = "5cc7b139a823b10004d8e6d1"
+  # @@cocina = "5cc7b139a823b10004d8e6d2"
+  @@recepcion = @@server != "dev" ? "5cc7b139a823b10004d8e6cd" : "5cbd3ce444f67600049431b3"
+  @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
+  @@pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
+  @@cocina = @@server != "dev" ? "5cc7b139a823b10004d8e6d2" : "5cbd3ce444f67600049431b8"
+  
+  
   @@api_key = "RAPrFLl620Cg$o"
   @@ordenes_pendientes = []
   @@first_execution = false
-  @@server = "prod"
   @@using_despacho = false
 
     '''Ultima conexión al servidor SFTP'''

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190606192601) do
+ActiveRecord::Schema.define(version: 20190610231203) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -84,7 +84,7 @@ ActiveRecord::Schema.define(version: 20190606192601) do
     t.integer "sku"
     t.string "name"
     t.integer "number_of_products"
-    t.integer "minimum_stock"
+    t.integer "minimum_stock", default: 0
     t.integer "ingredients_number"
     t.string "ingredient_name"
     t.integer "sku_ingredient"
@@ -128,6 +128,7 @@ ActiveRecord::Schema.define(version: 20190606192601) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "incoming"
+    t.integer "min", default: 0
   end
 
   create_table "receipts", force: :cascade do |t|

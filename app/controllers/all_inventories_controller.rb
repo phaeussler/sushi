@@ -8,7 +8,6 @@ class AllInventoriesController < ApplicationController
     puts @inventories
     # @ingredients = Ingredient.all
     @products = Product.all
-
   end
 
   # GET /all_inventories/1

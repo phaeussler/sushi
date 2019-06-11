@@ -1,5 +1,4 @@
 <p id="notice"><%= notice %></p>
-
 <h1>All Inventories</h1>
 <table>
   <thead>
@@ -10,20 +9,23 @@
       <th>Min</th>
       <th>Faltan</th>
       <th>Details</th>
+      <th>Cocina</th>
+      <th>Recepción</th>
+      <th>Pulmon</th>
     </tr>
   </thead>
 
   <tbody>
     <% @products.each do |product| %>
-      <% min = MinimumStock.find_by sku: product[:sku].to_i %>
-      <%min = min ? min["minimum_stock"] : 0%>
+      <%# <% min = MinimumStock.find_by sku: product[:sku].to_i %> 
+      <%# <%min = min ? min["minimum_stock"] : 0%> 
       <% total = @inventories[product[:sku].to_s] ? @inventories[product[:sku].to_s][:total] : 0   %>
       <tr>
         <td><%= product[:sku] %></td>
         <td><%= product[:name] %></td>
         <td><%= total %></td>
-        <td><%= min %></td>
-        <td><%= min - total> 0 ? min - total : 0%></td>
+        <td><%= product[:min] %></td>
+        <td><%= product[:min] - total> 0 ? product[:min] - total : 0%></td>
         <td><%= product[:description] %></td>
       </tr>
     <% end %>
