@@ -8,6 +8,10 @@ class AllInventoriesController < ApplicationController
     puts @inventories
     # @ingredients = Ingredient.all
     @products = Product.all
+    @recepcion = get_inventorie_from_cellar('recepcion')
+    @pulmon = get_inventorie_from_cellar('pulmon')
+    @cocina = get_inventorie_from_cellar('cocina')
+    @despacho = get_inventorie_from_cellar('despacho')
   end
 
   # GET /all_inventories/1

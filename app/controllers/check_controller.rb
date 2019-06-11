@@ -5,34 +5,61 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    '''1. Encontramos los productos que debemos mantener en un mínimo'''
-    lista_sku1 = skus_monitorear()
-    '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
-    lista de lista con cada elemento de la forma [sku, inventario minimo]'''
-    lista_sku2 = encontar_minimos(lista_sku1)
-    '''3. Para cada uno de los productos debo encontrar su inventario'''
-    '''3.1 Encuentro los productos con stock en cocina'''
-    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    '''3.2 Productos con inventario en pulmon'''
-    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
-    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
-    hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-    de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
-    Inventario total es inventario incoming + inventario en cocina'''
-    '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
-    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, pulmon)
-    '''4. Mantener inventario de productos finales y de productos normales'''
-    '''4. Analizar el tema de inventario'''
-    puts "-----------------PRODUCTOS-----------------"
-    inventario_minimo(@lista_productos)
-    puts "-----------------PRODUCTOS FINALES-----------------"
-    inventario_productos_finales(@lista_final)
-    puts "INVENTARIO"
+    # '''1. Encontramos los productos que debemos mantener en un mínimo'''
+    # lista_sku1 = skus_monitorear()
+    # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
+    # lista de lista con cada elemento de la forma [sku, inventario minimo]'''
+    # lista_sku2 = encontar_minimos(lista_sku1)
+    # '''3. Para cada uno de los productos debo encontrar su inventario'''
+    # '''3.1 Encuentro los productos con stock en cocina'''
+    # productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    # '''3.2 Productos con inventario en pulmon'''
+    # pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    # '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
+    # hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
+    # de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
+    # Inventario total es inventario incoming + inventario en cocina'''
+    # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
+    # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, pulmon)
+    # '''4. Mantener inventario de productos finales y de productos normales'''
+    # '''4. Analizar el tema de inventario'''
+    # puts "-----------------PRODUCTOS-----------------"
+    # inventario_minimo(@lista_productos)
+    # puts "-----------------PRODUCTOS FINALES-----------------"
+    # inventario_productos_finales(@lista_final)
+    # puts "INVENTARIO"
+    satisfy_inventory_policity()
 
 
 
     msg = "Inventario Revisado"
     render json: msg, :status => 200
+  end
+
+  ''' Funcion encargada de satisfacer la politica de inventario minimo y maximo '''
+  def satisfy_inventory_policity
+    puts "satisfy_inventory_policity"
+    inventories = get_dict_inventories()
+    puts "inventories #{inventories}"
+    for product in Product.all
+      in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
+      puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level}"
+      if product["min"] >= in_cellar and in_cellar < product["max"]
+        if product.level == 1
+          '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
+          if product["groups"].split(",")[0] == "1"
+            lot = production_lot(product[:sku], 10)
+            fabricarSinPago(@@api_key, product[:sku], lot)
+          else
+            pedir_otro_grupo_oc(product[:sku], 10)
+          end
+        elsif product.level == 2
+          '''Level 2 es productos que tenemos que mandar a fabricar'''
+        elsif product.level == 3
+          '''Level 3 es productos que tenemos que mandar a cocinar'''
+        end
+      end
+    end
   end
 
   def actualizar_incoming2(sku, cantidad)

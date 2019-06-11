@@ -51,7 +51,6 @@ recepcion_a_pulmon(productos)
   '''POST a la URL'''
   # POST/ftporders
   def create
-    puts "HOLA"
   end
 
 

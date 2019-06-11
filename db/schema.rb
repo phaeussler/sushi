@@ -127,8 +127,10 @@ ActiveRecord::Schema.define(version: 20190610231203) do
     t.string "production_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "incoming"
+    t.integer "incoming", default: 0
     t.integer "min", default: 0
+    t.integer "max", default: 0
+    t.integer "level", default: 0
   end
 
   create_table "receipts", force: :cascade do |t|

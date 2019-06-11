@@ -246,27 +246,64 @@ class ApplicationController < ActionController::Base
     respuesta
   end
 
+  '''Invetario de cocina + pulmón en forma de diccionario'''
   def get_dict_inventories
-    puts "CONSULTANDO INVENTARIO COCINA + PULMON\n"
-    recepcion = sku_with_stock(@@cocina,@@api_key)[0]
-    pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
-    productos = recepcion + pulmon
-    # productos.group_by(&:capitalize).map {|k,v| [k, v.length]}
-    productos = productos.group_by{|x| x["_id"]}
-    respuesta = {}
-    for sku, dic in productos do
-      total = 0
-      nombre = Product.find_by sku: sku.to_i
-      for y in dic do
-        total += y["total"]
-      end
-      begin
-        res = {"sku": sku,"nombre": nombre["name"], "total": total}
-        respuesta[sku] = res
-      rescue NoMethodError => e
-      end
+    puts "get_dict_inventories\n"
+    recepcion = get_inventorie_from_cellar('recepcion')
+    pulmon = get_inventorie_from_cellar('pulmon')
+    inventories = pulmon
+    for sku, total in pulmon do
+      in_reception = recepcion[sku] ? recepcion[sku] : 0
+      inventories[sku] = total+ in_reception
     end
-    respuesta
+    puts "get_dict_inventories -> #{inventories}"
+    return inventories
+
+    # recepcion = sku_with_stock(@@cocina,@@api_key)[0]
+    # pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
+    # productos = recepcion + pulmon
+    # productos.group_by(&:capitalize).map {|k,v| [k, v.length]}
+    # productos = productos.group_by{|x| x["_id"]}
+    # respuesta = {}
+    # for sku, dic in productos do
+    #   total = 0
+    #   nombre = Product.find_by sku: sku.to_i
+    #   for y in dic do
+    #     total += y["total"]
+    #   end
+    #   begin
+    #     res = {"sku": sku,"nombre": nombre["name"], "total": total}
+    #     respuesta[sku.to_i] = res
+    #   rescue NoMethodError => e
+    #   end
+    # end
+    # respuesta
+  end
+
+  '''Se le da como parametro el nombre de la bodega a analizar y te entrega un diccionario con {id:total} de la bodega'''
+  def get_inventorie_from_cellar(name)
+    puts "get_inventorie_from_cellar"
+    if name == "recepcion"
+      # puts "RECECPCION"
+      cellar = sku_with_stock(@@recepcion, @@api_key)[0]
+    elsif name == "cocina"
+      # puts "COCINA"
+      cellar = sku_with_stock(@@cocina, @@api_key)[0]
+    elsif name == "pulmon"
+      # puts "PULMON"
+      cellar = sku_with_stock(@@pulmon, @@api_key)[0]
+    elsif name == "despacho"
+      # puts "DESPACHO"
+      cellar = sku_with_stock(@@despacho, @@api_key)[0]
+    else
+      puts "Error nombre de bodega mal ingresado #{name}"
+    end
+    dic = {}
+    for item in cellar
+      dic[item["_id"].to_i] = item["total"]
+    end
+    puts "#{name} -> #{dic}"
+    return dic
   end
 
   '''Invetario de cocina + pulmón de los productos que produzco'''
@@ -597,7 +634,6 @@ class ApplicationController < ActionController::Base
       end
     end
   end
-
 
 
 end

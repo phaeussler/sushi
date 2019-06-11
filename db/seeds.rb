@@ -103,10 +103,16 @@ for i in 2..79
   min = min ? min["minimum_stock"] : 0
   if sku<=1016
     min = [min, 200].max
+    max = 700
+    level = 1
   elsif sku < 10000
     min = [min, 50].max
+    max = 150
+    level = 2
   else
     min = [min, 1].max
+    max = 50
+    level = 3
   end
   Product.create(
     sku: productos.cell('A', i),
@@ -124,6 +130,8 @@ for i in 2..79
     groups: productos.cell('M', i),
     total_productor_groups: productos.cell('N', i),
     production_type: productos.cell('AC', i), # nuevo
-    min: min
+    min: min,
+    max: max,
+    level: level
   )
 end

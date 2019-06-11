@@ -5,7 +5,7 @@ class Handler < CheckController
     puts "RECEPCION"
     if !@@using_despacho
       #despacho_a_pulmon
-      cocina_a_pulmon
+      cocina_a_pulmon()
     end
     '''Productos con stock en rececpcion'''
     productos = sku_with_stock(@@recepcion, @@api_key)[0]
@@ -21,13 +21,13 @@ class Handler < CheckController
     else
       puts "RECEPCION VACIA"
     end
-    self.empty_reception
+    self.empty_reception()
   end
   handle_asynchronously :empty_reception, :run_at => Proc.new {12.minutes.from_now }
 
 
   def oc_pendientes
-    pendientes
+    pendientes()
   end
   handle_asynchronously :oc_pendientes, :run_at => Proc.new {15.minutes.from_now }
 

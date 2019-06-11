@@ -2,7 +2,6 @@ class CheckInventoryJob < ApplicationJob::Base
   queue_as :default
 
   def perform
-    puts "HOLA"
   end
 end
 
