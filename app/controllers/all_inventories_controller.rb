@@ -5,8 +5,6 @@ class AllInventoriesController < ApplicationController
   # GET /all_inventories.json
   def index
     @inventories = get_dict_inventories
-    puts @inventories
-    # @ingredients = Ingredient.all
     @products = Product.all
     @recepcion = get_inventorie_from_cellar('recepcion')
     @pulmon = get_inventorie_from_cellar('pulmon')

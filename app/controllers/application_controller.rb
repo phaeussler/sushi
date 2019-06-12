@@ -34,7 +34,6 @@ class ApplicationController < ActionController::Base
   @@ftp_url = "fierro.ing.puc.cl"
   @@ftp_port = "22"
 
-
   def get_request(g_num, uri)
     begin  # "try" block
       base_url = "http://tuerca#{g_num}.ing.puc.cl"
@@ -258,26 +257,6 @@ class ApplicationController < ActionController::Base
     end
     puts "get_dict_inventories -> #{inventories}"
     return inventories
-
-    # recepcion = sku_with_stock(@@cocina,@@api_key)[0]
-    # pulmon = sku_with_stock(@@pulmon,@@api_key)[0]
-    # productos = recepcion + pulmon
-    # productos.group_by(&:capitalize).map {|k,v| [k, v.length]}
-    # productos = productos.group_by{|x| x["_id"]}
-    # respuesta = {}
-    # for sku, dic in productos do
-    #   total = 0
-    #   nombre = Product.find_by sku: sku.to_i
-    #   for y in dic do
-    #     total += y["total"]
-    #   end
-    #   begin
-    #     res = {"sku": sku,"nombre": nombre["name"], "total": total}
-    #     respuesta[sku.to_i] = res
-    #   rescue NoMethodError => e
-    #   end
-    # end
-    # respuesta
   end
 
   '''Se le da como parametro el nombre de la bodega a analizar y te entrega un diccionario con {id:total} de la bodega'''

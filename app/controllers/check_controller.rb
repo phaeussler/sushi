@@ -38,23 +38,24 @@ class CheckController < ApplicationController
 
   ''' Funcion encargada de satisfacer la politica de inventario minimo y maximo '''
   def satisfy_inventory_policity
-    puts "satisfy_inventory_policity"
+    puts "--satisfy_inventory_policity--"
     inventories = get_dict_inventories()
-    puts "inventories #{inventories}"
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
       puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level}"
-      if product["min"] >= in_cellar and in_cellar < product["max"]
+      if product["min"]*0.3 >= in_cellar and in_cellar < product["max"]
         if product.level == 1
           '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
-          if product["groups"].split(",")[0] == "1"
+          # if product["groups"].split(",")[0] == "1"
             lot = production_lot(product[:sku], 10)
             fabricarSinPago(@@api_key, product[:sku], lot)
-          else
-            pedir_otro_grupo_oc(product[:sku], 10)
-          end
+          # else
+            # pedir_otro_grupo_oc(product[:sku], 10)
+          # end
         elsif product.level == 2
           '''Level 2 es productos que tenemos que mandar a fabricar'''
+          lot = production_lot(product[:sku], 1)
+            fabricarSinPago(@@api_key, product[:sku], lot)
         elsif product.level == 3
           '''Level 3 es productos que tenemos que mandar a cocinar'''
         end
@@ -574,7 +575,7 @@ class CheckController < ApplicationController
           oc_body = JSON.parse(oc.body)
 
           if oc_code == 200
-
+            puts "#id orden de compra #{oc_body["_id"]} #{oc_body["_id"].class.name}"
             # Si es aceptado hacemos el request al otro grupo con el id de la orden
             code, body, headers = order_request(group, sku, @@recepcion, cantidad, oc_body["_id"])
             # else
@@ -582,7 +583,8 @@ class CheckController < ApplicationController
             #   code, body, headers = order_request(group, sku, @@recepcion, cantidad)
             # end
             # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-            puts "ORDER REQUEST -> #{code}"
+            require 'colorize'
+            puts "#{'ORDER REQUEST'.green} -> #{(code == 200 or code == 201) ? code.to_s.green : code.to_s.red} #{body}"
             # Reviso si fue aceptado, deberia ser 201 el codigo pero hay grupos que lo tienen implementado con 200
             if code == 200 or code == 201
               puts "#{headers} #{body}"
@@ -609,7 +611,6 @@ class CheckController < ApplicationController
           end
         end
       end
-      return cantidad
     end
     return cantidad
   end

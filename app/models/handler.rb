@@ -71,4 +71,11 @@ class Handler < CheckController
   end
   handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {15.minutes.from_now }
 
+
+  def satisfy_inventory_policity_job
+    satisfy_inventory_policity()
+  end
+  handle_asynchronously :satisfy_inventory_policity_job, :run_at => Proc.new {1.minutes.from_now }
+
+
 end
