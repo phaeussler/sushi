@@ -5,30 +5,30 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    # '''1. Encontramos los productos que debemos mantener en un mínimo'''
-    # lista_sku1 = skus_monitorear()
-    # '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
-    # lista de lista con cada elemento de la forma [sku, inventario minimo]'''
-    # lista_sku2 = encontar_minimos(lista_sku1)
-    # '''3. Para cada uno de los productos debo encontrar su inventario'''
-    # '''3.1 Encuentro los productos con stock en cocina'''
-    # productos1 = sku_with_stock(@@cocina, @@api_key)[0]
-    # '''3.2 Productos con inventario en pulmon'''
-    # pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
-    # '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
-    # hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
-    # de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
-    # Inventario total es inventario incoming + inventario en cocina'''
-    # '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
-    # @lista_final, @lista_productos = encontrar_incoming(lista_sku2, pulmon)
-    # '''4. Mantener inventario de productos finales y de productos normales'''
-    # '''4. Analizar el tema de inventario'''
-    # puts "-----------------PRODUCTOS-----------------"
-    # inventario_minimo(@lista_productos)
-    # puts "-----------------PRODUCTOS FINALES-----------------"
-    # inventario_productos_finales(@lista_final)
-    # puts "INVENTARIO"
-    satisfy_inventory_policity()
+    '''1. Encontramos los productos que debemos mantener en un mínimo'''
+    lista_sku1 = skus_monitorear()
+    '''2. Encontramos el mínimo para cada producto. Esta funcion nos devuelve una
+    lista de lista con cada elemento de la forma [sku, inventario minimo]'''
+    lista_sku2 = encontar_minimos(lista_sku1)
+    '''3. Para cada uno de los productos debo encontrar su inventario'''
+    '''3.1 Encuentro los productos con stock en cocina'''
+    productos1 = sku_with_stock(@@cocina, @@api_key)[0]
+    '''3.2 Productos con inventario en pulmon'''
+    pulmon = sku_with_stock(@@pulmon, @@api_key)[0]
+    '''3.3 Encuentro el inventario incoming de los productos. Puede ser que ya
+    hayamos pedido producto y no queremos ser redundantes. Productos2 es una lista
+    de listas donde cada elemento tiene el formato [sku, inventario total, inventario minimo].
+    Inventario total es inventario incoming + inventario en cocina'''
+    '''Lista final tiene la lista con productos finales, lista productos es una lista de materias primas'''
+    @lista_final, @lista_productos = encontrar_incoming(lista_sku2, pulmon)
+    '''4. Mantener inventario de productos finales y de productos normales'''
+    '''4. Analizar el tema de inventario'''
+    puts "-----------------PRODUCTOS-----------------"
+    inventario_minimo(@lista_productos)
+    puts "-----------------PRODUCTOS FINALES-----------------"
+    inventario_productos_finales(@lista_final)
+    puts "INVENTARIO"
+    # satisfy_inventory_policity()
 
 
 
@@ -42,12 +42,12 @@ class CheckController < ApplicationController
     inventories = get_dict_inventories()
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
-      puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level}"
-      if product["min"]*0.3 >= in_cellar and in_cellar < product["max"]
+      puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
+      if product["min"]*1.3 >= in_cellar and in_cellar < product["max"]
         if product.level == 1
           '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
           # if product["groups"].split(",")[0] == "1"
-            lot = production_lot(product[:sku], 10)
+            lot = production_lot(product[:sku], 100)
             fabricarSinPago(@@api_key, product[:sku], lot)
           # else
             # pedir_otro_grupo_oc(product[:sku], 10)
@@ -55,12 +55,167 @@ class CheckController < ApplicationController
         elsif product.level == 2
           '''Level 2 es productos que tenemos que mandar a fabricar'''
           lot = production_lot(product[:sku], 1)
-            fabricarSinPago(@@api_key, product[:sku], lot)
+          # producir_nivel2(product[:sku], lot)
+          get_ingredients_list(product[:sku])
         elsif product.level == 3
           '''Level 3 es productos que tenemos que mandar a cocinar'''
         end
       end
     end
+  end
+
+  def get_ingredients_list(sku)
+    receta = Receipt.find_by sku: sku
+    total_ingredientes = receta["ingredients_number"]
+    ingredientes = []
+    numero = "1"
+    for j in 0...total_ingredientes
+      if receta["ingredient"+numero] != nil
+        sku = Product.find_by name: receta["ingredient"+numero]
+        ingredientes << sku["sku"]
+      end
+        numero = numero.to_i + 1
+        numero = numero.to_s
+    end
+    puts "#{@sku} Ingredientes -> #{ingredientes} #{total_ingredientes}"
+    return ingredientes
+  end
+
+  def move_ingredients_to_despacho(ingredients, cantidad)
+    # Primero determinar la cantidad a mover de un ingrediente ingredient_quantity, segun cantidad a producir.
+    '''1.1 Analizar cuanto tengo en cocina'''
+    pulmon = get_inventorie_from_cellar('pulmon')
+    recepcion = get_inventorie_from_cellar('recepcion')
+    for sku in ingredients
+      lot = production_lot(sku, cantidad)
+
+      puts "el lote del #{sku} es: #{lot}"
+      cant_pulm = pulmon[sku] ? pulmon[sku] : 0
+
+      
+    end
+    
+    
+    # move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, restante)
+  end
+
+  ## Verifica que los ingredientes de un producto están disponibles
+  def validate_ingredients_existance(ingredients, cantidad)
+    inventories = get_dict_inventories()
+    for sku in ingredients
+      ## Si no se tiene en inventario el ingrediente, no se puede mandar a producir
+      if inventories[sku] < cantidad_de_bodega_necesaria_por_ingrediente(sku, cantidad)
+        puts "validate_ingredients_existance falta #{sku}"
+        return false
+      end
+    return true
+    end
+  end
+
+  def producir_nivel2(sku, cantidad)
+    puts "producir_nivel2 #{sku} #{cantidad}"
+    fabricarSinPago(@@api_key, product[:sku], cantidad)
+    '''1. Buscamos los ingredientes que necesitamos'''
+    ingredientes = get_ingredients_list(sku)
+    '''2. Enviar ingredientes a despacho'''
+    if  not validate_ingredients_existance(ingredientes, cantidad)
+      return false
+    end
+    move_ingredients_to_despacho(ingredientes, cantidad)
+
+    '''3. Tengo la receta y los ingredientes, busco el inventario de las materias_primas'''
+    contador = 0
+    inventario = get_inventories
+    for ingrediente in ingredientes
+      '''3.1 Cuanto necesito de cada ingrediente'''
+      '''3.1.1 Buscar la cantidad'''
+      puts "Revisando Ingrediente -> #{ingrediente}"
+      quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
+      lot = 0
+      if quantity == nil
+        lot = 0
+      else
+        lot = production_lot_ingredient(quantity ,@cantidad)
+      end
+      '''3.1.2 Reviso el stock que tengo de ese producto'''
+      '''Si tengo el stock ahora'''
+      revisado = false
+      for producto in inventario
+        if ingrediente == producto[:sku].to_i
+          real = producto[:total].to_i
+          if real > lot
+            puts "Stock ahora"
+            revisado = true
+            contador = contador + 1
+          end
+        end
+      end
+      if !revisado
+        '''Puede ser que el stock venga en camino'''
+        for stock in lista
+          '''Si lo tengo en mi lista de stock'''
+          if ingrediente == stock[0].to_i
+            '''Si el stock viene en camino'''
+            revisado = true
+            '''Si el stock viene en camino y no hay suficiente'''
+            if stock[1] < lot
+              fabricar = fabricarSinPago(@@api_key, ingrediente.to_s, lot)
+              respuesta = JSON.parse(fabricar.body)
+              handle_response(respuesta, ingrediente, lot, lista)
+            else
+              puts "Stock en camino"
+            end
+          end
+        end
+      end
+        '''Si el producto no está en stock o hay que pedirlo'''
+        if !revisado
+          fabricar = fabricarSinPago(@@api_key, ingrediente.to_s, lot)
+          respuesta = JSON.parse(fabricar.body)
+          handle_response(respuesta, ingrediente, lot, lista)
+        else
+          puts "Ingrediente #{ingrediente} tenía stock"
+        end
+      end
+
+      '''4. Si tengo las materias primas para fabricar'''
+      if contador == total_ingredientes.to_i
+        puts "Tengo todos los ingredientes y puedo fabricar"
+        '''1. Mover los productos del pulmon a la cocina'''
+        puts "Logica pulmon despacho"
+        '''O. Vaciar el despacho '''
+        puts "PRIMERO VACIO DESPACHO"
+        if !@@using_despacho
+          @@using_despacho = true
+          despacho_a_pulmon
+          @@using_despacho = false
+        end
+        for ingrediente in ingredientes
+          quantity = Ingredient.find_by(sku_product: @sku, sku_ingredient: ingrediente)
+          lot = 0
+          if quantity == nil
+            lot = 0
+          else
+            lot = production_lot_ingredient(quantity ,@cantidad)
+          end
+          '''1.1 Analizar cuanto tengo en cocina'''
+          puts "Revisando cuanto hay en despacho"
+          restante = revisar_si_hay_en_despacho(ingrediente, lot)
+          if restante > 0
+            @@using_despacho = true
+            puts "Moviendo de pulmon a despacho"
+            move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, restante)
+          end
+        end
+        '''2. Mandar a producir'''
+        puts "Enviando a producir"
+        fabricar = fabricarSinPago(@@api_key, @sku.to_s, @cantidad)
+        '''3. Manejar respuesta'''
+        puts "Manejando respuesta"
+        respuesta = JSON.parse(fabricar.body)
+        handle_response(respuesta, @sku, cantidad, lista)
+        @@using_despacho = false
+      end
   end
 
   def actualizar_incoming2(sku, cantidad)
@@ -619,11 +774,22 @@ class CheckController < ApplicationController
   def production_lot(sku, cantidad)
     quantity1 = Product.find_by sku: sku.to_i
     quantity = quantity1["production_lot"].to_i
-    n = 1
-    while cantidad > (quantity * n).to_i
-      n = n + 1
-    end
+    n = (cantidad/quantity).ceil
+    # n = 1
+    # while cantidad > (quantity * n).to_i
+    #   n = n + 1
+    # end
     return (quantity * n).to_i
+  end
+
+  '''En unidades de bodega'''
+  def cantidad_de_bodega_necesaria_por_ingrediente(sku, cantidad)
+    product = Product.find_by sku: sku.to_i
+    lot = product["production_lot"]
+    hold = product["equivalence_unit_hold"]
+    n = (cantidad/lote).ceil
+    # n = (cantidad/quantity).ceil
+    return (hold*n).to_i
   end
 
   '''Calcula lote de produccion de un ingrediente'''
