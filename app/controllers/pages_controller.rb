@@ -6,10 +6,12 @@ class PagesController < ApplicationController
     else
       @@first_execution = true
       handler = Handler.new
-      handler.empty_reception
-      handler.check_inventory
-      handler.ordenes_de_compra_ftp
-      handler.oc_pendientes
+      # handler.empty_reception
+      # handler.check_inventory
+      # handler.ordenes_de_compra_ftp
+      # handler.oc_pendientes
+      handler.satisfy_inventory_level1_job
+      handler.satisfy_inventory_level2_job
     end
   end
 

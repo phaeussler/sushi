@@ -7,10 +7,6 @@ class ApplicationController < ActionController::Base
   helper_method :grup_request
   include HTTParty
   @@server = "dev"
-  # @@recepcion = "5cc7b139a823b10004d8e6cd"
-  # @@despacho = "5cc7b139a823b10004d8e6ce"
-  # @@pulmon = "5cc7b139a823b10004d8e6d1"
-  # @@cocina = "5cc7b139a823b10004d8e6d2"
   @@recepcion = @@server != "dev" ? "5cc7b139a823b10004d8e6cd" : "5cbd3ce444f67600049431b3"
   @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
   @@pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
@@ -245,7 +241,7 @@ class ApplicationController < ActionController::Base
     respuesta
   end
 
-  '''Invetario de cocina + pulmón en forma de diccionario'''
+  '''Invetario de cocina + pulmón en forma de diccionario {id:total}'''
   def get_dict_inventories
     puts "get_dict_inventories\n"
     recepcion = get_inventorie_from_cellar('recepcion')
