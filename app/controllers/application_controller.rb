@@ -245,9 +245,9 @@ class ApplicationController < ActionController::Base
     puts "get_dict_inventories\n"
     recepcion = get_inventorie_from_cellar('recepcion')
     pulmon = get_inventorie_from_cellar('pulmon')
-    inventories = pulmon
+    inventories = recepcion
     for sku, total in pulmon do
-      in_reception = recepcion[sku] ? recepcion[sku] : 0
+      in_reception = inventories[sku] ? inventories[sku] : 0
       inventories[sku] = total+ in_reception
     end
     puts "get_dict_inventories -> #{inventories}"

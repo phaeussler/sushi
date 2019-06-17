@@ -6,7 +6,7 @@ class PagesController < ApplicationController
     else
       @@first_execution = true
       handler = Handler.new
-      # handler.empty_reception
+      handler.empty_reception
       # handler.check_inventory
       # handler.ordenes_de_compra_ftp
       # handler.oc_pendientes
