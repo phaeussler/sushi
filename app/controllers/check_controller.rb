@@ -5,6 +5,7 @@ class CheckController < ApplicationController
   # GET /check
   def index
     ''' LO QUE ESTA COMENTADO EN pedir_un_producto y satisfy_inventory_level1 PARA LA ENTREGA HAY QUE DESCOMENTARLO'''
+    satisfy_inventory_level3()
     msg = "Inventario Revisado"
     render json: msg, :status => 200
   end
@@ -32,7 +33,7 @@ class CheckController < ApplicationController
 
   '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
   def satisfy_inventory_level1
-    puts "--satisfy_inventory_level1--"
+    puts "--satisfy_inventory_level1--".green
     cantidad = 10
     inventories = get_dict_inventories()
     for product in Product.all
@@ -56,7 +57,7 @@ class CheckController < ApplicationController
 
   '''Level 2 es productos que tenemos que mandar a fabricar'''
   def satisfy_inventory_level2
-    puts "--satisfy_inventory_level2--"
+    puts "--satisfy_inventory_level2--".green
     inventories = get_dict_inventories()
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
@@ -71,7 +72,7 @@ class CheckController < ApplicationController
 
   '''Level 3 es productos que tenemos que mandar a fabricar'''
   def satisfy_inventory_level3
-    puts "--satisfy_inventory_level3--"
+    puts "--satisfy_inventory_level3--".green
     inventories = get_dict_inventories()
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
@@ -266,7 +267,7 @@ class CheckController < ApplicationController
     # while cantidad > (quantity * n).to_i
     #   n = n + 1
     # end
-    return (quantity * n).to_i
+    return [(quantity * n).to_i, quantity].max
   end
 
   '''Maneja las respuestas de fabricarSinPago'''

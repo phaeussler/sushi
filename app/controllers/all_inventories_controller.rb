@@ -16,6 +16,8 @@ class AllInventoriesController < CheckController
   # GET /all_inventories/1.json
   def show
     pedir_un_producto(params[:id])
+    @inventories = get_dict_inventories
+    @product = Product.find_by sku: params[:id].to_i
   end
 
   # GET /all_inventories/new

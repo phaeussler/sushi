@@ -1,1 +1,6 @@
+
+<h1><%= "SKU: #{@product[:sku]}" %></h1>
+<p><%= "Nombre: #{@product[:name]}" %></p>
+<p><%= "Total: #{@inventories[@product[:sku]] ? @inventories[@product[:sku]] : 0}" %></p>
+
 <%= link_to 'Back', all_inventories_path %>
