@@ -30,8 +30,8 @@
         <td><%= @pulmon[product[:sku]] ? @pulmon[product[:sku]] : 0 %></td>
         <td><%= @cocina[product[:sku]] ? @cocina[product[:sku]] : 0 %></td>
         <td><%= @despacho[product[:sku]] ? @despacho[product[:sku]] : 0 %></td>
+        <td><%= link_to 'Pedir', all_inventory_path(product[:sku]) %></td>
       </tr>
     <% end %>
   </tbody>
 </table>
-

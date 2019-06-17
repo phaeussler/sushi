@@ -1,18 +1,32 @@
 
 class CheckController < ApplicationController
-
-
+  helper_method :pedir_un_producto
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    # sku = 1112
-    # cantidad = 3
-    # fabricar_producto(cantidad, sku, 'despacho')
-    satisfy_inventory_level2()
-
-
+    ''' LO QUE ESTA COMENTADO EN pedir_un_producto y satisfy_inventory_level1 PARA LA ENTREGA HAY QUE DESCOMENTARLO'''
     msg = "Inventario Revisado"
     render json: msg, :status => 200
+  end
+
+  def pedir_un_producto(sku)
+    puts "pedir_un_producto #{sku}"
+    product = Product.find_by sku: sku.to_i
+    if product.level == 1
+      '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
+      # if product["groups"].split(",")[0] == "1"
+        lot = production_lot(product[:sku], 10)
+        fabricar = fabricarSinPago(@@api_key, product[:sku], lot)
+      #   respuesta = JSON.parse(fabricar.body)
+      #   handle_response(respuesta, sku, lot)
+      # else
+      #   pedir_otro_grupo_oc(product[:sku], 10)
+      # end
+    elsif product.level == 2
+      fabricar_producto(5, product[:sku], 'despacho')
+    elsif product.level == 3
+      fabricar_producto(1, product[:sku], 'cocina')
+    end
   end
 
 
