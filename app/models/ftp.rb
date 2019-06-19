@@ -4,12 +4,12 @@ class Ftp < CheckController
 
   def execute
     '''1. Veo las ordenes que me llegan '''
-    ordenes = get_ftp
+    ordenes = get_ftp()
     puts "ORDENES"
     for orden in ordenes
       evaluacion = false
       if orden["canal"] == "b2b"
-        '''NO hago nada'''
+        '''No hago nada'''
       else
         sku = orden["sku"]
         cantidad = orden["cantidad"]
@@ -20,11 +20,13 @@ class Ftp < CheckController
           '''3. Mando a fabricar el producto, si es que la evaluacion es positiva'''
           respuesta = fabricar_final(cantidad, sku)
           '''3.1 Si hay un error en la fabricación'''
+          '''Esto NOOO deberia pasar'''
           if respuesta["error"]
             rechazar_oc(orden["_id"])
           '''3.2 Si va todo bien en la fabricacion'''
           else
             '''3.2.1 Recepciono la orden'''
+            '''ESTO DEBERIA PASAR POCO'''
             recepcionar_oc(orden["_id"])
             '''3.2.2 Agrego la orden a pendientes'''
             @@ordenes_pendientes << orden

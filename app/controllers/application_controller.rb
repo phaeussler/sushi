@@ -11,8 +11,8 @@ class ApplicationController < ActionController::Base
   @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
   @@pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
   @@cocina = @@server != "dev" ? "5cc7b139a823b10004d8e6d2" : "5cbd3ce444f67600049431b8"
-  
-  
+
+
   @@api_key = "RAPrFLl620Cg$o"
   @@ordenes_pendientes = []
   @@first_execution = false
@@ -332,7 +332,7 @@ class ApplicationController < ActionController::Base
     '''Ojo que para hacerlo mas rapido muevo de a un producto'''
     cantidad = orden["cantidad"].to_i
     dir = "hola12345"
-    precio = orden["cantidad"].to_i * orden["precioUnitario"].to_i
+    precio = orden["precioUnitario"].to_i
     for i in 0..cantidad -1 do
         move_q_products_almacen(@@pulmon,@@despacho, orden["sku"], 1)
         lista_productos = request_product(@@despacho, orden["sku"], @@api_key)[0]
@@ -395,19 +395,22 @@ class ApplicationController < ActionController::Base
     @password = "p7T4uNY3yqdDB8sS3"
     @password2 = "9me9BCjgkJ8b5MV"
     contador = 0
-    Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
+    Net::SFTP.start(@host, @grupo2, :password => @password2) do |sftp|
       @ordenes = []
       sftp.dir.foreach("pedidos") do |entry|
-        contador += 1
-        if contador > 4 and contador < 10
-          if (Time.at(entry.attributes.mtime) > @@last_time)
+        @now = Time.now
+        if (Time.at(entry.attributes.mtime) > @@last_time)
+          puts "GET FTP ENTRE"
+          puts "TIME #{Time.at(entry.attributes.mtime)}"
+          if entry.name .include? ".xml"
             data = sftp.download!("pedidos/#{entry.name}")
             json = Hash.from_xml(data).to_json
             json = JSON.parse json
             ''' agregor cada orden como un diccionarioa una lista'''
             id = json["order"]["id"]
+            puts "ID #{id}"
             orden = obtener_oc(id)[0]
-            puts orden
+            puts "ORDEN #{orden}\n"
             @ordenes << orden
           end
         end
@@ -415,6 +418,15 @@ class ApplicationController < ActionController::Base
       @@last_time = Time.now
       return @ordenes
     end
+  end
+
+  def obtener_oc(id)
+    puts "Obtener OC"
+    url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/obtener/#{id}"
+    response = HTTParty.get(url,
+    headers:{
+	    "Content-Type": "application/json"})
+    return JSON.parse(response.body)
   end
 
   def recepcionar_oc(orden_id)
@@ -443,15 +455,7 @@ class ApplicationController < ActionController::Base
     return JSON.parse(response.body), response.headers
   end
 
-  def obtener_oc(id)
-    puts "Obtener OC"
-    url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/obtener/#{id}"
-    response = HTTParty.get(url,
-    headers:{
-	    "Content-Type": "application/json"})
-    puts JSON.parse(response.body)
-    return JSON.parse(response.body)
-  end
+
 
   """crea una fecha en el futuro 4 hrs por ahora"""
   def create_deliver_date(sku)
@@ -553,7 +557,6 @@ class ApplicationController < ActionController::Base
       for i in sku_with_stock(@@recepcion, @@api_key)[0]
         lista_productos = request_product(@@recepcion, i["_id"], @@api_key)[0]
         for j in lista_productos do
-          move_product_almacen(j["_id"], @@cocina)
           move_product_almacen(j["_id"], @@despacho)
           move_product_almacen(j["_id"], @@pulmon)
         end
@@ -593,6 +596,7 @@ class ApplicationController < ActionController::Base
     @@ordenes_pendientes = new_orders
 
     '''2. Si tengo el sku, y la cantidad en el inventario, despacharlo'''
+    '''Hay que hacer un get_inventories de cocina nom+as OJO'''
     stock = get_inventories
     if stock.length > 0 and @@ordenes_pendientes.length > 0
       for s in stock

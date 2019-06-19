@@ -5,7 +5,10 @@ class CheckController < ApplicationController
   # GET /check
   def index
     ''' LO QUE ESTA COMENTADO EN pedir_un_producto y satisfy_inventory_level1 PARA LA ENTREGA HAY QUE DESCOMENTARLO'''
-    satisfy_inventory_level3()
+    satisfy_inventory_level1_groups()
+    #satisfy_inventory_level2()
+
+
     msg = "Inventario Revisado"
     render json: msg, :status => 200
   end
@@ -30,26 +33,40 @@ class CheckController < ApplicationController
     end
   end
 
-
-  '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
-  def satisfy_inventory_level1
-    puts "--satisfy_inventory_level1--".green
+  def satisfy_inventory_level1_groups
+    puts "--satisfy_inventory_level1_gropus--".green
     cantidad = 10
     inventories = get_dict_inventories()
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
-      puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
+      #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
       if product["min"]*1.3 >= in_cellar and in_cellar < product["max"]
         if product.level == 1
           '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
-          # if product["groups"].split(",")[0] == "1"
-            lot = production_lot(product[:sku], cantidad)
-            fabricar = fabricarSinPago(@@api_key, product[:sku], lot)
-          #   respuesta = JSON.parse(fabricar.body)
-          #   handle_response(respuesta, sku, lot)
-          # else
-          #   pedir_otro_grupo_oc(product[:sku], 10)
-          # end
+          lot = production_lot(product[:sku], cantidad)
+          '''pedir_otro_grupo_oc retorna 0 si el otro grupo te aceptó y un numero > 0 si no aceptó'''
+          resp = pedir_otro_grupo_oc(product[:sku], lot)
+        end
+      end
+    end
+  end
+
+
+  '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
+  def satisfy_inventory_level1
+    puts "--satisfy_inventory_level1_--".green
+    cantidad = 50
+    inventories = get_dict_inventories()
+    for product in Product.all
+      in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
+      #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
+      if product["min"]*1.3 >= in_cellar and in_cellar < product["max"]
+        if product.level == 1
+          '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
+          lot = production_lot(product[:sku], cantidad)
+          fabricar = fabricarSinPago(@@api_key, product[:sku], lot)
+          respuesta = JSON.parse(fabricar.body)
+          handle_response(respuesta, product[:sku], lot, 'despacho')
         end
       end
     end
@@ -207,7 +224,7 @@ class CheckController < ApplicationController
     end
     # en forma aleatorea analizamos si es que nos pueden pasar los productos de los grupos que lo prodcen
     for group in groups.split(",").shuffle
-      unless group ==1
+      unless group == 1
         if cantidad > 0
           # Primero creamos la orden de compra
           puts "Metodo oc"
