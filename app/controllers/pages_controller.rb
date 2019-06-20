@@ -1,20 +1,23 @@
-class PagesController < ApplicationController
+class PagesController < CheckController
   def home
-    puts "HOME"
-    if @@first_execution
-      puts "YA SE EJECUTO"
-    else
-      @@first_execution = true
-      handler = Handler.new
-      handler.satisfy_inventory_level1_job
-      handler.satisfy_inventory_level2_job
-<<<<<<< HEAD
-      handler.satisfy_inventory_level1_groups_job
-=======
-      handler.satisfy_inventory_level1_gropus_job
->>>>>>> 6f5077b8d314623026ce252524d88606f00e5af9
+    #execute_ftp
+    pendientes
+    # puts "HOME"
+    # if @@first_execution
+    #   puts "YA SE EJECUTO"
+    # else
+    #   @@first_execution = true
+    #   handler = Handler.new
+    #   handler.satisfy_inventory_level1_job
+    #   handler.satisfy_inventory_level2_job
+    #   handler.satisfy_inventory_level1_groups_job
+    #   handler.oc_pendientes
+    #   handler.ordenes_de_compra_ftp
+    #   handler.empty_reception
 
-    end
+
+
+    #end
   end
 
 end

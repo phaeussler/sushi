@@ -1,12 +1,11 @@
-
 class CheckController < ApplicationController
   helper_method :pedir_un_producto
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
     ''' LO QUE ESTA COMENTADO EN pedir_un_producto y satisfy_inventory_level1 PARA LA ENTREGA HAY QUE DESCOMENTARLO'''
-    #fabricar_producto(5, 1101, 'despacho')
-    satisfy_inventory_level2
+    PendingOrder.destroy_all
+
 
     msg = "Inventario Revisado"
     render json: msg, :status => 200
@@ -136,7 +135,6 @@ class CheckController < ApplicationController
       puts "Enviando a producir"
       fabricar = fabricarSinPago(@@api_key, sku.to_s, cantidad)
       '''3. Manejar respuesta'''
-      puts "Manejando respuesta"
       respuesta = JSON.parse(fabricar.body)
       handle_response(respuesta, sku, cantidad, to)
       @@using_despacho = false
@@ -157,7 +155,8 @@ class CheckController < ApplicationController
     puts "Ingredientes -> #{total_ingredientes}"
     puts ingredientes
     '''Revisamos su stock'''
-    return check_ingredients_stock(sku, cantidad, total_ingredientes, ingredientes)
+    check, total = check_ingredients_stock(sku, cantidad, total_ingredientes, ingredientes)
+    return check
   end
 
   def fabricar_final(cantidad, sku)
@@ -192,7 +191,7 @@ class CheckController < ApplicationController
     puts "Enviando a producir"
     fabricar = fabricarSinPago(@@api_key, sku.to_s, cantidad)
     '''3. Manejar respuesta'''
-    puts "Manejando respuesta"
+
     respuesta = JSON.parse(fabricar.body)
     return respuesta
     # handle_response(respuesta, sku, cantidad)
@@ -397,4 +396,47 @@ class CheckController < ApplicationController
       end
     end
   end
+
+  def execute_ftp
+    '''1. Veo las ordenes que me llegan '''
+    ordenes = get_ftp()
+    for orden in ordenes
+      evaluacion = false
+      if orden["canal"] == "b2b"
+        '''No hago nada'''
+      else
+        sku = orden["sku"]
+        cantidad = orden["cantidad"]
+        '''2. Por casa orden, evaluo si puedo producir el producto'''
+        evaluacion = evaluar_fabricar_final(cantidad, sku)
+        if evaluacion
+          '''Notificar aceptacion'''
+          '''3. Mando a fabricar el producto, si es que la evaluacion es positiva'''
+          respuesta = fabricar_final(cantidad, sku)
+          '''3.1 Si hay un error en la fabricación'''
+          '''Esto NOOO deberia pasar'''
+          if respuesta["error"]
+            rechazar_oc(orden["_id"])
+          '''3.2 Si va todo bien en la fabricacion'''
+          else
+            '''3.2.1 Recepciono la orden'''
+            '''ESTO DEBERIA PASAR POCO'''
+            recepcionar_oc(orden["_id"])
+            '''3.2.2 Agrego la orden a pendientes'''
+            order = PendingOrder.new
+            order[:id_oc] = orden["_id"]
+            order[:reception_date] = Time.now
+            order[:max_dispatch_date] = orden["fechaEntrega"]
+            order.save
+          end
+        '''4. Si la evaluacion es negativa, rechazo la orden'''
+        else
+          '''Notificar rechazo'''
+          rechazar_oc(orden["_id"])
+        end
+      end
+    end
+  end
+
+
 end
