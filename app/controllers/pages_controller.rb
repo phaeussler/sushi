@@ -8,7 +8,7 @@ class PagesController < ApplicationController
       handler = Handler.new
       handler.satisfy_inventory_level1_job
       handler.satisfy_inventory_level2_job
-      handler.satisfy_inventory_level1_gropus
+      handler.satisfy_inventory_level1_groups_job
 
     end
   end

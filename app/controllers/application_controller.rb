@@ -107,9 +107,9 @@ class ApplicationController < ActionController::Base
         "Authorization": "INTEGRACION grupo1:#{hash_str}",
         "Content-Type": "application/json"
       })
-    puts "Solicitud: #{resp.code}"
-    puts JSON.parse(resp.body)
-    puts "Header #{resp.headers}"
+    # puts "Solicitud: #{resp.code}"
+    # puts JSON.parse(resp.body)
+    # puts "Header #{resp.headers}"
     return JSON.parse(resp.body), resp.headers
   end
 
@@ -140,7 +140,7 @@ class ApplicationController < ActionController::Base
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-      puts "\nMOVER ALMACEN\n"
+      puts "Mover Almacen #{product_id}"
       puts JSON.parse(request.body)
       return request
   end
@@ -250,7 +250,7 @@ class ApplicationController < ActionController::Base
       in_reception = inventories[sku] ? inventories[sku] : 0
       inventories[sku] = total+ in_reception
     end
-    puts "get_dict_inventories -> #{inventories}"
+    #puts "get_dict_inventories -> #{inventories}"
     return inventories
   end
 
@@ -276,7 +276,7 @@ class ApplicationController < ActionController::Base
     for item in cellar
       dic[item["_id"].to_i] = item["total"]
     end
-    puts "#{name} -> #{dic}"
+    #puts "#{name} -> #{dic}"
     return dic
   end
 
@@ -563,21 +563,21 @@ class ApplicationController < ActionController::Base
       end
     end
 
-  def cocina_a_pulmon
+  def cocina_a_pulmon(cantidad)
     for i in sku_with_stock(@@cocina, @@api_key)[0]
       lista_productos = request_product(@@cocina, i["_id"], @@api_key)[0]
-      for j in lista_productos do
-        move_product_almacen(j["_id"], @@despacho)
-        move_product_almacen(j["_id"], @@pulmon)
+      for j in 0..cantidad-1 do
+        move_product_almacen(lista_productos[j]["_id"], @@despacho)
+        move_product_almacen(lista_productos[j]["_id"], @@pulmon)
       end
     end
   end
 
-  def despacho_a_pulmon
+  def despacho_a_pulmon(cantidad)
     for i in sku_with_stock(@@despacho, @@api_key)[0]
       lista_productos = request_product(@@despacho, i["_id"], @@api_key)[0]
-      for j in lista_productos do
-        move_product_almacen(j["_id"], @@pulmon)
+      for j in 0..cantidad-1 do
+        move_product_almacen(lista_productos[j]["_id"], @@pulmon)
       end
     end
   end

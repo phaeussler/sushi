@@ -5,9 +5,8 @@ class CheckController < ApplicationController
   # GET /check
   def index
     ''' LO QUE ESTA COMENTADO EN pedir_un_producto y satisfy_inventory_level1 PARA LA ENTREGA HAY QUE DESCOMENTARLO'''
-    satisfy_inventory_level1_groups()
-    #satisfy_inventory_level2()
-
+    #fabricar_producto(5, 1101, 'despacho')
+    satisfy_inventory_level2
 
     msg = "Inventario Revisado"
     render json: msg, :status => 200
@@ -51,7 +50,6 @@ class CheckController < ApplicationController
     end
   end
 
-
   '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
   def satisfy_inventory_level1
     puts "--satisfy_inventory_level1_--".green
@@ -78,7 +76,7 @@ class CheckController < ApplicationController
     inventories = get_dict_inventories()
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
-      puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
+      #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
       if product["min"]*1.3 >= in_cellar and in_cellar < product["max"]
         if product.level == 2
           fabricar_producto(5, product[:sku], 'despacho')
@@ -93,7 +91,7 @@ class CheckController < ApplicationController
     inventories = get_dict_inventories()
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
-      puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
+      #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
       if product["min"]*1.3 >= in_cellar and in_cellar < product["max"]
         if product.level == 3
           fabricar_producto(1, product[:sku], 'cocina')
@@ -108,27 +106,30 @@ class CheckController < ApplicationController
     puts "FABRICANDO #{sku} -> CANTIDAD #{cantidad}"
     sku = sku
     cantidad = production_lot(sku, cantidad)
+    puts "PRODUCIENDO #{sku} CANTIDAD #{cantidad}"
     '''1. Buscamos la receta'''
     receta = Receipt.find_by sku: sku
     total_ingredientes = receta["ingredients_number"]
 
     ingredientes = get_ingredients_list(total_ingredientes, receta)
-    puts "#{sku}"
+    puts "Produciendo #{sku}"
     puts "Ingredientes -> #{total_ingredientes}"
     puts ingredientes
 
 
     '''4. Si tengo las materias primas para fabricar'''
-    if check_ingredients_stock(sku, cantidad, total_ingredientes, ingredientes)
+    check_ingredientes, total = check_ingredients_stock(sku, cantidad, total_ingredientes, ingredientes)
+    if check_ingredientes
       puts "Tengo todos los ingredientes y puedo fabricar"
       '''1. Mover los productos del pulmon a la cocina'''
-      puts "Logica pulmon despacho"
-      '''O. Vaciar el despacho '''
-      puts "PRIMERO VACIO DESPACHO"
-      if !@@using_despacho
-        @@using_despacho = true
-        despacho_a_pulmon()
-        @@using_despacho = false
+      restante = restante_despacho()
+      if total > restante
+        puts "Moviendo #{total - restante} a pulmon para vaciar despacho"
+        if !@@using_despacho
+          @@using_despacho = true
+          despacho_a_pulmon(total - restante)
+          @@using_despacho = false
+        end
       end
       move_ingredientes(sku, cantidad, ingredientes, to)
       '''2. Mandar a producir'''
@@ -170,20 +171,21 @@ class CheckController < ApplicationController
 
     '''2. Buscamos sus ingredientes '''
     ingredientes = get_ingredients_list(total_ingredientes, receta)
-    puts "#{sku}"
+    puts "Produciendo #{sku}"
     puts "Ingredientes -> #{total_ingredientes}"
     puts ingredientes
 
     '''Enviamos a producir'''
     puts "Tengo todos los ingredientes y puedo fabricar"
-    '''-Mover los productos del pulmon a la cocina'''
-    puts "Logica pulmon-cocina"
-    '''--Vaciar el despacho '''
-    puts "Vaciando despacho..."
-    if !@@using_despacho
-      @@using_despacho = true
-      despacho_a_pulmon()
-      @@using_despacho = false
+    check_ingredientes, total = check_ingredients_stock(sku, cantidad, total_ingredientes, ingredientes)
+    restante = restante_cocina()
+    if total > restante
+      puts "Moviendo #{total - restante} de cocina para poder producir"
+      if !@@using_despacho
+        @@using_despacho = true
+        cocina_a_pulmon(total - restante)
+        @@using_despacho = false
+      end
     end
     move_ingredientes(sku, cantidad, ingredientes, 'cocina')
     '''Mandar a producir'''
@@ -280,11 +282,24 @@ class CheckController < ApplicationController
     product = Product.find_by sku: sku.to_i
     quantity = product["production_lot"].to_i
     n = (cantidad.to_f/quantity).ceil
-    # n = 1
-    # while cantidad > (quantity * n).to_i
-    #   n = n + 1
-    # end
     return [(quantity * n).to_i, quantity].max
+  end
+
+  def production_lot_ingredient(sku, ingrediente, cantidad)
+    product = Ingredient.find_by(sku_product: sku, sku_ingredient: ingrediente)
+    quantity = (cantidad / product["production_lot"].to_i).ceil
+    n = quantity * product["equivalence_unit_hold"]
+    return n.to_i
+  end
+
+  def restante_despacho
+    despacho = request_system('almacenes', 'GET', @@api_key)[0][1]
+    return despacho["totalSpace"].to_i - despacho["usedSpace"].to_i
+  end
+
+  def restante_cocina
+    cocina = request_system('almacenes', 'GET', @@api_key)[0][5]
+    return cocina["totalSpace"].to_i - cocina["usedSpace"].to_i
   end
 
   '''Maneja las respuestas de fabricarSinPago'''
@@ -337,6 +352,7 @@ class CheckController < ApplicationController
 
   def check_ingredients_stock(sku, cantidad, total_ingredientes, ingredientes)
     '''3. Tengo la receta y los ingredientes, busco el inventario de las materias_primas'''
+    total = 0
     contador = 0
     inventario = get_dict_inventories()
     for ingrediente in ingredientes
@@ -347,11 +363,13 @@ class CheckController < ApplicationController
       '''3.1.2 Reviso el stock que tengo de ese producto'''
       '''Si tengo el stock ahora'''
       revisado = false
+      lot = production_lot_ingredient(sku, ingrediente, cantidad)
       real = inventario[ingrediente] ? inventario[ingrediente] : 0
-      if real >= cantidad
-        puts "Stock ahora"
+      if real >= lot
+        puts "Tenemos stock de #{ingrediente} ahora"
         revisado = true
         contador = contador + 1
+        total += lot
       end
       '''Si el producto no está en stock o hay que pedirlo'''
       if !revisado
@@ -363,21 +381,15 @@ class CheckController < ApplicationController
         puts "Ingrediente #{ingrediente} tenía stock"
       end
     end
-    return contador == total_ingredientes.to_i
+    return contador == total_ingredientes.to_i, total
   end
 
   def move_ingredientes(sku, cantidad, ingredientes, to)
+    puts "Moviendo ingredientes a #{to}"
     for ingrediente in ingredientes
-      # ingredient = Ingredient.find_by(sku_product: sku, sku_ingredient: ingrediente)
-      # lot = 0
-      # if ingredient == nil
-      #   lot = 0
-      # else
-      lot = production_lot(ingrediente ,cantidad)
-      # end
-      '''4.1 Analizar cuanto tengo en cocina'''
+      lot = production_lot_ingredient(sku, ingrediente ,cantidad)
+      puts "Moviendo ingrediente #{ingrediente} cantidad #{lot}"
       @@using_despacho = true
-      puts "Moviendo de pulmon a despacho"
       if to == 'despacho'
         move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, lot)
       elsif to == 'cocina'
