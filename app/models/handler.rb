@@ -30,7 +30,7 @@ class Handler < CheckController
   handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {3.minutes.from_now }
 
   def satisfy_inventory_level1_groups_job
-    satisfy_inventory_level1_gropus()
+    satisfy_inventory_level1_groups()
     self.satisfy_inventory_level1_groups_job()
   end
   handle_asynchronously :satisfy_inventory_level1_groups_job, :run_at => Proc.new {1.minutes.from_now }
