@@ -33,7 +33,7 @@ class Handler < CheckController
     satisfy_inventory_level1_groups()
     self.satisfy_inventory_level1_groups_job()
   end
-  handle_asynchronously :satisfy_inventory_level1_groups_job, :run_at => Proc.new {1.minutes.from_now }
+  handle_asynchronously :satisfy_inventory_level1_groups_job, :run_at => Proc.new {4.minutes.from_now }
 
   def satisfy_inventory_level1_job
     satisfy_inventory_level1()
