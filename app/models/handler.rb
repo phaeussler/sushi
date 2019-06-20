@@ -23,9 +23,7 @@ class Handler < CheckController
   end
   handle_asynchronously :oc_pendientes, :run_at => Proc.new {16.minutes.from_now }
 
-  '''Esto es en el caso que aceptemos ordenes que dejamos pendientes'''
   def ordenes_de_compra_ftp
-    puts "REVISANDO ORDENES"
     execute_ftp
     self.ordenes_de_compra_ftp
   end
