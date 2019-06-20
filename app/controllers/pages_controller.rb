@@ -12,6 +12,7 @@ class PagesController < CheckController
       handler.oc_pendientes
       handler.ordenes_de_compra_ftp
       handler.empty_reception
+      handler.arrocero
     end
   end
 

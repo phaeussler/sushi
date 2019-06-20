@@ -47,4 +47,11 @@ class Handler < CheckController
   end
   handle_asynchronously :satisfy_inventory_level2_job, :run_at => Proc.new {15.minutes.from_now }
 
+  def arrocero
+    puts "ARROCERO"
+    fabricar_producto(20, 1101, 'despacho')
+    self.arrocero
+  end
+  handle_asynchronously :arrocero, :run_at => Proc.new {6.minutes.from_now }
+
 end
