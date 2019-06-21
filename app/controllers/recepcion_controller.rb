@@ -32,7 +32,7 @@ class RecepcionController < CheckController
     for i in sku_with_stock(@@recepcion, @@api_key)[0]
       lista_productos = request_product(@@recepcion, i["_id"], @@api_key)[0]
       for j in lista_productos
-        if contador <= 10
+        if contador <= 1000
           move_product_almacen(j["_id"], @@despacho)
           move_product_almacen(j["_id"], @@pulmon)
           contador += 1
