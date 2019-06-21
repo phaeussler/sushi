@@ -176,7 +176,7 @@ class ApplicationController < ActionController::Base
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-      puts "\n____________ENVIO A FABRICAR_________ #{sku} #{cantidad}\n".green
+      puts "\n____________ENVIO A FABRICAR_________ #{sku} #{cantidad}".green
 		  puts JSON.parse(producido.body)
 
       return producido
