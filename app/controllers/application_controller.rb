@@ -1,5 +1,6 @@
 require 'json'
 require 'net/sftp'
+require 'colorize'
 
 class ApplicationController < ActionController::Base
   # protect_from_forgery with: :exception
@@ -177,10 +178,11 @@ class ApplicationController < ActionController::Base
 		    "Content-Type": "application/json"
 		  })
       puts "____________ENVIO A FABRICAR_________ #{sku} #{cantidad}".green
-      if JSON.parse(producido.body)["error"]
-        puts JSON.parse(producido.body).red
+      respuesta = JSON.parse(producido.body)
+      if producido["error"]
+        puts respuesta.red
       else
-		    puts JSON.parse(producido.body).green
+		    puts respuesta.green
       end
       puts "\n"
 
