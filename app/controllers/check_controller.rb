@@ -303,11 +303,23 @@ class CheckController < ApplicationController
         puts "No existen suficientes materias primas".red
         if respuesta["detalles"]
           for detalle in respuesta["detalles"]
-          cantidad = detalle[0]["requerido"].to_i - detalle[0]["disponible"].to_i
-          fabricar_producto(cantidad, detalle[0]["sku"], to)
+            producto = Product.find_by sku: detalle[0]["sku"].to_i
+            cantidad = detalle[0]["requerido"].to_i - detalle[0]["disponible"].to_i
+            if producto.level == 1
+              lot = production_lot(producto, cantidad*2)
+              fabricar = fabricarSinPago(@@api_key, producto, lot)
+            else
+              fabricar_producto(cantidad*2, producto, 'despacho')
+            end
           end
         else
-          fabricar_producto(quantity, ingrediente.to_i, to)
+          producto = Product.find_by sku: ingrediente.to_i
+          if producto.level == 1
+            lot = production_lot(producto, quantity*2)
+            fabricar = fabricarSinPago(@@api_key, producto, lot)
+          else
+              fabricar_producto(quantity*2, ingrediente.to_i, 'despacho')
+          end
         end
       end
       if respuesta["error"].include? "sku no"
