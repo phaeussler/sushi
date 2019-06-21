@@ -178,12 +178,7 @@ class ApplicationController < ActionController::Base
 		    "Content-Type": "application/json"
 		  })
       puts "____________ENVIO A FABRICAR_________ #{sku} #{cantidad}".green
-      respuesta = JSON.parse(producido.body)
-      if producido["error"]
-        puts respuesta.red
-      else
-		    puts respuesta.green
-      end
+      puts JSON.parse(producido.body)
       puts "\n"
 
       return producido

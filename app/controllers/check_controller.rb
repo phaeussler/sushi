@@ -4,7 +4,7 @@ class CheckController < ApplicationController
   # GET /check
   def index
     ''' LO QUE ESTA COMENTADO EN pedir_un_producto y satisfy_inventory_level1 PARA LA ENTREGA HAY QUE DESCOMENTARLO'''
-  
+
 
 
     msg = "Inventario Revisado"
@@ -300,6 +300,7 @@ class CheckController < ApplicationController
   def handle_response(respuesta, ingrediente, quantity, to)
     if respuesta["error"]
       if respuesta["error"] == "No existen suficientes materias primas"
+        puts "No existen suficientes materias primas".red
         if respuesta["detalles"]
           for detalle in respuesta["detalles"]
           cantidad = detalle[0]["requerido"].to_i - detalle[0]["disponible"].to_i
@@ -310,11 +311,12 @@ class CheckController < ApplicationController
         end
       end
       if respuesta["error"].include? "sku no"
-        puts "PIDIENDO A OTRO GRUPO"
+        puts "sku no encontrado".red
         pedir_otro_grupo_oc(ingrediente, quantity)
         '''OJO MANEJAR LA RESPUESTA DE OTRO GRUPO'''
       end
       if respuesta["error"].include? "Lote incorrecto"
+        puts "Lote incorrecto".red
         num = respuesta["error"].scan(/\d/).join('')
         num  = num.to_i
         n = 1
