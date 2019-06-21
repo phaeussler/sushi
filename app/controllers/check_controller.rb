@@ -4,7 +4,7 @@ class CheckController < ApplicationController
   # GET /check
   def index
     ''' LO QUE ESTA COMENTADO EN pedir_un_producto y satisfy_inventory_level1 PARA LA ENTREGA HAY QUE DESCOMENTARLO'''
-    PendingOrder.destroy_all
+  
 
 
     msg = "Inventario Revisado"
@@ -215,7 +215,7 @@ class CheckController < ApplicationController
 
   '''Le pide un ingrediente a los grupo y retorna la cantidad faltante'''
   def pedir_otro_grupo_oc(sku, cantidad)
-    puts "PIDIENDO INGREDIENTE A OTRO GRUPO"
+    puts "PIDIENDO INGREDIENTE A OTRO GRUPO".green
     producto = Product.find_by sku: sku
     groups = producto.groups
     # Deberiamos hacer una migracion para corregir esto, ya que hay valores nul
@@ -226,10 +226,6 @@ class CheckController < ApplicationController
     for group in groups.split(",").shuffle
       unless group == 1
         if cantidad > 0
-          # Primero creamos la orden de compra
-          puts "Metodo oc"
-          # oc_code, oc_body = create_oc(sku, cantidad, group)
-          # puts "body_oc #{oc_body}"
           oc = create_oc(sku, cantidad, group)
           oc_code = oc.code
           oc_body = JSON.parse(oc.body)

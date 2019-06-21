@@ -177,7 +177,12 @@ class ApplicationController < ActionController::Base
 		    "Content-Type": "application/json"
 		  })
       puts "____________ENVIO A FABRICAR_________ #{sku} #{cantidad}".green
-		  puts JSON.parse(producido.body)
+      if JSON.parse(producido.body)["error"]
+        puts JSON.parse(producido.body).red
+      else
+		    puts JSON.parse(producido.body).green
+      end
+      puts "\n"
 
       return producido
     end
@@ -413,7 +418,7 @@ class ApplicationController < ActionController::Base
   '''Crea una oc al servidor'''
   def create_oc(sku, qty, group)
     # Primero debo buscar el id del grupo
-    puts "CREAR ORDER"
+    puts "Creando Orden de Compra...".green
     group = "5cc66e378820160004a4c3c9"
     product = Product.find_by sku: sku
     cliente = @@server == "dev" ? @@id_oc_dev : @@id_oc_prod
