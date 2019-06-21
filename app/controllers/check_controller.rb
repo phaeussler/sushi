@@ -104,7 +104,7 @@ class CheckController < ApplicationController
   def fabricar_producto(cantidad, sku, to)
     sku = sku
     cantidad = production_lot(sku, cantidad)
-    puts "\nPRODUCIENDO #{sku} CANTIDAD #{cantidad}".red
+    puts "\nPRODUCIENDO #{sku} CANTIDAD #{cantidad}".green
     '''1. Buscamos la receta'''
     receta = Receipt.find_by sku: sku
     total_ingredientes = receta["ingredients_number"]
@@ -118,7 +118,7 @@ class CheckController < ApplicationController
     '''4. Si tengo las materias primas para fabricar'''
     check_ingredientes, total = check_ingredients_stock(sku, cantidad, total_ingredientes, ingredientes)
     if check_ingredientes
-      puts "Tengo todos los ingredientes y puedo fabricar #{sku}".red
+      puts "Tengo todos los ingredientes y puedo fabricar #{sku}".green
       '''1. Mover los productos del pulmon a la cocina'''
       restante = restante_despacho()
       if total > restante
@@ -131,7 +131,7 @@ class CheckController < ApplicationController
       end
       move_ingredientes(sku, cantidad, ingredientes, to)
       '''2. Mandar a producir'''
-      puts "Enviando a producir".red
+      # puts "Enviando a producir".red
       fabricar = fabricarSinPago(@@api_key, sku.to_s, cantidad)
       '''3. Manejar respuesta'''
       respuesta = JSON.parse(fabricar.body)
@@ -371,9 +371,9 @@ class CheckController < ApplicationController
       end
       '''Si el producto no está en stock o hay que pedirlo'''
       if !revisado
-        puts "No teníamo stock de #{ingrediente}, enviando a producir...".red
+        puts "No teníamos stock de #{ingrediente}, enviando a producir...".red
         lot = production_lot(ingrediente, cantidad)
-        fabricar = fabricarSinPago(@@api_key, ingrediente.to_s, lot)
+        fabricar = fabricarSinPago(@@api_key, ingrediente.to_s, lot*2)
         respuesta = JSON.parse(fabricar.body)
         handle_response(respuesta, ingrediente, lot, 'recepcion')
       else
