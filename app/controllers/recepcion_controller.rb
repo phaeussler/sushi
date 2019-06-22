@@ -5,7 +5,7 @@ class RecepcionController < CheckController
   productos y no se debe almacenar en el.'''
   # GET /recepcion
   def index
-    puts "HOLA".yellow
+    puts String.colors
 
     #empty_reception
     #

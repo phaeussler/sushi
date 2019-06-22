@@ -111,7 +111,7 @@ class CheckController < ApplicationController
 
     ingredientes = get_ingredients_list(total_ingredientes, receta)
     puts "Ingredientes -> #{total_ingredientes}".yellow
-    puts "  #{ingredientes}".yellow
+    puts ingredientes
 
 
     '''4. Si tengo las materias primas para fabricar'''
@@ -386,7 +386,7 @@ class CheckController < ApplicationController
         respuesta = JSON.parse(fabricar.body)
         handle_response(respuesta, ingrediente, lot, 'recepcion')
       else
-        puts "Ingrediente #{ingrediente} tenía stock".yellow
+        puts "  Ingrediente #{ingrediente} tenía stock".magenta
       end
     end
     return contador == total_ingredientes.to_i, total
