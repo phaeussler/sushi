@@ -5,9 +5,9 @@ class RecepcionController < CheckController
   productos y no se debe almacenar en el.'''
   # GET /recepcion
   def index
-    puts String.colors
 
-    #empty_reception
+    empty_reception
+    #despacho_a_pulmon(20)
     #
     # '''Productos con stock en rececpcion'''
     # productos = sku_with_stock(@@recepcion, @@api_key)[0]
