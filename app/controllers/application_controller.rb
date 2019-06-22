@@ -549,8 +549,10 @@ class ApplicationController < ActionController::Base
       t = Time.now
       if order["fechaEntrega"] <= t + 30*60
         rechazar_oc(order["_id"])
+        @@ordenes_no_rechazadas.delete(orden)
       else
         ordenes << order
+        @@ordenes_no_rechazadas.delete(orden)
       end
     end
     return ordenes
