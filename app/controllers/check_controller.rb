@@ -407,7 +407,9 @@ class CheckController < ApplicationController
 
   def execute_ftp
     '''1. Veo las ordenes que me llegan '''
-    ordenes = get_ftp()
+    ordenes1 = ordenes_segunda_oportundidad()
+    ordenes2 = get_ftp()
+    ordenes = ordenes1 + ordenes2
     for orden in ordenes
       evaluacion = false
       if orden["canal"] == "b2b"
@@ -424,7 +426,8 @@ class CheckController < ApplicationController
           '''3.1 Si hay un error en la fabricación'''
           '''Esto NOOO deberia pasar'''
           if respuesta["error"]
-            rechazar_oc(orden["_id"])
+            #rechazar_oc(orden["_id"])
+            @@ordenes_no_rechazadas << orden["_id"]
           '''3.2 Si va todo bien en la fabricacion'''
           else
             '''3.2.1 Recepciono la orden'''
@@ -440,7 +443,8 @@ class CheckController < ApplicationController
         '''4. Si la evaluacion es negativa, rechazo la orden'''
         else
           '''Notificar rechazo'''
-          rechazar_oc(orden["_id"])
+          #rechazar_oc(orden["_id"])
+          @@ordenes_no_rechazadas << orden["_id"]
         end
       end
     end

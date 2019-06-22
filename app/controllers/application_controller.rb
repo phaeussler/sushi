@@ -18,6 +18,7 @@ class ApplicationController < ActionController::Base
   @@ordenes_pendientes = []
   @@first_execution = false
   @@using_despacho = false
+  @@ordenes_no_rechazadas = []
 
     '''Ultima conexión al servidor SFTP'''
     @@last_time = Time.now
@@ -539,5 +540,20 @@ class ApplicationController < ActionController::Base
   #     end
   #   end
   # end
+
+  def ordenes_segunda_oportundidad
+    puts "Revisando ordenes segunda oportunidas".blue
+    ordenes = []
+    for orden in @@ordenes_no_rechazadas
+      order = obtener_oc(orden)
+      t = Time.now
+      if order["fechaEntrega"] <= t + 30*60
+        rechazar_oc(order["_id"])
+      else
+        ordenes << order
+      end
+    end
+    return ordenes
+  end
 
 end
