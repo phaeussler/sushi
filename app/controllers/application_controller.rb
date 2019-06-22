@@ -124,7 +124,7 @@ class ApplicationController < ActionController::Base
   def sku_with_stock(id, api_key)
     uri = "skusWithStock?almacenId=#{id}"
     hash_str = "GET#{id}"
-    puts "SKUS CON STOCK EN AMLACEN #{id}"
+    #puts "SKUS CON STOCK EN AMLACEN #{id}"
     return request_system(uri, hash_str,api_key)
   end
 
@@ -141,7 +141,7 @@ class ApplicationController < ActionController::Base
 		    "Authorization": "INTEGRACION grupo1:#{hash_str}",
 		    "Content-Type": "application/json"
 		  })
-      puts "Mover Almacen #{product_id}"
+      #puts "Mover Almacen #{product_id}"
       puts JSON.parse(request.body)
       return request
   end
@@ -179,7 +179,7 @@ class ApplicationController < ActionController::Base
 		  })
       puts "____________ENVIO A FABRICAR_________ #{sku} #{cantidad}".green
       puts JSON.parse(producido.body)
-      puts "\n"
+
 
       return producido
     end
@@ -217,7 +217,7 @@ class ApplicationController < ActionController::Base
 
   '''Invetario de cocina + pulmón en forma de diccionario {id:total}'''
   def get_dict_inventories
-    puts "get_dict_inventories\n"
+    #puts "get_dict_inventories\n"
     recepcion = get_inventorie_from_cellar('recepcion')
     pulmon = get_inventorie_from_cellar('pulmon')
     inventories = recepcion
@@ -231,7 +231,7 @@ class ApplicationController < ActionController::Base
 
   '''Se le da como parametro el nombre de la bodega a analizar y te entrega un diccionario con {id:total} de la bodega'''
   def get_inventorie_from_cellar(name)
-    puts "get_inventorie_from_cellar"
+    #puts "get_inventorie_from_cellar"
     if name == "recepcion"
       # puts "RECECPCION"
       cellar = sku_with_stock(@@recepcion, @@api_key)[0]
@@ -407,7 +407,6 @@ class ApplicationController < ActionController::Base
 
   """busca el id de oc de cada grupo"""
   def find_oc_group(n_group)
-    puts "find_oc_group"
     group = GroupIdOc.find_by group: n_group.to_s
     return @@server == "dev" ? group.id_development : group.id_production
   end
@@ -415,7 +414,7 @@ class ApplicationController < ActionController::Base
   '''Crea una oc al servidor'''
   def create_oc(sku, qty, group)
     # Primero debo buscar el id del grupo
-    puts "Creando Orden de Compra...".green
+    puts "Creando Orden de Compra...".blue
     group = "5cc66e378820160004a4c3c9"
     product = Product.find_by sku: sku
     cliente = @@server == "dev" ? @@id_oc_dev : @@id_oc_prod

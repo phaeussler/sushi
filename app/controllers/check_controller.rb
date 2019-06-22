@@ -104,15 +104,14 @@ class CheckController < ApplicationController
   def fabricar_producto(cantidad, sku, to)
     sku = sku
     cantidad = production_lot(sku, cantidad)
-    puts "\nPRODUCIENDO #{sku} CANTIDAD #{cantidad}".green
+    puts "\nProduciendo #{sku} cantidad #{cantidad}".green
     '''1. Buscamos la receta'''
     receta = Receipt.find_by sku: sku
     total_ingredientes = receta["ingredients_number"]
 
     ingredientes = get_ingredients_list(total_ingredientes, receta)
-    puts "Produciendo #{sku}"
-    puts "Ingredientes -> #{total_ingredientes}"
-    puts ingredientes
+    puts "Ingredientes -> #{total_ingredientes}".yellow
+    puts "  #{ingredientes}".yellow
 
 
     '''4. Si tengo las materias primas para fabricar'''
@@ -215,7 +214,7 @@ class CheckController < ApplicationController
 
   '''Le pide un ingrediente a los grupo y retorna la cantidad faltante'''
   def pedir_otro_grupo_oc(sku, cantidad)
-    puts "PIDIENDO INGREDIENTE A OTRO GRUPO".green
+    puts "Pidiendo ingrendiente a otro grupo".green
     producto = Product.find_by sku: sku
     groups = producto.groups
     # Deberiamos hacer una migracion para corregir esto, ya que hay valores nul
@@ -240,6 +239,7 @@ class CheckController < ApplicationController
             # end
             # Si el codigo es positivo restamos la cantidad que nos pueden pasar
             require 'colorize'
+            puts "Pidiendo a grupo #{group}".blue
             puts "#{'ORDER REQUEST'.green} -> #{(code == 200 or code == 201) ? code.to_s.green : code.to_s.red} #{body}"
             # Reviso si fue aceptado, deberia ser 201 el codigo pero hay grupos que lo tienen implementado con 200
             if code == 200 or code == 201
@@ -251,14 +251,14 @@ class CheckController < ApplicationController
                   cantidad -= body['cantidad']
                   producto.incoming += body['cantidad']
                   producto.save
-                  puts 'pedir_ingrediente_oc 0'
+                  #puts 'pedir_ingrediente_oc 0'
                   return cantidad
                 rescue TypeError => e
                   # El grupo 6 retorna cantidad true en vez de numero
                   if body['cantidad']
                     producto.incoming += cantidad
                     producto.save
-                    puts 'pedir_ingrediente_oc 0'
+                    #puts 'pedir_ingrediente_oc 0'
                     return 0
                   end
                 end
@@ -366,7 +366,7 @@ class CheckController < ApplicationController
     for ingrediente in ingredientes
       '''3.1 Cuanto necesito de cada ingrediente'''
       '''3.1.1 Buscar la cantidad'''
-      puts "Revisando Ingrediente -> #{ingrediente}"
+      puts "Revisando Ingrediente -> #{ingrediente}".yellow
       ingredient = Ingredient.find_by(sku_product: sku, sku_ingredient: ingrediente)
       '''3.1.2 Reviso el stock que tengo de ese producto'''
       '''Si tengo el stock ahora'''
@@ -374,7 +374,6 @@ class CheckController < ApplicationController
       lot = production_lot_ingredient(sku, ingrediente, cantidad)
       real = inventario[ingrediente] ? inventario[ingrediente] : 0
       if real >= lot
-        puts "Tenemos stock de #{ingrediente} ahora"
         revisado = true
         contador = contador + 1
         total += lot
@@ -387,17 +386,16 @@ class CheckController < ApplicationController
         respuesta = JSON.parse(fabricar.body)
         handle_response(respuesta, ingrediente, lot, 'recepcion')
       else
-        puts "Ingrediente #{ingrediente} tenía stock"
+        puts "Ingrediente #{ingrediente} tenía stock".yellow
       end
     end
     return contador == total_ingredientes.to_i, total
   end
 
   def move_ingredientes(sku, cantidad, ingredientes, to)
-    puts "Moviendo ingredientes a #{to}"
     for ingrediente in ingredientes
       lot = production_lot_ingredient(sku, ingrediente ,cantidad)
-      puts "Moviendo ingrediente #{ingrediente} cantidad #{lot}"
+      puts "Moviendo ingrediente #{ingrediente} cantidad #{lot} a #{to}".blue
       @@using_despacho = true
       if to == 'despacho'
         move_q_products_almacen(@@pulmon, @@despacho, ingrediente.to_s, lot)
