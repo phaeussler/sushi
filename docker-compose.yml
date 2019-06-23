@@ -16,18 +16,18 @@ services:
     depends_on:
       - postgres
 
-  delayed_job:
-    build: .
-    env_file:
-      - .env
-    command: rake jobs:work
-    volumes:
-      - .:/example
-    ports:
-      - "1080:1080"
-    depends_on:
-      - postgres
-    stdin_open: true
-    tty: true
-    environment:
-     - DEV_DATABASE_HOST=postgres
+  # delayed_job:
+  #   build: .
+  #   env_file:
+  #     - .env
+  #   command: rake jobs:work
+  #   volumes:
+  #     - .:/example
+  #   ports:
+  #     - "1080:1080"
+  #   depends_on:
+  #     - postgres
+  #   stdin_open: true
+  #   tty: true
+  #   environment:
+  #    - DEV_DATABASE_HOST=postgres

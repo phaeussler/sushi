@@ -342,7 +342,8 @@ class ApplicationController < ActionController::Base
     Net::SFTP.start(@host, @grupo2, :password => @password2) do |sftp|
       @ordenes = []
       sftp.dir.foreach("pedidos") do |entry|
-        if (Time.at(entry.attributes.mtime) > @@last_time)
+        #if Time.at(entry.attributes.mtime) > @@last_time
+        if Time.at(entry.attributes.mtime) < Time.now - 6*60
         #if (Time.at(entry.attributes.mtime) > Time.parse('2019-06-23 10:49:05'))
           if entry.name .include? ".xml"
             data = sftp.download!("pedidos/#{entry.name}")
@@ -364,7 +365,6 @@ class ApplicationController < ActionController::Base
   end
 
   def obtener_oc(id)
-    puts "Obtener OC"
     url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/obtener/#{id}"
     response = HTTParty.get(url,
     headers:{
@@ -495,6 +495,7 @@ class ApplicationController < ActionController::Base
     stock = sku_with_stock(@@cocina, @@api_key)[0]
     for orden in PendingOrder.all
       order = obtener_oc(orden['id_oc'])[0]
+      puts "Orden pendiente #{order["_id"]}, estado #{order["estado"]}".red
       for producto in stock
         if order['sku'].to_s == producto['_id'].to_s
           despachar_ftp(order)

@@ -3,6 +3,7 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
+    PendingOrder.delete_all
     msg = "Inventario Revisado"
     render json: msg, :status => 200
   end
@@ -434,24 +435,29 @@ class CheckController < ApplicationController
           '''Esto NOOO deberia pasar'''
           if respuesta["error"]
             #rechazar_oc(orden["_id"])
-            @@ordenes_no_rechazadas << orden["_id"]
+            if orden["estado"] == ]"creada"
+              @@ordenes_no_rechazadas << orden["_id"]
+            end
           '''3.2 Si va todo bien en la fabricacion'''
           else
             '''3.2.1 Recepciono la orden'''
-            '''ESTO DEBERIA PASAR POCO'''
-            recepcionar_oc(orden["_id"])
-            '''3.2.2 Agrego la orden a pendientes'''
-            order = PendingOrder.new
-            order[:id_oc] = orden["_id"]
-            order[:reception_date] = Time.now
-            order[:max_dispatch_date] = orden["fechaEntrega"]
-            order.save
+            if orden["estado"] == ]"creada"
+              recepcionar_oc(orden["_id"])
+              '''3.2.2 Agrego la orden a pendientes'''
+              order = PendingOrder.new
+              order[:id_oc] = orden["_id"]
+              order[:reception_date] = Time.now
+              order[:max_dispatch_date] = orden["fechaEntrega"]
+              order.save
+            end
           end
         '''4. Si la evaluacion es negativa, rechazo la orden'''
         else
           '''Notificar rechazo'''
           #rechazar_oc(orden["_id"])
-          @@ordenes_no_rechazadas << orden["_id"]
+          if orden["estado"] == ]"creada"
+            @@ordenes_no_rechazadas << orden["_id"]
+          end
         end
       end
     end

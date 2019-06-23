@@ -6,7 +6,8 @@ class RecepcionController < CheckController
   # GET /recepcion
   def index
 
-    empty_reception
+
+    #empty_reception
     #cocina_a_pulmon(20)
     #fabricar_producto(10, 1211, 'despacho')
     #
