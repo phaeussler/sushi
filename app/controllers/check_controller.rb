@@ -435,13 +435,13 @@ class CheckController < ApplicationController
           '''Esto NOOO deberia pasar'''
           if respuesta["error"]
             #rechazar_oc(orden["_id"])
-            if orden["estado"] == ]"creada"
+            if orden["estado"] == "creada"
               @@ordenes_no_rechazadas << orden["_id"]
             end
           '''3.2 Si va todo bien en la fabricacion'''
           else
             '''3.2.1 Recepciono la orden'''
-            if orden["estado"] == ]"creada"
+            if orden["estado"] == "creada"
               recepcionar_oc(orden["_id"])
               '''3.2.2 Agrego la orden a pendientes'''
               order = PendingOrder.new
@@ -455,7 +455,7 @@ class CheckController < ApplicationController
         else
           '''Notificar rechazo'''
           #rechazar_oc(orden["_id"])
-          if orden["estado"] == ]"creada"
+          if orden["estado"] == "creada"
             @@ordenes_no_rechazadas << orden["_id"]
           end
         end
