@@ -5,9 +5,6 @@ class RecepcionController < CheckController
   productos y no se debe almacenar en el.'''
   # GET /recepcion
   def index
-    puts Time.now - 6*60
-    puts Time.now
-
     #empty_reception
     #cocina_a_pulmon(20)
     #fabricar_producto(10, 1211, 'despacho')

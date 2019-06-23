@@ -101,7 +101,8 @@ class CheckController < ApplicationController
   def fabricar_producto(cantidad, sku, to)
     sku = sku
     cantidad = production_lot(sku, cantidad)
-    puts "\nProduciendo #{sku} cantidad #{cantidad}".green
+    puts "\n"
+    puts "Produciendo #{sku} cantidad #{cantidad}".green
     '''1. Buscamos la receta'''
     receta = Receipt.find_by sku: sku
     total_ingredientes = receta["ingredients_number"]
@@ -137,7 +138,7 @@ class CheckController < ApplicationController
   end
 
   def evaluar_fabricar_final(cantidad, sku)
-    puts "--------------- EVALUANDO #{sku} --------------------"
+    puts "--------------- EVALUANDO #{sku} --------------------".green
     sku = sku
     cantidad = production_lot(sku, cantidad)
     '''Buscamos la receta'''
@@ -165,7 +166,7 @@ class CheckController < ApplicationController
 
     '''2. Buscamos sus ingredientes '''
     ingredientes = get_ingredients_list(total_ingredientes, receta)
-    puts "Produciendo #{sku}"
+    puts "Produciendo #{sku}".green
     puts "Ingredientes -> #{total_ingredientes}"
     puts ingredientes
 
@@ -423,39 +424,35 @@ class CheckController < ApplicationController
       if orden["canal"] == "b2b"
         '''No hago nada'''
       else
-        sku = orden["sku"]
-        cantidad = orden["cantidad"]
-        '''2. Por casa orden, evaluo si puedo producir el producto'''
-        evaluacion = evaluar_fabricar_final(cantidad, sku)
-        if evaluacion
-          '''Notificar aceptacion'''
-          '''3. Mando a fabricar el producto, si es que la evaluacion es positiva'''
-          respuesta = fabricar_final(cantidad, sku)
-          '''3.1 Si hay un error en la fabricación'''
-          '''Esto NOOO deberia pasar'''
-          if respuesta["error"]
-            #rechazar_oc(orden["_id"])
-            if orden["estado"] == "creada"
-              @@ordenes_no_rechazadas << orden["_id"]
+        if orden["estado"] == creada
+          sku = orden["sku"]
+          cantidad = orden["cantidad"]
+          '''2. Por casa orden, evaluo si puedo producir el producto'''
+          evaluacion = evaluar_fabricar_final(cantidad, sku)
+          if evaluacion
+            '''Notificar aceptacion'''
+            '''3. Mando a fabricar el producto, si es que la evaluacion es positiva'''
+            respuesta = fabricar_final(cantidad, sku)
+            '''3.1 Si hay un error en la fabricación'''
+            '''Esto NOOO deberia pasar'''
+            if respuesta["error"]
+              #rechazar_oc(orden["_id"])
+                @@ordenes_no_rechazadas << orden["_id"]
+            '''3.2 Si va todo bien en la fabricacion'''
+            else
+              '''3.2.1 Recepciono la orden'''
+                recepcionar_oc(orden["_id"])
+                '''3.2.2 Agrego la orden a pendientes'''
+                order = PendingOrder.new
+                order[:id_oc] = orden["_id"]
+                order[:reception_date] = Time.now
+                order[:max_dispatch_date] = orden["fechaEntrega"]
+                order.save
             end
-          '''3.2 Si va todo bien en la fabricacion'''
+          '''4. Si la evaluacion es negativa, rechazo la orden'''
           else
-            '''3.2.1 Recepciono la orden'''
-            if orden["estado"] == "creada"
-              recepcionar_oc(orden["_id"])
-              '''3.2.2 Agrego la orden a pendientes'''
-              order = PendingOrder.new
-              order[:id_oc] = orden["_id"]
-              order[:reception_date] = Time.now
-              order[:max_dispatch_date] = orden["fechaEntrega"]
-              order.save
-            end
-          end
-        '''4. Si la evaluacion es negativa, rechazo la orden'''
-        else
-          '''Notificar rechazo'''
-          #rechazar_oc(orden["_id"])
-          if orden["estado"] == "creada"
+            '''Notificar rechazo'''
+            #rechazar_oc(orden["_id"])
             @@ordenes_no_rechazadas << orden["_id"]
           end
         end

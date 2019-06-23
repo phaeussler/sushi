@@ -373,7 +373,7 @@ class ApplicationController < ActionController::Base
   end
 
   def recepcionar_oc(orden_id)
-      puts "Recepcionando orden"
+      puts "Recepcionando orden #{orden_id}".green
       url ="https://integracion-2019-#{@@server}.herokuapp.com/oc/recepcionar/#{orden_id}"
       response = HTTParty.post(url,
         body:{
