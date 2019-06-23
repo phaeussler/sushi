@@ -331,7 +331,7 @@ class ApplicationController < ActionController::Base
   end
 
   def get_ftp
-    puts "GET FTP"
+    puts "Buscando ordenes FTP".green
     @host = "fierro.ing.puc.cl"
     @grupo = "grupo1"
     @grupo2 = "grupo1_dev"
@@ -358,6 +358,7 @@ class ApplicationController < ActionController::Base
         end
       end
       @@last_time = Time.now
+      puts "Se encontraron #{@ordenes.length} ordenes. Se actualizó el tiempo a #{@@last_time}"
       return @ordenes
     end
   end

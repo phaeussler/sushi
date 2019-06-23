@@ -55,7 +55,7 @@ class Handler < CheckController
   def arrocero
     puts "------------- Arrocero job ------------".green
     inventories = get_dict_inventories()
-    producto = Product.find_by sku: 1101
+    product = Product.find_by sku: 1101
     in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
     if product["min"]*1.5 >= in_cellar and in_cellar < product["max"]
       fabricar_producto(10, 1101, 'despacho')
