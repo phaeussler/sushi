@@ -7,7 +7,8 @@ class RecepcionController < CheckController
   def index
 
     empty_reception
-    #despacho_a_pulmon(20)
+    #cocina_a_pulmon(20)
+    #fabricar_producto(10, 1211, 'despacho')
     #
     # '''Productos con stock en rececpcion'''
     # productos = sku_with_stock(@@recepcion, @@api_key)[0]

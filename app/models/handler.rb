@@ -15,14 +15,14 @@ class Handler < CheckController
     end
     self.empty_reception()
   end
-  handle_asynchronously :empty_reception, :run_at => Proc.new {2.minutes.from_now}
+  handle_asynchronously :empty_reception, :run_at => Proc.new {1.minutes.from_now}
 
   def oc_pendientes
     puts "------------- Ordenes Pendientes job ------------".green
     pendientes()
     self.oc_pendientes()
   end
-  handle_asynchronously :oc_pendientes, :run_at => Proc.new {16.minutes.from_now}
+  handle_asynchronously :oc_pendientes, :run_at => Proc.new {10.minutes.from_now}
 
   def ordenes_de_compra_ftp
     puts "------------- Buscar Ordenes de Compra job ------------".green
@@ -50,7 +50,7 @@ class Handler < CheckController
     satisfy_inventory_level2()
     self.satisfy_inventory_level2_job
   end
-  handle_asynchronously :satisfy_inventory_level2_job, :run_at => Proc.new {9.minutes.from_now}
+  handle_asynchronously :satisfy_inventory_level2_job, :run_at => Proc.new {12.minutes.from_now}
 
   def arrocero
     puts "------------- Arrocero job ------------".green
@@ -62,6 +62,6 @@ class Handler < CheckController
     end
     self.arrocero
   end
-  handle_asynchronously :arrocero, :run_at => Proc.new {6.minutes.from_now}
+  handle_asynchronously :arrocero, :run_at => Proc.new {7.minutes.from_now}
 
 end
