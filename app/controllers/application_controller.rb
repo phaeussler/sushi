@@ -343,7 +343,7 @@ class ApplicationController < ActionController::Base
       @ordenes = []
       sftp.dir.foreach("pedidos") do |entry|
         #if Time.at(entry.attributes.mtime) > @@last_time
-        if Time.at(entry.attributes.mtime) < Time.now - 6*60
+        if Time.at(entry.attributes.mtime) > Time.now - 6*60
         #if (Time.at(entry.attributes.mtime) > Time.parse('2019-06-23 10:49:05'))
           if entry.name .include? ".xml"
             data = sftp.download!("pedidos/#{entry.name}")
