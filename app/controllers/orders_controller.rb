@@ -39,7 +39,7 @@ class OrdersController < CheckController
     end
     '''2. Acepto o Rechazo'''
     '''Ojo que acá se puede hacer algo más avanzado como revisar si tengo los ingredientes para fabricar y mandar a fabricar'''
-    if stock - cantidad > 0
+    if stock - cantidad >= 0
       return true
     else
       return false

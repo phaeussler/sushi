@@ -276,7 +276,7 @@ class ApplicationController < ActionController::Base
         total -= 50
         if total > 0
           begin
-            res = {"sku": sku,"nombre": product["name"], "total": total}
+            res = {"sku": sku,"nombre": product["name"], "total": [total, 10].min}
             respuesta << res
           rescue NoMethodError => e
           end

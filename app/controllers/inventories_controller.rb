@@ -12,7 +12,7 @@ class InventoriesController < ApplicationController
     puts "INDEX INVENTORY"
     products = avaible_to_sell
 
-     #dispuestos = dispuesto_a_vender(productos)
+     
      render json: products, :status => 200
   end
 
