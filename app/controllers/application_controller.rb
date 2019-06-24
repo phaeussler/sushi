@@ -7,7 +7,7 @@ class ApplicationController < ActionController::Base
   protect_from_forgery unless: -> { request.format.json? }
   helper_method :grup_request
   include HTTParty
-  @@server = "dev"
+  @@server = "prod"
   @@recepcion = @@server != "dev" ? "5cc7b139a823b10004d8e6cd" : "5cbd3ce444f67600049431b3"
   @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
   @@pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
@@ -339,7 +339,7 @@ class ApplicationController < ActionController::Base
     @password2 = "9me9BCjgkJ8b5MV"
     contador = 0
     puts @@last_time
-    Net::SFTP.start(@host, @grupo2, :password => @password2) do |sftp|
+    Net::SFTP.start(@host, @grupo, :password => @password) do |sftp|
       @ordenes = []
       sftp.dir.foreach("pedidos") do |entry|
         #if Time.at(entry.attributes.mtime) > @@last_time

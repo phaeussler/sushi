@@ -424,7 +424,7 @@ class CheckController < ApplicationController
       if orden["canal"] == "b2b"
         '''No hago nada'''
       else
-        if orden["estado"] == creada
+        if orden["estado"] == "creada"
           sku = orden["sku"]
           cantidad = orden["cantidad"]
           '''2. Por casa orden, evaluo si puedo producir el producto'''
