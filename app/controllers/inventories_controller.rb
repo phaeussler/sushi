@@ -10,24 +10,24 @@ class InventoriesController < ApplicationController
   # GET /inventories
   def index
     puts "INDEX INVENTORY"
-    products = avaible_to_sell
+    products = avaible_to_sell()
 
      
      render json: products, :status => 200
   end
 
-  def dispuesto_a_vender(inventario)
-    for key in inventario
-      min = MinimumStock.find_by sku: key[:sku].to_i
-      min = min["minimum_stock"]
-      if min == nil
-        min = 0
-      end
-      key[:total] = (key[:total].to_i - min.to_i).to_s
-    end
-    return inventario
+  # def dispuesto_a_vender(inventario)
+  #   for key in inventario
+  #     min = MinimumStock.find_by sku: key[:sku].to_i
+  #     min = min["minimum_stock"]
+  #     if min == nil
+  #       min = 0
+  #     end
+  #     key[:total] = (key[:total].to_i - min.to_i).to_s
+  #   end
+  #   return inventario
 
-  end
+  # end
 
 
   # GET /inventories/1

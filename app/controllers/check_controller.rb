@@ -1,5 +1,6 @@
 class CheckController < ApplicationController
   helper_method :pedir_un_producto
+  require 'colorize'
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
@@ -13,14 +14,14 @@ class CheckController < ApplicationController
     product = Product.find_by sku: sku.to_i
     if product.level == 1
       '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
-      # if product["groups"].split(",")[0] == "1"
+      if product["groups"].split(",")[0] == "1"
         lot = production_lot(product[:sku], 10)
         fabricar = fabricarSinPago(@@api_key, product[:sku], lot)
-      #   respuesta = JSON.parse(fabricar.body)
-      #   handle_response(respuesta, sku, lot)
-      # else
-      #   pedir_otro_grupo_oc(product[:sku], 10)
-      # end
+        respuesta = JSON.parse(fabricar.body)
+        handle_response(respuesta, sku, lot, 'despacho')
+      else
+        pedir_otro_grupo_oc(product[:sku], 10)
+      end
     elsif product.level == 2
       fabricar_producto(5, product[:sku], 'despacho')
     elsif product.level == 3
@@ -194,20 +195,20 @@ class CheckController < ApplicationController
     # @@using_despacho = false
   end
 
-  '''funcion para checkear si otro grupo tiene stock de un producto'''
-  def check_other_inventories(group, sku)
-    puts "check_other_inventories grupo #{group}"
-    code, body = get_request(group,"inventories")
+  '''funcion para checkear si otro grupo tiene stock de un producto. Retorna la cantidad que tienen'''
+  def check_other_inventories(group, sku, cantidad)
+    # puts "check_other_inventories grupo #{group}, sku #{sku}".blue.on_red
+    code, body = get_request(group, "inventories")
     if code == 200
-      for dic in JSON.parse(body)
+      for dic in body
         if dic["sku"].to_i == sku
-          puts "check_other_inventories encontado"
-          return true
+          puts "check_other_inventories grupo #{group} sku #{sku} encontado #{dic["total"].to_i}".yellow
+          return dic["total"].to_i
         end
       end
     end
-    puts "check_other_inventories NO encontado"
-    return false
+    puts "check_other_inventories grupo #{group} sku #{sku} NO encontado".yellow
+    return 0
   end
 
   '''Le pide un ingrediente a los grupo y retorna la cantidad faltante'''
@@ -215,51 +216,29 @@ class CheckController < ApplicationController
     puts "Pidiendo ingrendiente a otro grupo".green
     producto = Product.find_by sku: sku
     groups = producto.groups
-    # Deberiamos hacer una migracion para corregir esto, ya que hay valores nul
-    if not producto.incoming
-      producto.incoming = 0
-    end
     # en forma aleatorea analizamos si es que nos pueden pasar los productos de los grupos que lo prodcen
     for group in groups.split(",").shuffle
-      unless group == 1
-        if cantidad > 0
-          oc = create_oc(sku, cantidad, group)
-          oc_code = oc.code
-          oc_body = JSON.parse(oc.body)
-
+      unless group == "1"
+        # Dejamos de analisar cuando ya tenemos la cantidad deseada.
+        if cantidad <= 0
+          return 0
+        end
+        # Revisamos la cantidad que nos pueden dar.
+        cant_pedir = [check_other_inventories(group, sku, cantidad), cantidad].min
+        if cant_pedir > 0
+          oc_code, oc_body, oc_header = create_oc(sku, cant_pedir, group)
           if oc_code == 200
-            puts "#id orden de compra #{oc_body["_id"]} #{oc_body["_id"].class.name}"
             # Si es aceptado hacemos el request al otro grupo con el id de la orden
-            code, body, headers = order_request(group, sku, @@recepcion, cantidad, oc_body["_id"])
-            # else
-            #   puts "Metodo sin oc"
-            #   code, body, headers = order_request(group, sku, @@recepcion, cantidad)
-            # end
+            code, body, headers = order_request(group, sku, @@recepcion, cant_pedir, oc_body["_id"])
             # Si el codigo es positivo restamos la cantidad que nos pueden pasar
-            require 'colorize'
             puts "Pidiendo a grupo #{group}".blue
-            puts "#{'ORDER REQUEST'.green} -> #{(code == 200 or code == 201) ? code.to_s.green : code.to_s.red} #{body}"
+            puts "#{'ORDER REQUEST'.green} -> #{(code == 200 or code == 201) ? code.to_s.green : code.to_s.red}"
             # Reviso si fue aceptado, deberia ser 201 el codigo pero hay grupos que lo tienen implementado con 200
             if code == 200 or code == 201
-              puts "#{headers} #{body}"
-              body = JSON.parse(body)
+              puts "Respuesta de la oc #{body}"
               if body["aceptado"]
-                # Si es aceptado entonces le agrego a incoming
-                begin  # "try" block
-                  cantidad -= body['cantidad']
-                  producto.incoming += body['cantidad']
-                  producto.save
-                  #puts 'pedir_ingrediente_oc 0'
-                  return cantidad
-                rescue TypeError => e
-                  # El grupo 6 retorna cantidad true en vez de numero
-                  if body['cantidad']
-                    producto.incoming += cantidad
-                    producto.save
-                    #puts 'pedir_ingrediente_oc 0'
-                    return 0
-                  end
-                end
+                cantidad -= body['cantidad']
+                puts "oc aceptada: #{cant_pedir} sku : #{sku} faltan: #{cantidad}".yellow.on_blue
               end
             end
           end

@@ -29,7 +29,7 @@ class OrdersController < CheckController
     sku = orden["sku"]
     cantidad = orden["cantidad"].to_i
     '''1. Consultar inventario '''
-    inventario = avaible_to_sell
+    inventario = avaible_to_sell()
     # inventario = get_inventories
     stock = 0
     for producto in inventario

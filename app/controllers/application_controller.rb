@@ -37,22 +37,22 @@ class ApplicationController < ActionController::Base
       base_url = "http://tuerca#{g_num}.ing.puc.cl"
       # uri : str orders or inventories ....
       response = HTTParty.get("#{base_url}/#{uri}")
-      return response.code, response.body
+      return response.code, JSON.parse(response.body)
     rescue Errno::ECONNREFUSED, Net::ReadTimeout => e
-      puts "Error del otro grupo #{e}"
+      puts "Error del otro grupo (#{g_num}), #{e}"
       return 500, {}, {}
-    end
+  rescue JSON::ParserError => e
+    puts "Error del otro grupo (#{g_num}), error al parcear el body"
+    return 500, {}, {}
+  end
+
+    
+
   end
 
   def order_request(g_num, sku, storeId, quantity, id)
-    # g_num : int [1..14]
-    # # uri = "orders?sku=#{sku}&almacenId=#{storeId}&cantidad=#{quantity}"
-    # if id
-    #   body_dict = {sku: sku, almacenId: storeId, cantidad:quantity}.to_json
-    # else
     body_dict = {sku: sku, almacenId: storeId, cantidad:quantity, oc: id}.to_json
-    puts "order_request #{body_dict}"
-    # end
+    # puts "order_request #{body_dict}"
     request_group("orders", g_num, body_dict)
   end
 
@@ -68,26 +68,31 @@ class ApplicationController < ActionController::Base
           "Content-Type": "application/json"
         },
         body: body_dict, timeout: 30)
-      # puts "Solicitud: #{resp.code}"
-      # puts JSON.parse(resp.body)
-      # puts "Header #{resp.headers}"
-      return resp.code, resp.body, resp.headers
+      return resp.code, JSON.parse(resp.body), resp.headers
     rescue Errno::ECONNREFUSED, Net::ReadTimeout => e
-      puts "Error del otro grupo #{e}"
+      puts "Error del otro grupo (#{g_num}), #{e}"
+      return 500, {}, {}
+    rescue JSON::ParserError => e
+      puts "Error del otro grupo (#{g_num}), error al parcear el body"
       return 500, {}, {}
     end
   end
 
   def request_oc(uri, body)
     base_url ="https://integracion-2019-#{@@server}.herokuapp.com/"
-    puts "request oc #{base_url+uri} body #{body.to_json}"
-    request = HTTParty.put(base_url+uri,
-		  body:body.to_json,
-		  headers:{
-		    "Content-Type": "application/json"
-      })
-    puts request.code, request.headers, request.body
-    return request
+    # puts "request oc #{base_url+uri} body #{body.to_json}"
+    begin
+      request = HTTParty.put(base_url+uri,
+        body:body.to_json,
+        headers:{
+          "Content-Type": "application/json"
+        })
+
+      return request.code, JSON.parse(request.body) ,request.headers
+    rescue JSON::ParserError => e
+      puts "request_oc, error al parcear el body"
+      return 500, {}, {}
+    end
     end
 
   #funcion de hash
