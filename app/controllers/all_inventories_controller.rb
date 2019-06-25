@@ -5,7 +5,7 @@ class AllInventoriesController < CheckController
   # GET /all_inventories.json
   def index
     @inventories = get_dict_inventories
-    @products = Product.all
+    @products = Product.all.sort
     @recepcion = get_inventorie_from_cellar('recepcion')
     @pulmon = get_inventorie_from_cellar('pulmon')
     @cocina = get_inventorie_from_cellar('cocina')
