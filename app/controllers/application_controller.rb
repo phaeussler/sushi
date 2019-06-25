@@ -356,7 +356,7 @@ class ApplicationController < ActionController::Base
             json = JSON.parse json
             ''' agregor cada orden como un diccionarioa una lista'''
             id = json["order"]["id"]
-            puts "ID #{id}"
+            #puts "ID #{id}"
             orden = obtener_oc(id)[0]
             puts "ORDEN #{orden}\n"
             @ordenes << orden
@@ -364,7 +364,7 @@ class ApplicationController < ActionController::Base
         end
       end
       @@last_time = Time.now
-      puts "Se encontraron #{@ordenes.length} ordenes. Se actualizó el tiempo a #{@@last_time}"
+      puts "Se encontraron #{@ordenes.length} ordenes. Se actualizó el tiempo a #{@@last_time}".yellow
       return @ordenes
     end
   end

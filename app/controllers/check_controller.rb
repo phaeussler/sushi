@@ -4,7 +4,7 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    PendingOrder.delete_all
+    puts PendingOrder.all
     msg = "Inventario Revisado"
     render json: msg, :status => 200
   end
@@ -278,37 +278,37 @@ class CheckController < ApplicationController
     if respuesta["error"]
       if respuesta["error"] == "No existen suficientes materias primas"
         puts "No existen suficientes materias primas".red
-        if respuesta["detalles"]
-          if respuesta["detalles"].length > 0
-            for detalle in respuesta["detalles"]
-              sku = detalle[0]["sku"].to_i
-              producto = Product.find_by sku: sku
-              cantidad = detalle[0]["requerido"].to_i - detalle[0]["disponible"].to_i
-              if producto.level == 1
-                lot = production_lot(producto, cantidad*2)
-                fabricar = fabricarSinPago(@@api_key, producto, lot)
-              else
-                fabricar_producto(cantidad*2, producto, 'despacho')
-              end
-            end
-          else
-            producto = Product.find_by sku: ingrediente.to_i
-            if producto.level == 1
-              lot = production_lot(producto, quantity*2)
-              fabricar = fabricarSinPago(@@api_key, producto, lot)
-            else
-                fabricar_producto(quantity*2, ingrediente.to_i, 'despacho')
-            end
-          end
-        else
-          producto = Product.find_by sku: ingrediente.to_i
-          if producto.level == 1
-            lot = production_lot(producto, quantity*2)
-            fabricar = fabricarSinPago(@@api_key, producto, lot)
-          else
-              fabricar_producto(quantity*2, ingrediente.to_i, 'despacho')
-          end
-        end
+       #if respuesta["detalles"]
+       #   if respuesta["detalles"].length > 0
+       #     for detalle in respuesta["detalles"]
+       #       sku = detalle[0]["sku"].to_i
+       #      producto = Product.find_by sku: sku
+       #       cantidad = detalle[0]["requerido"].to_i - detalle[0]["disponible"].to_i
+       #      if producto.level == 1
+       #         lot = production_lot(producto, cantidad*2)
+       #         fabricar = fabricarSinPago(@@api_key, producto, lot)
+       #       else
+       #         fabricar_producto(cantidad*2, producto, 'despacho')
+       #       end
+       #     end
+       #   else
+       #     producto = Product.find_by sku: ingrediente.to_i
+       #     if producto.level == 1
+       #       lot = production_lot(producto, quantity*2)
+       #       fabricar = fabricarSinPago(@@api_key, producto, lot)
+       #     else
+       #         fabricar_producto(quantity*2, ingrediente.to_i, 'despacho')
+       #     end
+       #   end
+       # else
+       #   producto = Product.find_by sku: ingrediente.to_i
+       #   if producto.level == 1
+       #     lot = production_lot(producto, quantity*2)
+       #     fabricar = fabricarSinPago(@@api_key, producto, lot)
+       #   else
+       #       fabricar_producto(quantity*2, ingrediente.to_i, 'despacho')
+       #   end
+       # end
       end
       if respuesta["error"].include? "sku no"
         puts "sku no encontrado".red
