@@ -8,7 +8,7 @@ class PagesController < CheckController
       handler = Handler.new
       handler.satisfy_inventory_level1_job
       handler.satisfy_inventory_level2_job
-      handler.satisfy_inventory_level1_groups_job
+      #handler.satisfy_inventory_level1_groups_job
       handler.oc_pendientes
       handler.ordenes_de_compra_ftp
       handler.empty_reception
