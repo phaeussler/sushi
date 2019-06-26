@@ -1,0 +1,25 @@
+<h1> Productos disponibles para la venta <h1>
+
+<% @shopping_cart_products.each do |product|%>
+    <div class="well">
+        <div class="row">
+            <div class="col-sm-8">
+                <h3><%= product.title %></h3>
+            </div>
+            <div class="col-sm-4">
+                <div class="pull-right">
+                <%= form_for(@shopping_cart_order_item, remote: true) do |f| %>
+                    <%= f.hidden_field :shopping_cart_product_id, value: product.id %>
+                    <h5>$<%= product.price%></h5>
+                    <h6><%= product.description%><h6>
+                    <div class="form-group">
+                        <%= f.text_field :quantity, value: 1, min: 1, max: 3, class: "form-control" %>
+                    </div>
+                    <%= f.submit "Añadir al carro de compras", class: 'btn btn-primary btn-sm' %>
+                <% end %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<% end %>

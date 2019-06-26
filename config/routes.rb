@@ -7,4 +7,10 @@ Rails.application.routes.draw do
   resources :check
   resources :recepcion
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
+
+  resources :shopping_cart_products
+  resources :shopping_cart_order_items
+  resources :carts, only: [:show]
+  get 'portal/' => 'portal#index'
+
 end
