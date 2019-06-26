@@ -14,14 +14,14 @@ class CheckController < ApplicationController
     product = Product.find_by sku: sku.to_i
     if product.level == 1
       '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
-      if product["groups"].split(",")[0] == "1"
-        lot = production_lot(product[:sku], 10)
-        fabricar = fabricarSinPago(@@api_key, product[:sku], lot)
-        respuesta = JSON.parse(fabricar.body)
-        handle_response(respuesta, sku, lot, 'despacho')
-      else
+     # if product["groups"].split(",")[0] == "1"
+     #   lot = production_lot(product[:sku], 10)
+     #   fabricar = fabricarSinPago(@@api_key, product[:sku], lot)
+     #   respuesta = JSON.parse(fabricar.body)
+     #   handle_response(respuesta, sku, lot, 'despacho')
+     # else
         pedir_otro_grupo_oc(product[:sku], 10)
-      end
+     # end
     elsif product.level == 2
       fabricar_producto(5, product[:sku], 'despacho')
     elsif product.level == 3
