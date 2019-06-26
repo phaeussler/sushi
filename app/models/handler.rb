@@ -57,7 +57,7 @@ class Handler < CheckController
     inventories = get_dict_inventories()
     product = Product.find_by sku: 1101
     in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
-    if product["min"] >= in_cellar and in_cellar < product["max"]
+    if product["min"]*1.1 >= in_cellar and in_cellar < product["max"]
       fabricar_producto(10, 1101, 'despacho')
     end
     self.arrocero
