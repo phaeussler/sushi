@@ -56,13 +56,18 @@ class Handler < CheckController
     puts "------------- Arrocero job ------------".green
     inventories = get_dict_inventories()
     product = Product.find_by sku: 1101
+    product2 = Product.find_by sku: 1002
     in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
-    if product["min"]*1.1 >= in_cellar and in_cellar < product["max"]
+    in_cellar2 = inventories[product2["sku"]] ? inventories[product2["sku"]] : 0
+    if product["min"]*1.6 >= in_cellar and in_cellar < product["max"]
       fabricar_producto(10, 1101, 'despacho')
+    end
+    if product2["min"]*1.4 >= in_cellar and in_cellar < product2["max"]
+      fabricar_producto(10, 1002, 'despacho')
     end
     self.arrocero
   end
-  handle_asynchronously :arrocero, :run_at => Proc.new {7.minutes.from_now}
+handle_asynchronously :arrocero, :run_at => Proc.new {7.minutes.from_now}
 
   def delete_over_stock_job
     puts "------------- delete_over_stock_job ------------".green
