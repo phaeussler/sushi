@@ -4,9 +4,45 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
-    puts PendingOrder.all
+    # sku = 1002
+    # cantidad = 100
+    # eliminar_producto(sku, cantidad)
+    # puts PendingOrder.all
     msg = "Inventario Revisado"
     render json: msg, :status => 200
+  end
+
+  def eliminar_producto(sku, cantidad)
+    puts "ELIMINAR PRODUCTO #{sku}, cantidad #{cantidad}".red
+    id = "000000000000000000000000"
+    dir = "cualquiera"
+    precio = 1
+    '''Elimino la orden'''
+    lista_productos = request_product(@@cocina, sku, @@api_key)[0]
+    largo = lista_productos.length.to_i
+    if largo >= cantidad
+      for i in 0..cantidad -1 do
+        despachar_producto(lista_productos[i]["_id"].to_s, id, dir.to_s, precio.to_s)
+      end
+    else
+      '''Si no estan en cocina los muevo y luego vuelvo a llamar la funcion'''
+      move_q_products_almacen(@@pulmon, @@cocina, sku.to_s, cantidad)
+      eliminar_producto(sku, cantidad)
+    end
+  end
+
+  def delete_over_stock
+    puts "--delete_over_stock--".red
+    inventories = get_dict_inventories()
+    for product in Product.all
+      if product.level == 1 or product.level == 2
+        in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
+        if in_cellar > product["min"]*2
+          cantidad_a_eliminar = [(in_cellar - product["min"]*2), 50].min
+          eliminar_producto(product["sku"], cantidad_a_eliminar)
+        end
+      end
+    end
   end
 
   def pedir_un_producto(sku)
@@ -50,7 +86,7 @@ class CheckController < ApplicationController
   '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
   def satisfy_inventory_level1
     puts "--satisfy_inventory_level1_--".green
-    cantidad = 50
+    cantidad = 10
     inventories = get_dict_inventories()
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0

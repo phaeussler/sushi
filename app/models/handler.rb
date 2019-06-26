@@ -64,4 +64,11 @@ class Handler < CheckController
   end
   handle_asynchronously :arrocero, :run_at => Proc.new {7.minutes.from_now}
 
+  def delete_over_stock_job
+    puts "------------- delete_over_stock_job ------------".green
+    delete_over_stock()
+    self.delete_over_stock_job
+  end
+  handle_asynchronously :delete_over_stock_job, :run_at => Proc.new {5.minutes.from_now}
+
 end

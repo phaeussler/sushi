@@ -13,6 +13,7 @@ class PagesController < CheckController
       handler.ordenes_de_compra_ftp
       handler.empty_reception
       handler.arrocero
+      # handler.delete_over_stock_job
     end
   end
 
