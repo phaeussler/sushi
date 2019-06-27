@@ -449,9 +449,10 @@ class CheckController < ApplicationController
 
   def execute_ftp
     '''1. Veo las ordenes que me llegan '''
-    ordenes1 = get_ftp()
-    ordenes2 = ordenes_segunda_oportundidad()
-    ordenes = ordenes1 + ordenes2
+    #ordenes1 = get_ftp()
+    #ordenes2 = ordenes_segunda_oportundidad()
+    #ordenes = ordenes1 + ordenes2
+    ordenes = get_ftp()
     for orden in ordenes
       evaluacion = false
       if orden["canal"] == "b2b"
