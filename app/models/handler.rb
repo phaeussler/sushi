@@ -31,6 +31,16 @@ class Handler < CheckController
   end
   handle_asynchronously :ordenes_de_compra_ftp, :run_at => Proc.new {3.minutes.from_now}
 
+
+  
+  def satisfy_inventory_urgent_job
+    puts "------------- Satisfy Inventory Level 1 urgent ------------".green
+    satisfy_inventory_urgent()
+    self.satisfy_inventory_urgent_job()
+  end
+  handle_asynchronously :satisfy_inventory_urgent_job, :run_at => Proc.new {4.minutes.from_now}
+
+
   def satisfy_inventory_level1_groups_job
     puts "------------- Satisfy Inventory Level 1 Groups job ------------".green
     satisfy_inventory_level1_groups()

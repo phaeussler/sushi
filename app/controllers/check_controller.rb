@@ -65,6 +65,24 @@ class CheckController < ApplicationController
     end
   end
 
+  def satisfy_inventory_urgent
+    puts "--satisfy_inventory_urgent--".green
+    cantidad = 10
+    inventories = get_dict_inventories()
+    for product in Product.all
+      in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
+      #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
+      if 20 >= in_cellar
+        if product.level == 1
+          # '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
+          # lot = production_lot(product[:sku], cantidad)
+          # '''pedir_otro_grupo_oc retorna 0 si el otro grupo te aceptó y un numero > 0 si no aceptó'''
+          resp = pedir_otro_grupo_oc(product[:sku], cantidad)
+        end
+      end
+    end
+  end
+
   def satisfy_inventory_level1_groups
     puts "--satisfy_inventory_level1_gropus--".green
     cantidad = 10
@@ -74,10 +92,10 @@ class CheckController < ApplicationController
       #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
       if product["min"]*0.9 >= in_cellar and in_cellar < product["max"]
         if product.level == 1
-          '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
-          lot = production_lot(product[:sku], cantidad)
-          '''pedir_otro_grupo_oc retorna 0 si el otro grupo te aceptó y un numero > 0 si no aceptó'''
-          resp = pedir_otro_grupo_oc(product[:sku], lot)
+          # '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
+          # lot = production_lot(product[:sku], cantidad)
+          # '''pedir_otro_grupo_oc retorna 0 si el otro grupo te aceptó y un numero > 0 si no aceptó'''
+          resp = pedir_otro_grupo_oc(product[:sku], cantidad)
         end
       end
     end
