@@ -63,4 +63,5 @@ gem 'delayed_job_active_record'
 gem "daemons"
 gem "colorize"
 
+gem 'gmaps4rails'
 

@@ -74,6 +74,7 @@ GEM
     ffi (1.11.1)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
+    gmaps4rails (2.1.2)
     httparty (0.13.7)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
@@ -200,6 +201,7 @@ DEPENDENCIES
   colorize
   daemons
   delayed_job_active_record
+  gmaps4rails
   httparty (~> 0.13.7)
   jbuilder (~> 2.5)
   jquery-rails

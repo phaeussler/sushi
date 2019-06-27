@@ -35,10 +35,11 @@
 	<div>
 		<%= button_to 'Ir a pagar', { controller: :portal, action: 'index' }, method: :get %>
 	</div>
+	<div style='width: 800px;'>
+		<div id="map" style='width: 800px; height: 400px;'></div>
+	</div>
 <% else %>
 	<div>
-		Tu carro de compra esta vacio
+		Tu carro de compra esta vacio :(
 	</div>		
 <% end %>
-
-
