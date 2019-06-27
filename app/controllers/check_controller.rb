@@ -8,15 +8,37 @@ class CheckController < ApplicationController
     # cantidad = 100
     # eliminar_producto(sku, cantidad)
     # puts PendingOrder.all
+    n = 1
+    while n<10
+      puts "PULMON A ALMACEN".green
+      pulon_almacen(20)
+      n += 1
+      puts "n #{n}"
+    end
     msg = "Inventario Revisado"
     render json: msg, :status => 200
   end
+
+  def pulon_almacen(cantidad)
+    contador = 0
+    for i in sku_with_stock("5cc7b139a823b10004d8e6d1",@@api_key)[0]
+      lista_productos = request_product("5cc7b139a823b10004d8e6d1" ,i["_id"], @@api_key)[0]
+      for j in lista_productos do
+        if contador <= cantidad
+          # move_product_almacen(j["_id"], @@recepcion)
+          move_product_almacen(j["_id"], "5cc7b139a823b10004d8e6cf")
+          contador += 1
+        end
+      end
+    end
+  end
+
 
   def eliminar_producto(sku, cantidad)
     puts "ELIMINAR PRODUCTO #{sku}, cantidad #{cantidad}".red
     id = "000000000000000000000000"
     dir = "cualquiera"
-    precio = 1
+    precio = 100
     '''Elimino la orden'''
     lista_productos = request_product(@@cocina, sku, @@api_key)[0]
     largo = lista_productos.length.to_i
