@@ -1,5 +1,7 @@
 class PagesController < CheckController
   def home
+    # FIXME: DELETE THIS: joaquin 
+    @@first_execution = true
     puts "HOME"
     if @@first_execution
       puts "YA SE EJECUTO"

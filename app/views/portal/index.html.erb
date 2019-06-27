@@ -13,7 +13,7 @@
                     <h5>$<%= product.price%></h5>
                     <h6><%= product.description%><h6>
                     <div class="form-group">
-                        <%= f.text_field :quantity, value: 1, min: 1, max: 3, class: "form-control" %>
+                        <%= f.number_field :quantity, value: 1, min: 1, max: 3, step: 1, class: "form-control" %>
                     </div>
                     <%= f.submit "Añadir al carro de compras", class: 'btn btn-primary btn-sm' %>
                 <% end %>

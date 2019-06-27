@@ -10,7 +10,7 @@ Rails.application.routes.draw do
 
   resources :shopping_cart_products
   resources :shopping_cart_order_items
-  resources :carts, only: [:show]
+  resource :carts, only: [:show]
   get 'portal/' => 'portal#index'
 
 end
