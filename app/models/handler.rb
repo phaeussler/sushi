@@ -62,7 +62,7 @@ class Handler < CheckController
     if product["min"]*1.6 >= in_cellar and in_cellar < product["max"]
       fabricar_producto(10, 1101, 'despacho')
     end
-    if product2["min"]*1.4 >= in_cellar and in_cellar < product2["max"]
+    if product2["min"]*0.8 >= in_cellar and in_cellar < product2["max"]
       fabricar_producto(10, 1002, 'despacho')
     end
     self.arrocero
