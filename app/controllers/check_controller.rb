@@ -91,7 +91,7 @@ class CheckController < ApplicationController
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
       #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
-      if product["min"]*0.75 >= in_cellar and in_cellar < product["max"]*0.8
+      if product["min"]*1.1 >= in_cellar and in_cellar < product["max"]*1.1
         if product.level == 1
           '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
           lot = production_lot(product[:sku], cantidad)
@@ -110,7 +110,7 @@ class CheckController < ApplicationController
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
       #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
-      if product["min"]*0.75 >= in_cellar and in_cellar < product["max"]*0.8
+      if product["min"]*1.1 >= in_cellar and in_cellar < product["max"]*1.1
         if product.level == 2
           fabricar_producto(5, product[:sku], 'despacho')
         end
