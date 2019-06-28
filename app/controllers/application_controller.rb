@@ -7,7 +7,9 @@ class ApplicationController < ActionController::Base
   protect_from_forgery unless: -> { request.format.json? }
   helper_method :grup_request
   include HTTParty
-  @@server = "prod"
+  #FIXME: joaquin
+  #@@server = "prod"
+  @@server = "dev"
   @@recepcion = @@server != "dev" ? "5cc7b139a823b10004d8e6cd" : "5cbd3ce444f67600049431b3"
   @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
   @@pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"

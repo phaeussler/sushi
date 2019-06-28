@@ -1,0 +1,11 @@
+<div class="jumbotron text-xs-center">
+  <h1 class="display-3">El banco no ha podido procesar tu compra...</h1>
+  <p class="lead"><strong>Lo lamentamos...</strong></p>
+  <hr>
+  <p>
+    De todas formas, puedes <p><strong>calificarnos con un 7 :) </strong></p>
+  </p>
+  <p class="lead">
+    <%= button_to('Quieres intentar otra compra?', { controller: :portal, action: 'new_attempt'}, {method: :get, params: {order_id: current_order.id}, class: 'btn btn-primary'}) %>
+  </p>
+</div>

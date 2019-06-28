@@ -1,0 +1,34 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Client:</strong>
+  <%= @purchase_order.client %>
+</p>
+
+<p>
+  <strong>Latitude:</strong>
+  <%= @purchase_order.latitude %>
+</p>
+
+<p>
+  <strong>Longitude:</strong>
+  <%= @purchase_order.longitude %>
+</p>
+
+<p>
+  <strong>Total:</strong>
+  <%= @purchase_order.total %>
+</p>
+
+<p>
+  <strong>Proveedor:</strong>
+  <%= @purchase_order.proveedor %>
+</p>
+
+<p>
+  <strong>Products:</strong>
+  <%= @purchase_order.products %>
+</p>
+
+<%= link_to 'Edit', edit_purchase_order_path(@purchase_order) %> |
+<%= link_to 'Back', purchase_orders_path %>

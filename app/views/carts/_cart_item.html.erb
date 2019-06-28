@@ -12,34 +12,27 @@
 			<div class="row">
 				<div class="col-sm-8">
 					<h3><%= item.shopping_cart_product.title %></h3>
+					<h6><%= item.shopping_cart_product.description%><h6>
 				</div>
 				<div class="col-sm-4">
 					<div class="pull-right">
 					<%= form_for(item, remote: true) do |f| %>
 						<%= f.hidden_field :product_id, value: item.shopping_cart_product.id %>
-						<h5><%= item.shopping_cart_product.price %></h5>
+						<h5>Precio unitario: $<%= item.shopping_cart_product.price %></h5>
 						<div class="form-group">
 							<%= f.number_field :quantity, value: item.quantity, min: 1, max: 3, step: 1, class: "form-control" %>
 						</div>
 						<div class="btn-group">
-							<%= f.submit "Update Quantity", class: 'btn btn-primary' %>
-							<%= link_to "Delete", item, method: :delete, remote: true, class: 'btn btn-danger'  %>
+							<%= f.submit "Actualizar cantidad", class: 'btn btn-primary' %>
+							<%= link_to "Eliminar del carro", item, method: :delete, remote: true, class: 'btn btn-danger'  %>
 						</div>
-						<span>Total Price: <%= item.total_price %></span>
+						<span>Precio total: <%= item.total_price %></span>
 					<% end %>
 					</div>
 				</div>
 			</div>
 		</div>
 	<% end %>
-	<div>
-		<%= button_to 'Ir a pagar', { controller: :portal, action: 'index' }, method: :get %>
-	</div>
-	<div style='width: 800px;'>
-		<div id="map" style='width: 800px; height: 400px;'></div>
-	</div>
 <% else %>
-	<div>
-		Tu carro de compra esta vacio :(
-	</div>		
+
 <% end %>

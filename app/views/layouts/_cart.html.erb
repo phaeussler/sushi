@@ -1,3 +1,4 @@
-<div>
-    <%= link_to "#{current_order.shopping_cart_order_items.size} elementos en el carro. Precio: #{current_order.subtotal}", carts_path %>
+<div style="text-align:right">
+    <%= link_to "#{total_items} elementos en el carro", {:controller => :carts, :action => :show, :order_id => current_order.id} %>
+    <p><strong><%= "Precio: $#{current_order.subtotal}"%></strong></p>
 </div>

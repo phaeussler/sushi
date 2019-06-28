@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :purchase_orders
   resources :all_inventories
   root to: 'pages#home'
   resources :ftporders
@@ -12,5 +13,9 @@ Rails.application.routes.draw do
   resources :shopping_cart_order_items
   resource :carts, only: [:show]
   get 'portal/' => 'portal#index'
+  get 'portal/new_attempt' => 'portal#new_attempt'
+
+  get 'purchase_orders/(:format)/success' => 'purchase_orders#success'
+  get 'purchase_orders/(:fail)/fail' => 'purchase_orders#fail'
 
 end

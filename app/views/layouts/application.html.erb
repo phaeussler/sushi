@@ -11,6 +11,7 @@
     <script src="//cdn.rawgit.com/mahnunchik/markerclustererplus/master/dist/markerclusterer.min.js"></script>
     <script src='//cdn.rawgit.com/printercu/google-maps-utility-library-v3-read-only/master/infobox/src/infobox_packed.js' type='text/javascript'></script> <!-- only if you need custom infoboxes -->
 
+    <%= yield(:head_tags) %>
   </head>
 
   <body>
@@ -29,11 +30,11 @@
           </div>
           <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-              <li class="active"><%= link_to "Home", 'portal#index'  %></li>
+              <li class="active"><%= link_to "Inicio", {controller: :portal, action: :index}  %></li>
               
             </ul>
             <ul class="nav navbar-nav navbar-right">
-              <li class="cart" id='mycart'><%= render 'layouts/cart' %></li>
+              <li class="active cart" id='mycart'><%= render 'layouts/cart' %></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container-fluid -->
@@ -43,33 +44,4 @@
   </body>
 </html>
 
-<script type="text/javascript">  
-handler = Gmaps.build('Google');
-handler.buildMap({
-    provider: {
-      disableDefaultUI: true
-      // pass in other Google Maps API options here
-    },
-    internal: {
-      id: 'map'
-    }
-  },
-  function(){
-    markers = handler.addMarkers([
-      {
-        "lat": 0,
-        "lng": 0,
-        "picture": {
-          "url": "http://people.mozilla.com/~faaborg/files/shiretoko/firefoxIcon/firefox-32.png",
-          "width":  32,
-          "height": 32
-        },
-        "infowindow": "hello!"
-      }
-    ]);
-    handler.bounds.extendWith(markers);
-    handler.fitMapToBounds();
-  }
-);
-</script>  
 
