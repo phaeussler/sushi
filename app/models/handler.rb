@@ -53,14 +53,14 @@ class Handler < CheckController
     satisfy_inventory_level1()
     self.satisfy_inventory_level1_job
   end
-  handle_asynchronously :satisfy_inventory_level1_job, :run_at => Proc.new {30.minutes.from_now}
+  handle_asynchronously :satisfy_inventory_level1_job, :run_at => Proc.new {13.minutes.from_now}
 
   def satisfy_inventory_level2_job
     puts "------------- Satisfy Inventory Level 2 job ------------".green
     satisfy_inventory_level2()
     self.satisfy_inventory_level2_job
   end
-  handle_asynchronously :satisfy_inventory_level2_job, :run_at => Proc.new {12.minutes.from_now}
+  handle_asynchronously :satisfy_inventory_level2_job, :run_at => Proc.new {11.minutes.from_now}
 
   def arrocero
     puts "------------- Arrocero job ------------".green
@@ -72,7 +72,7 @@ class Handler < CheckController
     if product["min"]*1.6 >= in_cellar and in_cellar < product["max"]
       fabricar_producto(10, 1101, 'despacho')
     end
-    if product2["min"]*0.8 >= in_cellar and in_cellar < product2["max"]
+    if product2["min"]*0.4 >= in_cellar2 and in_cellar2 < product2["max"]*0.4
       fabricar_producto(10, 1002, 'despacho')
     end
     self.arrocero

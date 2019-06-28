@@ -7,14 +7,7 @@ class CheckController < ApplicationController
     # sku = 1002
     # cantidad = 100
     # eliminar_producto(sku, cantidad)
-    # puts PendingOrder.all
-    n = 1
-    while n<10
-      puts "PULMON A ALMACEN".green
-      pulon_almacen(20)
-      n += 1
-      puts "n #{n}"
-    end
+    puts PendingOrder.all
     msg = "Inventario Revisado"
     render json: msg, :status => 200
   end
@@ -131,7 +124,7 @@ class CheckController < ApplicationController
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
       #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
-      if product["min"]*1.1 >= in_cellar and in_cellar < product["max"]*1.1
+      if product["min"]*0.6 >= in_cellar and in_cellar < product["max"]*0.6
         if product.level == 1
           '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
           lot = production_lot(product[:sku], cantidad)
