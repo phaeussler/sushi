@@ -11,6 +11,13 @@ module PurchaseOrdersHelper
         items_dict.to_json
     end
 
+    def get_sku_quantity order_items
+        sku = order_items[0].shopping_cart_product.sku
+        quantity = order_items[0].quantity
+        
+        return sku, quantity
+    end
+
     def generar_boleta(proveedor, cliente, total)
         @server_boleta = "dev"
     # hash_str = hash(method_str, api_key)
@@ -56,8 +63,19 @@ module PurchaseOrdersHelper
         payment_url = "https://integracion-2019-#{server}.herokuapp.com/web/pagoenlinea?callbackUrl=#{url_ok}&cancelUrl=#{url_fail}&boletaId=#{boleta_id}"
 
         redirect_to payment_url
+    end
 
+    def check_dispatch_feasibility (cantidad, sku)
+        puts "se manda a evaluar el pedido"
+        feasible = CheckController.new.evaluar_fabricar_final(cantidad, sku)
+        puts "ya se evaluo..."
+        feasible
+    end
 
+    def fabricate_purchase_order (cantidad, sku)
+        puts "se manda a fabricar el pedido"
+        CheckController.new.fabricar_final(cantidad, sku)
+        puts "ya se mando a fabricar"
     end
 
 end

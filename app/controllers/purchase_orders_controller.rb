@@ -12,19 +12,20 @@ class PurchaseOrdersController < ApplicationController
     @purchase_orders = PurchaseOrder.all
   end
 
-  # GET /purchase_orders/1
   # GET /purchase_orders/1.json
   def show
   end
 
   # GET /purchase_orders/new
   def new
+    @sku_exists = false
     @order = ShoppingCartOrder.find(params[:order_id])
     @order_items = ShoppingCartOrderItem.where(shopping_cart_order_id: params[:order_id])
     @items_json = get_items_json(@order_items)
-
     if @order.shopping_cart_order_items.empty?
       redirect_to :controller => :portal, :action => :index
+    else
+      sku, quantity = get_sku_quantity(@order_items)
     end
 
 
@@ -36,7 +37,10 @@ class PurchaseOrdersController < ApplicationController
     
     
     @purchase_order.total = @order.subtotal
-    @purchase_order.products = @items_json #{3001=> 1}
+    @purchase_order.quantity = quantity.to_i
+    @purchase_order.sku = sku.to_s
+    @purchase_order.products = @items_json #"{3001=> 1}"
+
 
   end
 
@@ -47,33 +51,46 @@ class PurchaseOrdersController < ApplicationController
   # POST /purchase_orders
   # POST /purchase_orders.json
   def create
-    @purchase_order = PurchaseOrder.new(purchase_order_params)
-    if @purchase_order.save
-      # Generar boleta
-      code, body, headers = generar_boleta(@purchase_order.proveedor, @purchase_order.client, @purchase_order.total)
-      puts code, body, headers
-      puts 'se genero la boleta'
-      if code.to_i == 200
-        puts "se redirige a pagar"
-        boleta_id = body["_id"]
-        oc_id = body["oc"]
-        purchased_at = DateTime.parse(body["created_at"])
-        deadline = purchased_at + 90.minutes
-        puts purchased_at&.class
-        puts purchased_at
-        puts deadline
+    #FIXME: si es feasible, cumplir el flujo existente, si no, redirigir al portal. Agregar otro flash por si no se puede fabricar
+    
+    puts "cantidad: #{purchase_order_params[:quantity]} y sku: #{purchase_order_params[:sku]}"
+    feasible = check_dispatch_feasibility(purchase_order_params[:quantity].to_i, purchase_order_params[:sku].to_i)
+    puts "El pedido es posible: #{feasible}."
 
-        @purchase_order.purchased_at  = purchased_at
-        @purchase_order.deadline = deadline
-        @purchase_order.boleta_id = boleta_id
-        @purchase_order.oc_id = oc_id
-        @purchase_order.save
-        puts "ID  BOLETA _id: #{boleta_id}"
+    # FIXME: joaquin. Eliminar esto. Ahora es para probar el flujo completo
+    feasible = true
 
-        code2, body2, headers2 = pagar_orden(boleta_id, @purchase_order.id)
-        puts 'se realizo el proceso de pago'
+    if feasible
+      @purchase_order = PurchaseOrder.new(purchase_order_params)
+      if @purchase_order.save
+        # Generar boleta
+        code, body, headers = generar_boleta(@purchase_order.proveedor, @purchase_order.client, @purchase_order.total)
+        puts code, body, headers
+        puts 'se genero la boleta'
+        if code.to_i == 200
+          puts "se redirige a pagar"
+          boleta_id = body["_id"]
+          oc_id = body["oc"]
+          purchased_at = DateTime.parse(body["created_at"])
+          deadline = purchased_at + 90.minutes
+          puts purchased_at&.class
+          puts purchased_at
+          puts deadline
+
+          @purchase_order.purchased_at  = purchased_at
+          @purchase_order.deadline = deadline
+          @purchase_order.boleta_id = boleta_id
+          @purchase_order.oc_id = oc_id
+          @purchase_order.save
+          puts "ID  BOLETA _id: #{boleta_id}"
+
+          code2, body2, headers2 = pagar_orden(boleta_id, @purchase_order.id)
+          puts 'se realizo el proceso de pago'
+        end
+
       end
-
+    else # feasible=false. Redirigir al portal
+      redirect_to :controller => :portal, :action => :infeasible_order
     end
   end
 
@@ -102,6 +119,17 @@ class PurchaseOrdersController < ApplicationController
   end
 
   def success
+    puts "Parametros de éxito"
+    puts params
+    puts "---end---"
+    
+    @purchase_order = PurchaseOrder.find(params[:format].to_i)
+    sku = @purchase_order.sku
+    quantity = @purchase_order.quantity
+    puts "se envia a fabricar"
+    fabricate_purchase_order(quantity.to_i, sku.to_i)
+    puts "ya se envio a fabricar"
+    #FIXME: Se debe appendear a PendingPurchaseOrders (tabla (crear))
     reset_session
   end
 
@@ -117,6 +145,6 @@ class PurchaseOrdersController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def purchase_order_params
-      params.require(:purchase_order).permit(:client, :latitude, :longitude, :total, :proveedor, :products)
+      params.require(:purchase_order).permit(:client, :latitude, :longitude, :total, :proveedor, :products, :sku, :quantity)
     end
 end

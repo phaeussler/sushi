@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190628045433) do
+ActiveRecord::Schema.define(version: 20190628212033) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -155,6 +155,8 @@ ActiveRecord::Schema.define(version: 20190628045433) do
     t.string "oc_id"
     t.datetime "purchased_at"
     t.datetime "deadline"
+    t.string "sku"
+    t.integer "quantity"
   end
 
   create_table "receipts", force: :cascade do |t|
@@ -192,6 +194,9 @@ ActiveRecord::Schema.define(version: 20190628045433) do
     t.float "shipping"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "flash_sku"
+    t.boolean "flash_quantity"
+    t.boolean "flash_order"
   end
 
   create_table "shopping_cart_products", force: :cascade do |t|

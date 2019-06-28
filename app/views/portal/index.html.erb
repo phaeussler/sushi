@@ -1,4 +1,20 @@
 <h1>Nuestro catálogo<h1>
+<div>
+    <% if current_order.flash_sku? %>
+        <div class="alert alert-danger">Error al agregar al carro: Puedes tener un solo sku en tu carro</div>
+    <% end %>
+</div>
+<div>
+    <% if current_order.flash_quantity? %>
+        <div class="alert alert-danger">Error al agregar al carro: Puedes tener hasta 3 unidades en tu carro</div>
+    <% end %>
+</div>
+
+<div>
+    <% if @flash_infeasible %>
+        <div class="alert alert-danger">Error al confirmar tu orden: No podemos producirla en estos momentos...</div>
+    <% end %>
+</div>
 
 <% @shopping_cart_products.each do |product|%>
     <div class="well">

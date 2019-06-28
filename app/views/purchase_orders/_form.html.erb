@@ -46,6 +46,14 @@
     <%= form.hidden_field :total, value: @purchase_order.total %>
   </div>
 
+  <div>
+    <%= form.hidden_field :sku, value: @purchase_order.sku %>
+  </div>
+
+  <div>
+    <%= form.hidden_field :quantity, value: @purchase_order.quantity %>
+  </div>
+
   <p>
     <div id="map2"> </div>
   </p>

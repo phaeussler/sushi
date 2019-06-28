@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   resource :carts, only: [:show]
   get 'portal/' => 'portal#index'
   get 'portal/new_attempt' => 'portal#new_attempt'
+  get 'portal/infeasible_order' => 'portal#infeasible_order'
 
   get 'purchase_orders/(:format)/success' => 'purchase_orders#success'
   get 'purchase_orders/(:fail)/fail' => 'purchase_orders#fail'
