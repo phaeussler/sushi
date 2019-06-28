@@ -1,4 +1,4 @@
-ShoppingCartProduct.create(title: "California Maki Sesamo", description:"Roll kanikama, palta, envuelto en sésamo", sku:10001, price: 4500)
+ShoppingCartProduct.create(title: "California Maki Sésamo", description:"Roll kanikama, palta, envuelto en sésamo", sku:10001, price: 4500)
 ShoppingCartProduct.create(title: "California Maki Masago", description:"Roll kanikama, palta, envuelto en masago", sku:10002, price: 4500)
 ShoppingCartProduct.create(title: "California Ebi Mix", description:"Roll kanikama, palta, envuelto en mezcla de masago y sésamo", sku:10003, price: 4700)
 ShoppingCartProduct.create(title: "California Ebi Sésamo", description:"Roll con camarón, palta, envuelto en sésamo", sku:10004, price: 4700)

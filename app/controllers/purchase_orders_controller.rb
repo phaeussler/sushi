@@ -1,4 +1,5 @@
 require 'json'
+require 'date'
 
 class PurchaseOrdersController < ApplicationController
   before_action :set_purchase_order, only: [:show, :edit, :update, :destroy]
@@ -18,14 +19,21 @@ class PurchaseOrdersController < ApplicationController
 
   # GET /purchase_orders/new
   def new
+    @order = ShoppingCartOrder.find(params[:order_id])
+    @order_items = ShoppingCartOrderItem.where(shopping_cart_order_id: params[:order_id])
+    @items_json = get_items_json(@order_items)
+
+    if @order.shopping_cart_order_items.empty?
+      redirect_to :controller => :portal, :action => :index
+    end
+
+
     @purchase_order = PurchaseOrder.new
     @purchase_order.latitude = -33.4991118
     @purchase_order.longitude = -70.6183225
     @purchase_order.proveedor = "5cbd31b7c445af0004739be3"
     
-    @order = ShoppingCartOrder.find(params[:order_id])
-    @order_items = ShoppingCartOrderItem.where(shopping_cart_order_id: params[:order_id])
-    @items_json = get_items_json(@order_items)
+    
     
     @purchase_order.total = @order.subtotal
     @purchase_order.products = @items_json #{3001=> 1}
@@ -47,11 +55,22 @@ class PurchaseOrdersController < ApplicationController
       puts 'se genero la boleta'
       if code.to_i == 200
         puts "se redirige a pagar"
-        id_boleta2 = "5d1566dfb5ab0f0004f360d2"
-        id_boleta = body["_id"]
-        puts "ID  BOLETA _id: #{id_boleta}"
-        code2, body2, headers2 = pagar_orden(id_boleta, @purchase_order.id)
-        #id_boleta = body._id FIXME: BODY ES HASH
+        boleta_id = body["_id"]
+        oc_id = body["oc"]
+        purchased_at = DateTime.parse(body["created_at"])
+        deadline = purchased_at + 90.minutes
+        puts purchased_at&.class
+        puts purchased_at
+        puts deadline
+
+        @purchase_order.purchased_at  = purchased_at
+        @purchase_order.deadline = deadline
+        @purchase_order.boleta_id = boleta_id
+        @purchase_order.oc_id = oc_id
+        @purchase_order.save
+        puts "ID  BOLETA _id: #{boleta_id}"
+
+        code2, body2, headers2 = pagar_orden(boleta_id, @purchase_order.id)
         puts 'se realizo el proceso de pago'
       end
 

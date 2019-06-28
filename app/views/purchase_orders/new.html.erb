@@ -15,4 +15,4 @@
 
 <%= render 'form', purchase_order: @purchase_order %>
 
-<%= link_to 'Back', portal_path %>
+<%= button_to('Volver al portal', { controller: :portal, action: 'index'}, {method: :get, class: 'btn btn-danger'}) %>

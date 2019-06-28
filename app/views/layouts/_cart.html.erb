@@ -1,4 +1,4 @@
 <div style="text-align:right">
-    <%= link_to "#{total_items} elementos en el carro", {:controller => :carts, :action => :show, :order_id => current_order.id} %>
-    <p><strong><%= "Precio: $#{current_order.subtotal}"%></strong></p>
+    <%= link_to "Ir al carro de compras (#{total_items} elementos)", {:controller => :carts, :action => :show, :order_id => current_order.id} %>
+    <p><strong><%= "Total: $#{current_order.subtotal}"%></strong></p>
 </div>

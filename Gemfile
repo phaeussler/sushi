@@ -63,8 +63,6 @@ gem 'delayed_job_active_record'
 gem "daemons"
 gem "colorize"
 
-gem 'gmaps4rails'  #FIXME: Should be deleted. joaquin
-
 gem "therubyracer"
 gem "less-rails" #Sprockets (what Rails 3.1 uses for its asset pipeline) supports LESS
 gem "twitter-bootstrap-rails"

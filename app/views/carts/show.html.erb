@@ -1,20 +1,14 @@
-<div style="text-align:right">
-	<% if @shopping_cart_order_items.size>0 %>
-		<div >
-			<%= button_to('Confirmar orden', { controller: :purchase_orders, action: 'new'}, {method: :get, params: {order_id: current_order.id}, class: 'btn btn-primary'}) %>
-		</div>
-		<br>
-	<% end %>
-</div>
-<div class="cart_item">
-	<%= render "carts/cart_item" %>
-</div>
-<% if @shopping_cart_order_items.size>0 %>
+ <% if @shopping_cart_order_items.size>0 %>
 	<div style="text-align:right">
 		<%= button_to('Confirmar orden', { controller: :purchase_orders, action: 'new'}, {method: :get, params: {order_id: current_order.id}, class: 'btn btn-primary'}) %>
 	</div>
-<% else %>
+	<br>
+<% end %>
+<div class="cart_item">
+	<%= render "carts/cart_item" %>
+</div>
+<% if @shopping_cart_order_items.size == 0 %>
 	<div>
-		Tu carro de compra esta vacio :(
+		Tu carro de compra está vacio :(
 	</div>		
 <% end %>
