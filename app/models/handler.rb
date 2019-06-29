@@ -87,19 +87,12 @@ handle_asynchronously :arrocero, :run_at => Proc.new {7.minutes.from_now}
   handle_asynchronously :delete_over_stock_job, :run_at => Proc.new {5.minutes.from_now}
 
 
-  def portal_pendientes
+  def portal_pendientes_job
     puts "------------- [PORTAL] Ordenes Pendientes job ------------".green
     portal_pendientes()
-    self.portal_pendientes()
+    self.portal_pendientes_job()
   end
-  handle_asynchronously :portal_pendientes, :run_at => Proc.new {15.minutes.from_now}
+  handle_asynchronously :portal_pendientes_job, :run_at => Proc.new {4.minutes.from_now}
   
-  # FIXME: joaquin. eliminar. copia pa hacer identico el portal_pendientes 
-  # def oc_pendientes
-  #   puts "------------- Ordenes Pendientes job ------------".green
-  #   pendientes()
-  #   self.oc_pendientes()
-  # end
-  # handle_asynchronously :oc_pendientes, :run_at => Proc.new {10.minutes.from_now}
 
 end

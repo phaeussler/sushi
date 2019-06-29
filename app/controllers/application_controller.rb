@@ -7,9 +7,8 @@ class ApplicationController < ActionController::Base
   protect_from_forgery unless: -> { request.format.json? }
   helper_method :grup_request
   include HTTParty
-  #FIXME: joaquin
-  #@@server = "prod"
-  @@server = "dev"
+
+  @@server = "prod"
   @@recepcion = @@server != "dev" ? "5cc7b139a823b10004d8e6cd" : "5cbd3ce444f67600049431b3"
   @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
   @@old_pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
@@ -253,7 +252,7 @@ class ApplicationController < ActionController::Base
       cellar = sku_with_stock("5cc7b139a823b10004d8e6cf", @@api_key)[0]
     elsif name == "old_pulmon"
       # puts "PULMON"
-      cellar = sku_with_stock("5cc7b139a823b10004d8e6d1", @@api_key)[0]
+      cellar = sku_with_stock("5cc7b139a823b10004d8e6cf", @@api_key)[0]
     elsif name == "despacho"
       # puts "DESPACHO"
       cellar = sku_with_stock(@@despacho, @@api_key)[0]
@@ -585,38 +584,24 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  #FIXME: joaquin. copia pa hacer portal_pendientes y despachar_portal similar. ELIMINAR
-  # def pendientes
-  #   stock = sku_with_stock(@@cocina, @@api_key)[0]
-  #   for orden in PendingOrder.all
-  #     order = obtener_oc(orden['id_oc'])[0]
-  #     puts "Orden pendiente #{order["_id"]}, estado #{order["estado"]}".red
-  #     for producto in stock
-  #       if order['sku'].to_s == producto['_id'].to_s
-  #         despachar_ftp(order)
-  #       end
-  #     end
-  #   end
-  # end
-
   def despachar_portal(orden)
     cantidad = orden.quantity - orden.cantidad_despachada
     dir = "long:#{orden.longitude}-lat:#{orden.latitude}"
     precio = (orden.total / orden.quantity).to_i
     lista_productos = request_product(@@cocina, orden.sku, @@api_key)[0]
     largo = lista_productos.length.to_i
-    puts "Evaluando largo >= cantidad [despachar_portal]"
+    puts "#{orden.sku}: Evaluando largo >= cantidad [despachar_portal]"
     if largo >= cantidad
       for i in 0..cantidad-1 do
         despachar_producto(lista_productos[i]["_id"].to_s, orden.oc_id.to_s, dir.to_s, precio.to_s)
-        puts "Se despacho[despachar_portal]"
+        puts "#{orden.sku}:Se despacho[despachar_portal]"
       end
       eliminar_orden_portal(orden.boleta_id.to_s) # Se elimina por la boleta, oc es siempre igual
-      puts "Se elimino [despachar_portal]"
+      puts "#{orden.sku} se elimino [despachar_portal]"
     else
       for i in 0..largo-1 do
         despachar_producto(lista_productos[i]["_id"].to_s, orden.oc_id.to_s, dir.to_s, precio.to_s)
-        puts "Se despacho a medias [despachar_portal]"
+        puts "#{orden.sku}Se despacho a medias [despachar_portal]"
       end
     end
   end

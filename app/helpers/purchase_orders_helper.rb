@@ -19,7 +19,8 @@ module PurchaseOrdersHelper
     end
 
     def generar_boleta(proveedor, cliente, total)
-        @server_boleta = "dev"
+        # TODO: joaquin. CAMBIAR A "prod" CUANDO PASE A PROD
+        @server_boleta = "prod"
     # hash_str = hash(method_str, api_key)
         puts "Se inicio la generación de boleta"
         uri = 'sii/boleta'
@@ -46,10 +47,10 @@ module PurchaseOrdersHelper
     end
 
     def pagar_orden(boleta_id, order_id)
-        # FIXME: joaquin. CAMBIAR A "prod" CUANDO PASE A PROD
-        server = "dev"
-        # FIXME: joaquin. CAMBIAR A "prod" CUANDO PASE A PROD
-        isLocal = "local"
+        # TODO: joaquin. CAMBIAR A "prod" CUANDO PASE A PROD
+        server = "prod"
+        # TODO: joaquin. CAMBIAR A "prod" CUANDO PASE A PROD
+        isLocal = "prod"
 
         success_url_local = "http%3A%2F%2F127.0.0.1%2Fpurchase_orders%2F#{order_id}%2Fsuccess"
         success_url_prod = "http%3A%2F%2Ftuerca1.ing.puc.cl%2Fpurchase_orders%2F#{order_id}%2Fsuccess"

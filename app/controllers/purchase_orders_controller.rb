@@ -51,7 +51,7 @@ class PurchaseOrdersController < ApplicationController
   # POST /purchase_orders
   # POST /purchase_orders.json
   def create
-    #FIXME: si es feasible, cumplir el flujo existente, si no, redirigir al portal. Agregar otro flash por si no se puede fabricar
+    #si es feasible, cumplir el flujo existente, si no, redirigir al portal. Agregar otro flash por si no se puede fabricar
     
     puts "cantidad: #{purchase_order_params[:quantity]} y sku: #{purchase_order_params[:sku]}"
     feasible = check_dispatch_feasibility(purchase_order_params[:quantity].to_i, purchase_order_params[:sku].to_i)
