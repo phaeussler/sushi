@@ -1,7 +1,7 @@
 class PagesController < CheckController
   def home
     # FIXME: DELETE THIS: joaquin 
-    @@first_execution = true
+    # @@first_execution = true
     puts "HOME"
     if @@first_execution
       puts "YA SE EJECUTO"
@@ -15,6 +15,7 @@ class PagesController < CheckController
       handler.ordenes_de_compra_ftp
       handler.empty_reception
       handler.arrocero
+      handler.portal_pendientes
     end
   end
 

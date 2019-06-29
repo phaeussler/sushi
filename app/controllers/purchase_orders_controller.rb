@@ -129,7 +129,10 @@ class PurchaseOrdersController < ApplicationController
     puts "se envia a fabricar"
     fabricate_purchase_order(quantity.to_i, sku.to_i)
     puts "ya se envio a fabricar"
-    #FIXME: Se debe appendear a PendingPurchaseOrders (tabla (crear))
+
+    @purchase_order.created = true
+    @purchase_order.save
+    puts "purchase_order was created successfully loco alexissss."
     reset_session
   end
 

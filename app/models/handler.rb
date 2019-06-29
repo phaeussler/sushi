@@ -64,4 +64,20 @@ class Handler < CheckController
   end
   handle_asynchronously :arrocero, :run_at => Proc.new {7.minutes.from_now}
 
+
+  def portal_pendientes
+    puts "------------- [PORTAL] Ordenes Pendientes job ------------".green
+    portal_pendientes()
+    self.portal_pendientes()
+  end
+  handle_asynchronously :portal_pendientes, :run_at => Proc.new {15.minutes.from_now}
+  
+  # FIXME: joaquin. eliminar. copia pa hacer identico el portal_pendientes 
+  # def oc_pendientes
+  #   puts "------------- Ordenes Pendientes job ------------".green
+  #   pendientes()
+  #   self.oc_pendientes()
+  # end
+  # handle_asynchronously :oc_pendientes, :run_at => Proc.new {10.minutes.from_now}
+
 end

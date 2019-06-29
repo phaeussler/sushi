@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  get 'pending_purchase_orders/create'
+
+  get 'pending_purchase_order/create'
+
   resources :purchase_orders
   resources :all_inventories
   root to: 'pages#home'

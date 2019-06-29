@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190628212033) do
+ActiveRecord::Schema.define(version: 20190629031609) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -157,6 +157,9 @@ ActiveRecord::Schema.define(version: 20190628212033) do
     t.datetime "deadline"
     t.string "sku"
     t.integer "quantity"
+    t.boolean "created", default: false
+    t.boolean "finished", default: false
+    t.integer "cantidad_despachada", default: 0
   end
 
   create_table "receipts", force: :cascade do |t|
