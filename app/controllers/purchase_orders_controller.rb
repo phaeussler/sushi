@@ -32,8 +32,10 @@ class PurchaseOrdersController < ApplicationController
     @purchase_order = PurchaseOrder.new
     @purchase_order.latitude = -33.4991118
     @purchase_order.longitude = -70.6183225
-    @purchase_order.proveedor = "5cbd31b7c445af0004739be3"
     
+    # DEV: @purchase_order.proveedor = "5cbd31b7c445af0004739be3"
+    # PROD: "5cc66e378820160004a4c3bc"
+    @purchase_order.proveedor = "5cc66e378820160004a4c3bc"
     
     
     @purchase_order.total = @order.subtotal
