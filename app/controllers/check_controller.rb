@@ -4,9 +4,60 @@ class CheckController < ApplicationController
   '''Queremos revisar el inventario mínimo para cada producto que nos piden'''
   # GET /check
   def index
+    # sku = 1002
+    # cantidad = 100
+    # eliminar_producto(sku, cantidad)
     puts PendingOrder.all
     msg = "Inventario Revisado"
     render json: msg, :status => 200
+  end
+
+  def pulon_almacen(cantidad)
+    contador = 0
+    for i in sku_with_stock("5cc7b139a823b10004d8e6d1",@@api_key)[0]
+      lista_productos = request_product("5cc7b139a823b10004d8e6d1" ,i["_id"], @@api_key)[0]
+      for j in lista_productos do
+        if contador <= cantidad
+          # move_product_almacen(j["_id"], @@recepcion)
+          move_product_almacen(j["_id"], "5cc7b139a823b10004d8e6cf")
+          contador += 1
+        end
+      end
+    end
+  end
+
+
+  def eliminar_producto(sku, cantidad)
+    puts "ELIMINAR PRODUCTO #{sku}, cantidad #{cantidad}".red
+    id = "000000000000000000000000"
+    dir = "cualquiera"
+    precio = 100
+    '''Elimino la orden'''
+    lista_productos = request_product(@@cocina, sku, @@api_key)[0]
+    largo = lista_productos.length.to_i
+    if largo >= cantidad
+      for i in 0..cantidad -1 do
+        despachar_producto(lista_productos[i]["_id"].to_s, id, dir.to_s, precio.to_s)
+      end
+    else
+      '''Si no estan en cocina los muevo y luego vuelvo a llamar la funcion'''
+      move_q_products_almacen(@@pulmon, @@cocina, sku.to_s, cantidad)
+      eliminar_producto(sku, cantidad)
+    end
+  end
+
+  def delete_over_stock
+    puts "--delete_over_stock--".red
+    inventories = get_dict_inventories()
+    for product in Product.all
+      if product.level == 1 or product.level == 2
+        in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
+        if in_cellar > product["min"]*2
+          cantidad_a_eliminar = [(in_cellar - product["min"]*2), 50].min
+          eliminar_producto(product["sku"], cantidad_a_eliminar)
+        end
+      end
+    end
   end
 
   def pedir_un_producto(sku)
@@ -29,6 +80,24 @@ class CheckController < ApplicationController
     end
   end
 
+  def satisfy_inventory_urgent
+    puts "--satisfy_inventory_urgent--".green
+    cantidad = 10
+    inventories = get_dict_inventories()
+    for product in Product.all
+      in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
+      #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
+      if 20 >= in_cellar
+        if product.level == 1
+          # '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
+          # lot = production_lot(product[:sku], cantidad)
+          # '''pedir_otro_grupo_oc retorna 0 si el otro grupo te aceptó y un numero > 0 si no aceptó'''
+          resp = pedir_otro_grupo_oc(product[:sku], cantidad)
+        end
+      end
+    end
+  end
+
   def satisfy_inventory_level1_groups
     puts "--satisfy_inventory_level1_gropus--".green
     cantidad = 10
@@ -38,10 +107,10 @@ class CheckController < ApplicationController
       #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
       if product["min"]*0.9 >= in_cellar and in_cellar < product["max"]
         if product.level == 1
-          '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
-          lot = production_lot(product[:sku], cantidad)
-          '''pedir_otro_grupo_oc retorna 0 si el otro grupo te aceptó y un numero > 0 si no aceptó'''
-          resp = pedir_otro_grupo_oc(product[:sku], lot)
+          # '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
+          # lot = production_lot(product[:sku], cantidad)
+          # '''pedir_otro_grupo_oc retorna 0 si el otro grupo te aceptó y un numero > 0 si no aceptó'''
+          resp = pedir_otro_grupo_oc(product[:sku], cantidad)
         end
       end
     end
@@ -50,12 +119,12 @@ class CheckController < ApplicationController
   '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
   def satisfy_inventory_level1
     puts "--satisfy_inventory_level1_--".green
-    cantidad = 50
+    cantidad = 10
     inventories = get_dict_inventories()
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
       #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
-      if product["min"]*0.9 >= in_cellar and in_cellar < product["max"]
+      if product["min"]*0.6 >= in_cellar and in_cellar < product["max"]*0.6
         if product.level == 1
           '''Level 1 son ingredientes que podemos fabricar o pedir a otro grupo'''
           lot = production_lot(product[:sku], cantidad)
@@ -74,7 +143,7 @@ class CheckController < ApplicationController
     for product in Product.all
       in_cellar = inventories[product["sku"]] ? inventories[product["sku"]] : 0
       #puts "product -> sku: #{product.sku} min: #{product.min} tenemos :#{in_cellar} max :#{product.max} level:#{product.level} #{product['min']*1.3 >= in_cellar and in_cellar < product['max']}"
-      if product["min"]*0.9 >= in_cellar and in_cellar < product["max"]
+      if product["min"]*1.1 >= in_cellar and in_cellar < product["max"]*1.1
         if product.level == 2
           fabricar_producto(5, product[:sku], 'despacho')
         end
@@ -395,9 +464,10 @@ class CheckController < ApplicationController
 
   def execute_ftp
     '''1. Veo las ordenes que me llegan '''
-    ordenes1 = ordenes_segunda_oportundidad()
-    ordenes2 = get_ftp()
-    ordenes = ordenes1 + ordenes2
+    #ordenes1 = get_ftp()
+    #ordenes2 = ordenes_segunda_oportundidad()
+    #ordenes = ordenes1 + ordenes2
+    ordenes = get_ftp()
     for orden in ordenes
       evaluacion = false
       if orden["canal"] == "b2b"

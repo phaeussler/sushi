@@ -22,6 +22,9 @@ class RecepcionController < CheckController
     # else
     #   puts "RECEPCION VACIA"
     # end
+    for p in Product.all
+      puts p["sku"]
+      end
     msg = "Jobs"
     render json: msg,   :status => 200
 

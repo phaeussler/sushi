@@ -11,6 +11,7 @@
       <th>Details</th>
       <th>Recepción</th>
       <th>Pulmon</th>
+      <th>Old Pulmon</th>
       <th>Cocina</th>
       <th>Despacho</th>
     </tr>
@@ -28,6 +29,7 @@
         <td><%= product[:description] %></td>
         <td><%= @recepcion[product[:sku]] ? @recepcion[product[:sku]] : 0 %></td>
         <td><%= @pulmon[product[:sku]] ? @pulmon[product[:sku]] : 0 %></td>
+        <td><%= @old_pulmon[product[:sku]] ? @old_pulmon[product[:sku]] : 0 %></td>
         <td><%= @cocina[product[:sku]] ? @cocina[product[:sku]] : 0 %></td>
         <td><%= @despacho[product[:sku]] ? @despacho[product[:sku]] : 0 %></td>
         <td><%= link_to 'Pedir', all_inventory_path(product[:sku]) %></td>

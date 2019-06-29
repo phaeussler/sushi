@@ -12,7 +12,8 @@ class ApplicationController < ActionController::Base
   @@server = "dev"
   @@recepcion = @@server != "dev" ? "5cc7b139a823b10004d8e6cd" : "5cbd3ce444f67600049431b3"
   @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
-  @@pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
+  @@old_pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
+  @@pulmon = "5cc7b139a823b10004d8e6cf"
   @@cocina = @@server != "dev" ? "5cc7b139a823b10004d8e6d2" : "5cbd3ce444f67600049431b8"
 
 
@@ -228,12 +229,13 @@ class ApplicationController < ActionController::Base
     #puts "get_dict_inventories\n"
     recepcion = get_inventorie_from_cellar('recepcion')
     pulmon = get_inventorie_from_cellar('pulmon')
+    old_pulmon = get_inventorie_from_cellar('old_pulmon')
     inventories = recepcion
     for sku, total in pulmon do
-      in_reception = inventories[sku] ? inventories[sku] : 0
-      inventories[sku] = total+ in_reception
+      recepcion = recepcion[sku] ? recepcion[sku] : 0
+      in_old_pulmon = old_pulmon[sku] ? old_pulmon[sku] : 0
+      inventories[sku] = total+ recepcion + in_old_pulmon
     end
-    #puts "get_dict_inventories -> #{inventories}"
     return inventories
   end
 
@@ -248,7 +250,10 @@ class ApplicationController < ActionController::Base
       cellar = sku_with_stock(@@cocina, @@api_key)[0]
     elsif name == "pulmon"
       # puts "PULMON"
-      cellar = sku_with_stock(@@pulmon, @@api_key)[0]
+      cellar = sku_with_stock("5cc7b139a823b10004d8e6cf", @@api_key)[0]
+    elsif name == "old_pulmon"
+      # puts "PULMON"
+      cellar = sku_with_stock("5cc7b139a823b10004d8e6d1", @@api_key)[0]
     elsif name == "despacho"
       # puts "DESPACHO"
       cellar = sku_with_stock(@@despacho, @@api_key)[0]
@@ -350,7 +355,7 @@ class ApplicationController < ActionController::Base
       @ordenes = []
       sftp.dir.foreach("pedidos") do |entry|
         #if Time.at(entry.attributes.mtime) > @@last_time
-        if Time.at(entry.attributes.mtime) > Time.now - 7*60
+        if Time.at(entry.attributes.mtime) > Time.now - 45*60
         #if (Time.at(entry.attributes.mtime) > Time.parse('2019-06-23 10:49:05'))
           if entry.name .include? ".xml"
             data = sftp.download!("pedidos/#{entry.name}")

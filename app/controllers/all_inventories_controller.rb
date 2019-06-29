@@ -10,6 +10,7 @@ class AllInventoriesController < CheckController
     @pulmon = get_inventorie_from_cellar('pulmon')
     @cocina = get_inventorie_from_cellar('cocina')
     @despacho = get_inventorie_from_cellar('despacho')
+    @old_pulmon = get_inventorie_from_cellar('old_pulmon')
   end
 
   # GET /all_inventories/1

@@ -71,7 +71,7 @@ end
 
 stock = xlxs.sheet('Stock mínimo')
 
-for i in 2..24
+for i in 2..26
   MinimumStock.create(
     sku: stock.cell('A', i),
     name: stock.cell('B', i),
@@ -102,12 +102,12 @@ for i in 2..79
   min = MinimumStock.find_by sku: sku
   min = min ? min["minimum_stock"] : 0
   if sku<=1016
-    min = [min, 200].max
-    max = 700
+    min = [min, 60].max
+    max = 150
     level = 1
   elsif sku < 10000
-    min = [min, 50].max
-    max = 150
+    min = [min, 40].max
+    max = 100
     level = 2
   else
     min = [min, 1].max
