@@ -252,7 +252,7 @@ class ApplicationController < ActionController::Base
       cellar = sku_with_stock("5cc7b139a823b10004d8e6cf", @@api_key)[0]
     elsif name == "old_pulmon"
       # puts "PULMON"
-      cellar = sku_with_stock("5cc7b139a823b10004d8e6cf", @@api_key)[0]
+      cellar = sku_with_stock("5cc7b139a823b10004d8e6d1", @@api_key)[0]
     elsif name == "despacho"
       # puts "DESPACHO"
       cellar = sku_with_stock(@@despacho, @@api_key)[0]
