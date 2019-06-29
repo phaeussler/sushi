@@ -1,0 +1,42 @@
+<h1>Nuestro catálogo<h1>
+<div>
+    <% if current_order.flash_sku? %>
+        <div class="alert alert-danger">Error al agregar al carro: Puedes tener un solo sku en tu carro</div>
+    <% end %>
+</div>
+<div>
+    <% if current_order.flash_quantity? %>
+        <div class="alert alert-danger">Error al agregar al carro: Puedes tener hasta 3 unidades en tu carro</div>
+    <% end %>
+</div>
+
+<div>
+    <% if @flash_infeasible %>
+        <div class="alert alert-danger">Error al confirmar tu orden: No podemos producirla en estos momentos...</div>
+    <% end %>
+</div>
+
+<% @shopping_cart_products.each do |product|%>
+    <div class="well">
+        <div class="row">
+            <div class="col-sm-8">
+                <h3><%= product.title %></h3>
+                <h6><%= product.description%><h6>
+            </div>
+            <div class="col-sm-4">
+                <div class="pull-right">
+                <%= form_for(@shopping_cart_order_item, remote: true) do |f| %>
+                    <%= f.hidden_field :shopping_cart_product_id, value: product.id %>
+                    <h5>Precio unitario: $<%= product.price%></h5>
+                    
+                    <div class="form-group">
+                        <%= f.number_field :quantity, value: 1, min: 1, max: 3, step: 1, class: "form-control" %>
+                    </div>
+                    <%= f.submit "Añadir al carro de compras", class: 'btn btn-primary btn-sm' %>
+                <% end %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<% end %>

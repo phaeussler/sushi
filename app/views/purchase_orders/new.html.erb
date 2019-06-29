@@ -1,0 +1,18 @@
+<% provide :head_tags do %>
+    <meta name='turbolinks-visit-control' content='reload'>
+    <script>
+    document.addEventListener("DOMContentLoaded", function(){
+        initMap2(<%=@purchase_order.latitude%>, <%=@purchase_order.longitude%>)
+    });
+    </script>
+<% end %>
+
+<h1>Estás a punto de confirmar tu compra de sushi!</h1>
+<br><br>
+<h4> A continuación, rellena tus datos</h4> 
+<p>1. Ingresa tu nombre, y </p>
+<p>2. Selecciona tu dirección de despacho en el mapa</p>
+
+<%= render 'form', purchase_order: @purchase_order %>
+
+<%= button_to('Volver al portal', { controller: :portal, action: 'index'}, {method: :get, class: 'btn btn-danger'}) %>

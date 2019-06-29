@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190620202647) do
+ActiveRecord::Schema.define(version: 20190629031609) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -142,6 +142,26 @@ ActiveRecord::Schema.define(version: 20190620202647) do
     t.integer "level", default: 0
   end
 
+  create_table "purchase_orders", force: :cascade do |t|
+    t.string "client"
+    t.decimal "latitude"
+    t.decimal "longitude"
+    t.float "total"
+    t.string "proveedor"
+    t.string "products"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "boleta_id"
+    t.string "oc_id"
+    t.datetime "purchased_at"
+    t.datetime "deadline"
+    t.string "sku"
+    t.integer "quantity"
+    t.boolean "created", default: false
+    t.boolean "finished", default: false
+    t.integer "cantidad_despachada", default: 0
+  end
+
   create_table "receipts", force: :cascade do |t|
     t.integer "sku"
     t.string "name"
@@ -156,6 +176,37 @@ ActiveRecord::Schema.define(version: 20190620202647) do
     t.integer "space_for_production"
     t.integer "space_for_receive_production"
     t.string "production_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "shopping_cart_order_items", force: :cascade do |t|
+    t.integer "shopping_cart_product_id"
+    t.integer "shopping_cart_order_id"
+    t.integer "unit_price"
+    t.integer "quantity"
+    t.integer "total_price"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "shopping_cart_orders", force: :cascade do |t|
+    t.integer "subtotal"
+    t.integer "total"
+    t.float "tax"
+    t.float "shipping"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "flash_sku"
+    t.boolean "flash_quantity"
+    t.boolean "flash_order"
+  end
+
+  create_table "shopping_cart_products", force: :cascade do |t|
+    t.string "title"
+    t.integer "sku"
+    t.string "description"
+    t.integer "price"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

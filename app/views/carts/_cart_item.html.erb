@@ -1,0 +1,38 @@
+<% if !@shopping_cart_order_item.nil? && @shopping_cart_order_item.errors.any? %>
+	<ul>
+		<% @shopping_cart_order_item.errors.full_messages.each do |msg| %>
+			<li><%= msg %></li>
+		<% end %>
+	</ul>
+<% end %>
+
+<% if @shopping_cart_order_items.size > 0 %>
+	<% @shopping_cart_order_items.each do |item| %>
+		<div class="well">
+			<div class="row">
+				<div class="col-sm-8">
+					<h3><%= item.shopping_cart_product.title %></h3>
+					<h6><%= item.shopping_cart_product.description%><h6>
+				</div>
+				<div class="col-sm-4">
+					<div class="pull-right">
+					<%= form_for(item, remote: true) do |f| %>
+						<%= f.hidden_field :product_id, value: item.shopping_cart_product.id %>
+						<h5>Precio unitario: $<%= item.shopping_cart_product.price %></h5>
+						<div class="form-group">
+							<%= f.number_field :quantity, value: item.quantity, min: 1, max: 3, step: 1, class: "form-control" %>
+						</div>
+						<div class="btn-group">
+							<%= f.submit "Actualizar cantidad", class: 'btn btn-primary' %>
+							<%= link_to "Eliminar del carro", item, method: :delete, remote: true, class: 'btn btn-danger'  %>
+						</div>
+						<span>Precio total: <%= item.total_price %></span>
+					<% end %>
+					</div>
+				</div>
+			</div>
+		</div>
+	<% end %>
+<% else %>
+
+<% end %>

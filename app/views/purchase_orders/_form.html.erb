@@ -1,0 +1,64 @@
+<% provide :head_tags do %>
+    <meta name='turbolinks-visit-control' content='reload'>
+    <script>
+        document.addEventListener("DOMContentLoaded", initMap2);
+    </script>
+<% end %>
+
+<%= form_with(model: purchase_order, local: true) do |form| %>
+  <% if purchase_order.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(purchase_order.errors.count, "error") %> prohibited this purchase_order from being saved:</h2>
+
+      <ul>
+      <% purchase_order.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label "Indique su nombre" %>
+    <%= form.text_field :client, id: :purchase_order_client, value: 'Señor X' %>
+  </div>
+  <br>
+  <strong> Coordenadas de despacho </strong>
+  <div class="field">
+    <%= form.label "Latitud" %>
+    <%= form.text_field :latitude, id: :purchase_order_latitude, :readonly => true%>
+  </div>
+
+  <div class="field">
+    <%= form.label "Longitud" %>
+    <%= form.text_field :longitude, id: :purchase_order_longitude, :readonly => true %>
+  </div>
+
+  <div>
+    <%= form.hidden_field :products, value: @purchase_order.products %>
+  </div>
+
+  <div>
+    <%= form.hidden_field :proveedor, value: @purchase_order.proveedor %>
+  </div>
+
+  <div>
+    <%= form.hidden_field :total, value: @purchase_order.total %>
+  </div>
+
+  <div>
+    <%= form.hidden_field :sku, value: @purchase_order.sku %>
+  </div>
+
+  <div>
+    <%= form.hidden_field :quantity, value: @purchase_order.quantity %>
+  </div>
+
+  <p>
+    <div id="map2"> </div>
+  </p>
+
+  <div class="actions">
+    <%= form.submit "Ir a pagar", class: 'btn btn-primary' %>
+  </div>
+<% end %>

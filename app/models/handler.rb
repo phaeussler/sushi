@@ -86,4 +86,13 @@ handle_asynchronously :arrocero, :run_at => Proc.new {7.minutes.from_now}
   end
   handle_asynchronously :delete_over_stock_job, :run_at => Proc.new {5.minutes.from_now}
 
+
+  def portal_pendientes_job
+    puts "------------- [PORTAL] Ordenes Pendientes job ------------".green
+    portal_pendientes()
+    self.portal_pendientes_job()
+  end
+  handle_asynchronously :portal_pendientes_job, :run_at => Proc.new {4.minutes.from_now}
+  
+
 end

@@ -7,6 +7,7 @@ class ApplicationController < ActionController::Base
   protect_from_forgery unless: -> { request.format.json? }
   helper_method :grup_request
   include HTTParty
+
   @@server = "prod"
   @@recepcion = @@server != "dev" ? "5cc7b139a823b10004d8e6cd" : "5cbd3ce444f67600049431b3"
   @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
@@ -569,5 +570,68 @@ class ApplicationController < ActionController::Base
     end
     return ordenes
   end
+
+  def portal_pendientes
+    stock = sku_with_stock(@@cocina, @@api_key)[0]
+    for orden in PurchaseOrder.where(created: true)
+      puts "EL SKU DE LA ORDEN portal_pendientes"
+      puts orden.sku
+      for producto in stock
+        if orden.sku.to_s == producto['_id'].to_s
+          despachar_portal(orden)
+        end
+      end
+    end
+  end
+
+  def despachar_portal(orden)
+    cantidad = orden.quantity - orden.cantidad_despachada
+    dir = "long:#{orden.longitude}-lat:#{orden.latitude}"
+    precio = (orden.total / orden.quantity).to_i
+    lista_productos = request_product(@@cocina, orden.sku, @@api_key)[0]
+    largo = lista_productos.length.to_i
+    puts "#{orden.sku}: Evaluando largo >= cantidad [despachar_portal]"
+    if largo >= cantidad
+      for i in 0..cantidad-1 do
+        despachar_producto(lista_productos[i]["_id"].to_s, orden.oc_id.to_s, dir.to_s, precio.to_s)
+        puts "#{orden.sku}:Se despacho[despachar_portal]"
+      end
+      eliminar_orden_portal(orden.boleta_id.to_s) # Se elimina por la boleta, oc es siempre igual
+      puts "#{orden.sku} se elimino [despachar_portal]"
+    else
+      for i in 0..largo-1 do
+        despachar_producto(lista_productos[i]["_id"].to_s, orden.oc_id.to_s, dir.to_s, precio.to_s)
+        puts "#{orden.sku}Se despacho a medias [despachar_portal]"
+      end
+    end
+  end
+
+  def eliminar_orden_portal(id)
+      puts "Se va a eliminar [eliminar_orden_portal]"
+      order = PurchaseOrder.find_by boleta_id: id
+      order.destroy
+      puts "Se destruyó [eliminar_orden_portal]"
+  end
+
+  # def despachar_ftp(orden)
+  #   '''Ojo que para hacerlo mas rapido muevo de a un producto'''
+  #   cantidad = orden["cantidad"].to_i - orden["cantidadDespachada"].to_i
+  #   dir = "cualquiera"
+  #   precio = orden["precioUnitario"].to_i
+  #   '''Despacho la orden'''
+  #   lista_productos = request_product(@@cocina, orden["sku"], @@api_key)[0]
+  #   largo = lista_productos.length.to_i
+  #   if largo >= cantidad
+  #     for i in 0..cantidad -1 do
+  #         despachar_producto(lista_productos[i]["_id"].to_s, orden["_id"].to_s, dir.to_s, precio.to_s)
+  #     end
+  #     '''Elimino la orden de compra de pendientes'''
+  #     eliminar_orden(orden["_id"].to_s)
+  #   else
+  #     for i in 0..largo -1 do
+  #       despachar_producto(lista_productos[i]["_id"].to_s, orden["_id"].to_s, dir.to_s, precio.to_s)
+  #     end
+  #   end
+  # end
 
 end

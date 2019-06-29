@@ -1,0 +1,11 @@
+<div class="jumbotron text-xs-center">
+  <h1 class="display-3">Tu compra se ha realizado con éxito!</h1>
+  <p class="lead"><strong>Tu pedido será despachado pronto</strong></p>
+  <hr>
+  <p>
+    <strong>Tu experiencia de compra fue agradable? </strong><p> Calificanos con un 7 :) </p>
+  </p>
+  <p class="lead">
+    <%= button_to('Quieres hacer otra compra?', { controller: :portal, action: :new_attempt}, {method: :get, params: {order_id: current_order.id}, class: 'btn btn-primary'}) %>
+  </p>
+</div>

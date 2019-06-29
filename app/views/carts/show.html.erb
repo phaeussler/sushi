@@ -1,0 +1,14 @@
+ <% if @shopping_cart_order_items.size>0 %>
+	<div style="text-align:right">
+		<%= button_to('Confirmar orden', { controller: :purchase_orders, action: 'new'}, {method: :get, params: {order_id: current_order.id}, class: 'btn btn-primary'}) %>
+	</div>
+	<br>
+<% end %>
+<div class="cart_item">
+	<%= render "carts/cart_item" %>
+</div>
+<% if @shopping_cart_order_items.size == 0 %>
+	<div>
+		 <div class="alert alert-warning"> <h4>Tu carro de compras está vacio :( </h4></div>
+	</div>		
+<% end %>
