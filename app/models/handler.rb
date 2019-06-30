@@ -22,7 +22,7 @@ class Handler < CheckController
     pendientes()
     self.oc_pendientes()
   end
-  handle_asynchronously :oc_pendientes, :run_at => Proc.new {8.minutes.from_now}
+  handle_asynchronously :oc_pendientes, :run_at => Proc.new {100.minutes.from_now}
 
   def ordenes_de_compra_ftp
     puts "------------- Buscar Ordenes de Compra job ------------".green
