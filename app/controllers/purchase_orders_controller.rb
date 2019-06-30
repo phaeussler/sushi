@@ -59,8 +59,6 @@ class PurchaseOrdersController < ApplicationController
     feasible = check_dispatch_feasibility(purchase_order_params[:quantity].to_i, purchase_order_params[:sku].to_i)
     puts "El pedido es posible: #{feasible}."
 
-    # FIXME: joaquin. Eliminar esto. Ahora es para probar el flujo completo
-    feasible = true
 
     if feasible
       @purchase_order = PurchaseOrder.new(purchase_order_params)
