@@ -71,6 +71,8 @@ class OrdersController < CheckController
     rescue NoMethodError => e
     end
 
+    evaluacion = false
+
     if evaluacion
       '''Notificar aceptacion'''
       res = {
