@@ -11,8 +11,8 @@ class ApplicationController < ActionController::Base
   @@server = "prod"
   @@recepcion = @@server != "dev" ? "5cc7b139a823b10004d8e6cd" : "5cbd3ce444f67600049431b3"
   @@despacho = @@server != "dev" ? "5cc7b139a823b10004d8e6ce" : "5cbd3ce444f67600049431b4"
-  @@old_pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
-  @@pulmon = "5cc7b139a823b10004d8e6cf"
+  @@pulmon = @@server != "dev" ? "5cc7b139a823b10004d8e6d1" : "5cbd3ce444f67600049431b7"
+  @@old_pulmon = "5cc7b139a823b10004d8e6cf"
   @@cocina = @@server != "dev" ? "5cc7b139a823b10004d8e6d2" : "5cbd3ce444f67600049431b8"
 
 
